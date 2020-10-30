@@ -1,0 +1,66 @@
+\documentclass[12pt,catalan]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{babel}
+\usepackage{tikz}
+\usepackage[a3paper]{geometry}
+\newcommand{\UPC}{\fontfamily{phv}\fontsize{0.75cm}{0.75cm}\fontseries{bx}\selectfont}
+\newcommand{\ETSEIT}{\fontfamily{phv}\fontsize{0.55cm}{0.9cm}\fontseries{bx}\selectfont}
+\newcommand{\UNI}{\fontfamily{phv}\fontsize{0.65cm}{0.6cm}\selectfont}
+\newcommand{\UNIB}{\fontfamily{phv}\fontsize{0.75cm}{0.625cm}\fontseries{bx}\selectfont}
+
+\begin{document}
+
+\thispagestyle{empty}
+
+\begin{tikzpicture}[x=0.5cm,y=0.5cm]
+
+\draw (0,0) [fill=black] circle (3.4);
+
+\draw (0,-0.5) [fill=white] circle (0.5);
+\draw (0,0.75) [fill=white] circle (0.5);
+\draw (0,2) [fill=white] circle (0.5);
+
+\draw (1.25,-0.5) [fill=white] circle (0.5);
+\draw (1.25,0.75) [fill=white] circle (0.5);
+\draw (1.25,2) [fill=white] circle (0.5);
+
+\draw (-1.25,-0.5) [fill=white] circle (0.5);
+\draw (-1.25,0.75) [fill=white] circle (0.5);
+\draw (-1.25,2) [fill=white] circle (0.5);
+
+\path (-1.65,-2) node {
+         \pgfsetlinewidth{2pt}
+         \pgfsetstrokecolor{white}
+         \pgfsetfillcolor{white}
+         \pdfliteral{2 Tr}
+         \UPC U};
+         
+\path (-0.35,-2) node {
+         \pgfsetlinewidth{2pt}
+         \pgfsetstrokecolor{white}
+         \pgfsetfillcolor{white}
+         \pdfliteral{2 Tr}
+         \UPC P};        
+
+\path (0.85,-2) node {
+         \pgfsetlinewidth{2pt}
+         \pgfsetstrokecolor{white}
+         \pgfsetfillcolor{white}
+         \pdfliteral{2 Tr}
+         \UPC C}; 
+         
+\node [anchor=north west] at (4.2,3.7) {\UNIB UNIVERSITAT POLIT\`ECNICA DE CATALUNYA};
+
+\node [anchor=north west] at (4.2,1.7) {{\UNI BARCELONA} {\UNIB TECH}};
+
+\node [anchor=south west] at (4.2,-1.4) {\ETSEIT Departament de Matemàtiques};
+
+\node [anchor=south west] at (4.2,-2.6) {\ETSEIT Escola Superior d'Enginyeries Industrial};
+
+\node [anchor=south west] at (4.2,-3.7) {\ETSEIT Aeroespacial i Audiovisual de Terrassa};
+
+\end{tikzpicture}
+
+\end{document}
