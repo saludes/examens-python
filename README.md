@@ -34,7 +34,7 @@ Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<ent
    --estudiants=<fitxer>    : Fitxer amb nom:cognoms dels estudiants
    --problemes=<nombre>     : Nombre de problemes
    --tex-engine=<programa>  : Nom del programa de LaTeX utilitzat
-                            : Si no s'especifica, bo es generen els PDF
+                            : Si no s'especifica, no es generen els PDF
    --no-solucions           : No es generen els fitxers amb les solucions
 
 ```
