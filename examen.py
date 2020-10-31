@@ -29,10 +29,26 @@ class Examen:
         self.parser.add_option("--estudiants",dest="estudiants",default=None)
         self.parser.add_option("--problemes",dest="problemes",default=None)
         self.parser.add_option("--tex-engine",dest="engine",default=None)
+        self.parser.add_option("--no-solucions",action="store_false",dest="solucions",default=True)
+        self.parser.add_option("--ajuda",action="store_true",dest="ajuda",default=False)
         (self.options,self.args) = self.parser.parse_args()
         self.estudiants = []
         self.problemes = 0
         self.enunciats = []
+        if self.options.ajuda:
+            self.ajuda()
+    #
+    #
+    #
+    def ajuda(self):
+        print("Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<enter> [--no-solucions] [--tex-engine=pdflatex]")
+        print("   --examen=<fitxer>        : Fitxer LaTeX amb el model d'examen")
+        print("   --estudiants=<fitxer>    : Fitxer amb nom:cognoms dels estudiants")
+        print("   --problemes=<nombre>     : Nombre de problemes")
+        print("   --tex-engine=<programa>  : Nom del programa de LaTeX utilitzat")
+        print("                            : Si no s'especifica, bo es generen els PDF")
+        print("   --no-solucions           : No es generen els fitxers amb les solucions")
+        sys.exit(0)
     #
     #
     #
@@ -42,9 +58,7 @@ class Examen:
         prob = self.options.problemes
         regex = re.compile('^\s*#.$',re.IGNORECASE)
         if ex is None or est is None or prob is None:
-            print("Error en les dades proporcionades")
-            print("Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<enter>")
-            sys.exit('0')
+            self.ajuda()
         #
         # Enunciat de l'examen
         #
@@ -124,21 +138,22 @@ class Examen:
             for k,v in relacio.items():
                 examen = examen.replace(k,v)
             filename = f"{e['cognoms']}-{e['nom']}".lower().replace(' ','-')
-            fileneme =
             with open(f"{filename}.tex",'w') as f:
                 f.write(examen)
                 f.close()
             examen = examen.replace('NIC','sol')
-            with open(f"{filename}-solucio.tex",'w') as f:
-                f.write(examen)
-                f.close()
+            if self.options.solucions:
+                with open(f"{filename}-solucio.tex",'w') as f:
+                    f.write(examen)
+                    f.close()
             if engine is not None:
                 comanda = f"{engine} {filename}.tex > /dev/null 2>&1 "
                 print (comanda)
                 os.system(comanda)
-                comanda = f"{engine} {filename}-solucio.tex > /dev/null 2>&1 "
-                print (comanda)
-                os.system(comanda)
+                if self.options.solucions:
+                    comanda = f"{engine} {filename}-solucio.tex > /dev/null 2>&1 "
+                    print (comanda)
+                    os.system(comanda)
         os.system('rm -f *.log *.aux')
         os.chdir(dir)
     #
