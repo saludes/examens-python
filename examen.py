@@ -17,6 +17,7 @@ License:    This program is free software: you can redistribute it and/or modify
 
 import sys
 import os
+import re
 from optparse import OptionParser
 sys.path.append('.')
 from Problemes import Problemes
@@ -39,6 +40,7 @@ class Examen:
         ex = self.options.examen
         est = self.options.estudiants
         prob = self.options.problemes
+        regex = re.compile('^\s*#.$',re.IGNORECASE)
         if ex is None or est is None or prob is None:
             print("Error en les dades proporcionades")
             print("Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<enter>")
@@ -60,8 +62,10 @@ class Examen:
             with open(est) as f:
                 for line in f:
                     line = line.rstrip()
-                    data = line.split(':')
+                    if regex.match(line):
+                        continue
                     try:
+                        data = line.split(':')
                         self.estudiants.append({'nom' : data[0],
                                                 'cognoms' : data[1]
                                                 })
