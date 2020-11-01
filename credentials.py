@@ -14,15 +14,17 @@ from google.auth.transport.requests import Request
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly',
           'https://www.googleapis.com/auth/gmail.send']
 
+
 def main():
     creds = None
+    HOME = os.path.expanduser('~')
     #
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
     #
     if os.path.exists('token.pickle'):
-        with open('~/credentials/token.pickle', 'rb') as token:
+        with open(f"{HOME}/credentials/token.pickle", 'rb') as token:
             creds = pickle.load(token)
     #
     # If there are no (valid) credentials available, let the user log in.
@@ -32,7 +34,7 @@ def main():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                '~/credentials/credentials.json', SCOPES)
+                f"{HOME}/credentials/credentials.json", SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open('~/credentials/token.pickle', 'wb') as token:

@@ -12,7 +12,7 @@ Per fer servir aquesta utilitat des de qualsevol carpeta on tinguem els model d'
 
 * Copiar els fitxers examen.sty i eseiaat-ma.pdf a una carpeta on els TeX pugui trobar-los. Amb Linux poden ser _$HOME/texmf/tex/latex/_ o _/usr/local/share/texmf/tex/latex/_ i en Windows 10 ...
 * Copiar el fitxer Algebra.py a una carpeta on el Python pugui trobar-lo. Amb Linux pot ser _/usr/local/lib/python3.8/dist-packages/_ i en Windows 10 ...
-* Copiar el fitxer examen.py en una carpeta des d'on es pugui executar des de la línia de comandes. Amb Linux pot ser _/usr/local/bin/_ i en Windpws 10 ...
+* Copiar els fitxers _examen.py_ i _credentials.py_  a una carpeta des d'on es pugui executar des de la línia de comandes. Amb Linux pot ser _/usr/local/bin/_ i en Windpws 10 ...
 
 ## Descàrrega
 
@@ -48,4 +48,9 @@ Per poder enviar a cada estudiant un correu electrònic amb el seu examen adjunt
 ```
 A continuació, hem d'activar al nostre compte de GMail la utilització d'aquesta API. Per això, accedim al WEB https://developers.google.com/gmail/api/quickstart/python i cliquem al botó _Enable the Gmail API_. Aleshores, ens demanarà el nostre correu electrònic i contrasenya de GMail. Si cal, tornem a clicar a _Enable the Gmail API_ i se'ns obrirà una finestra on ens demana "Enable GMail API: Enter new project name", hi posem, per exemple, "UPC" i cliquem a "NEXT". A continuació a "Configure your OAuth client" hi posem "Desktop App" i cliquem a "CREATE" i després a "DOWNLOAD CLIENT CONFIGURATION".
 
-Com a resultat d'aquesta operació ens haurem descarregat el fitxer _credentials.json_ i el guardem a la carpeta $HOME/credentials/  
+Com a resultat d'aquesta operació ens haurem descarregat el fitxer _credentials.json_ i el guardem a la carpeta $HOME/credentials/
+
+El segon pas consisteix en executar el programa _credentials.py_ des d'un terminal
+```
+~$ credentials.py
+```
