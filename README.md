@@ -38,3 +38,12 @@ Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<ent
    --no-solucions           : No es generen els fitxers amb les solucions
 
 ```
+
+## Enviament de correus amb Google API
+
+Per poder enviar a cada estudiant un correu electrònic amb el seu examen adjunt, hem de tenir instal·lada l'API del Google. En Linux la podem instal·lar amb la comanda
+```
+~# apt install python3-testresources
+~# pip3 install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
+```
+A continuació, hem d'activar al nostre compte de GMail la utilització d'aquesta API. Per això, accedim al WEB https://developers.google.com/gmail/api/quickstart/python i cliquem al botó _Enable the Gmail API_. 
