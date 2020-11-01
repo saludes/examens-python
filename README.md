@@ -46,4 +46,6 @@ Per poder enviar a cada estudiant un correu electrònic amb el seu examen adjunt
 ~# apt install python3-testresources
 ~# pip3 install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
 ```
-A continuació, hem d'activar al nostre compte de GMail la utilització d'aquesta API. Per això, accedim al WEB https://developers.google.com/gmail/api/quickstart/python i cliquem al botó _Enable the Gmail API_. 
+A continuació, hem d'activar al nostre compte de GMail la utilització d'aquesta API. Per això, accedim al WEB https://developers.google.com/gmail/api/quickstart/python i cliquem al botó _Enable the Gmail API_. Aleshores, ens demanarà el nostre correu electrònic i contrasenya de GMail. Si cal, tornem a clicar a _Enable the Gmail API_ i se'ns obrirà una finestra on ens demana "Enable GMail API: Enter new project name", hi posem, per exemple, "UPC" i cliquem a "NEXT". A continuació a "Configure your OAuth client" hi posem "Desktop App" i cliquem a "CREATE" i després a "DOWNLOAD CLIENT CONFIGURATION".
+
+Com a resultat d'aquesta operació ens haurem descarregat el fitxer _credentials.json_ i el guardem a la carpeta $HOME/credentials/  
