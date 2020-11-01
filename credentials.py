@@ -37,7 +37,7 @@ def main():
                 f"{HOME}/credentials/credentials.json", SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open('~/credentials/token.pickle', 'wb') as token:
+        with open(f"{HOME}/credentials/token.pickle", 'wb') as token:
             pickle.dump(creds, token)
 
     service = build('gmail', 'v1', credentials=creds)
