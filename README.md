@@ -41,6 +41,8 @@ Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<ent
 
 ## Enviament de correus amb Google API
 
+### Credencials
+
 Per poder enviar a cada estudiant un correu electrònic amb el seu examen adjunt, hem de tenir instal·lada l'API del Google. En Linux la podem instal·lar amb la comanda
 ```
 ~# apt install python3-testresources
@@ -54,3 +56,20 @@ El segon pas consisteix en executar el programa _credentials.py_ des d'un termin
 ```
 ~$ credentials.py
 ```
+Se'ns obre una finestra del navegador i ens torna a demanar el nostre correu electrònic i contrasenya de GMail. Una vegada completat tindrem el fitxer _token.pickle_ a la carpeta $HOME/credentials/
+
+**Advertència**: Si fem servir un ordinador compartit, hem se tenir present que qualsevol persona que tingui accés als fitxers _credentials.py_ i  _token.pickle_ pot accedir al nostre correu de GMail. És una bona idea que, una vegada utilitzats, els encriptem, per exemple amb les comandes
+```
+~$ openssl enc -pbkdf2 -aes-256-cbc -in credentials.py -out credentials.py.data
+~$ shred -n 5 credentials.py
+~$ openssl enc -pbkdf2 -aes-256-cbc -in token.pickle -out token.pickle.data
+~$ shred -n 5 token.pickle
+```
+
+Quan els vulguem tornar a utilitzar, els hem de desencriptar:
+```
+~$ openssl enc -aes-256-cbc -d -in credentials.py.data -out credentials.py
+~$ openssl enc -aes-256-cbc -d -in token.pickle.data -out token.pickle
+```
+
+### Enviament dels correus
