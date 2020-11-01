@@ -116,7 +116,11 @@ class Examen:
         engine = self.options.engine
         dir = os.getcwd()
         if not os.path.exists('tex'):
-            os.mkdir('tex')
+            try:
+                os.mkdir('tex')
+            except:
+                print("Error en crear la carpeta tex")
+                sys.exit(0)
         os.chdir('tex')
         for e in self.estudiants:
             enunciats = ""
@@ -130,11 +134,6 @@ class Examen:
 
             relacio = {'COGNOMS' : e['cognoms'], 'NOM' : e['nom'], 'ENUNCIATS' : enunciats}
             examen = self.examen
-            if not os.path.exists('tex'):
-                try:
-                    os.mkdir('tex')
-                except:
-                    print("Error en la creació de la carpeta tex")
             for k,v in relacio.items():
                 examen = examen.replace(k,v)
             filename = f"{e['cognoms']}-{e['nom']}".lower().replace(' ','-')
