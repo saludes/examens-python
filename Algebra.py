@@ -31,6 +31,7 @@ from sympy import Basic, Function, Symbol
 from sympy.printing.printer import Printer
 from sympy.printing.latex import print_latex
 from sympy.core.basic import Basic
+from itertools import permutations
 
 var('x y z t')
 ddict = collections.OrderedDict([(x,1),(y,2), (z,3), (t,4)])
@@ -341,12 +342,20 @@ def simplificar_equacio(eq,r=None):
     return str
 
 def eliminacio_dos_parametres(n,m):
-    a = n.col_insert(2,Matrix(4,1,[x,y,z,t]) - m)
-    options = ((0,1),(0,2),(0,3),(1,2),(1,3),(2,3))
+    f, c = n.shape
+    if f <= 4:
+        x, y, z, t = symbols('x y z t')
+        incg = [x,y,z,t]
+    else:
+        x1, x2, x3, x4, x5, x6, x7 = symbols('x1 x2 x3 x4 x5 x6 x7')
+        incg = [x1,x2,x3,x4,x5,x6,x7]
+    incg = incg[0:f]
+    a = n.col_insert(2,Matrix(f,1,incg) - m)
+    all = list(range(f))
+    options = permutations(all,2)
     for o in options:
         if n[o,:].det() != 0:
             break
-    all = [0,1,2,3]
     for e in o:
         all.remove(e)
     eqs = []
@@ -357,6 +366,8 @@ def eliminacio_dos_parametres(n,m):
         d = a[f,:].det()
         eq = simplificar_equacio(d)
         eqs.append(eq)
+    if len(eqs) == 1:
+        return eqs[0].replace('&','')
     eqs = " \\\\ ".join(eqs)
     return f"\\left.\\aligned {eqs} \\endaligned\\;\\right\\}}"
 
@@ -396,8 +407,14 @@ def solucio_equacio_matricial(a,x):
     z1, z2, z3, z4, z5, z6, z7 = symbols('z1 z2 z3 z4 z5 z6 z7')
     incg = [z1,z2,z3,z4,z5,z6,z7]
     n = a.nullspace(simplify=True)
-    n = multiplicar_matriu(n[0])
-    s = x.col(0) + z1 * n
-    for i in range(1,c):
-        s = s.col_insert(i,x.col(i) + incg[i] * n)
-    return matriu_latex(s,format='*{%d}c' % c)
+    if len(n) == 0:
+        return matriu_latex(x)
+    elif len(n) == 1:
+        n = multiplicar_matriu(n[0])
+        s = x.col(0) + z1 * n
+        for i in range(1,c):
+            s = s.col_insert(i,x.col(i) + incg[i] * n)
+        return matriu_latex(s,format='*{%d}c' % c)
+    else:
+        print('No implementat')
+        sys.exit(0)
