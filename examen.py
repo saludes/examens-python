@@ -41,12 +41,13 @@ class Examen:
     #
     #
     def ajuda(self):
-        print("Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<enter> [--no-solucions] [--tex-engine=pdflatex]")
+        print("Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<enter> [--no-solucions] [--tex-engine=pdflatex]\n")
+        print("Opcions:")
         print("   --examen=<fitxer>        : Fitxer LaTeX amb el model d'examen")
         print("   --estudiants=<fitxer>    : Fitxer amb nom:cognoms dels estudiants")
         print("   --problemes=<nombre>     : Nombre de problemes")
         print("   --tex-engine=<programa>  : Nom del programa de LaTeX utilitzat")
-        print("                            : Si no s'especifica, bo es generen els PDF")
+        print("                            : Si no s'especifica, no es generen els PDF")
         print("   --no-solucions           : No es generen els fitxers amb les solucions")
         sys.exit(0)
     #
