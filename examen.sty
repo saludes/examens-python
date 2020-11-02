@@ -44,7 +44,8 @@
 %
 \newboolean{nomicognoms}
 \setboolean{nomicognoms}{false}
-\newcommand{\opt@solucions}{NoSolucions}
+\newboolean{solucions}
+\setboolean{solucions}{false}
 \newboolean{canvipagina}
 \setboolean{canvipagina}{true}
 %
@@ -75,21 +76,25 @@
 }
 \DeclareOption{nic}{
  \setboolean{nomicognoms}{true}
+ \setboolean{solucions}{false}
  \voffset=-1.2in
  \headheight=1.1in
 }
 \DeclareOption{NIC}{
  \setboolean{nomicognoms}{true}
+ \setboolean{solucions}{false}
  \voffset=-1.2in
  \headheight=1.1in
 }
 \DeclareOption{sol}{
- \renewcommand{\opt@solucions}{Solucions}
+ \setboolean{nomicognoms}{false}
+ \setboolean{solucions}{true}
  \voffset=-0.7in
  \headheight=0.9in
 }
 \DeclareOption{nicsol}{
  \setboolean{nomicognoms}{true}
+ \setboolean{solucions}{true}
  \setboolean{canvipagina}{false}
  \voffset=-0.7in
  \headheight=0.9in
@@ -300,17 +305,7 @@
 {\begin{center}}
 {\end{center}}
 %
-\ifthenelse{\equal{\opt@solucions}{NoSolucions}}%
-{\let\solucio\comment
- \let\endsolucio\endcomment
- \let\historia\historia@i
- \let\endhistoria\endhistoria@i
- \let\observacio\observacio@i
- \let\endobservacio\endobservacio@i
- \let\quadricula\quadricula@i
- \let\endquadricula\endquadricula@i
-}
-%
+\ifthenelse{\boolean{solucions}}
 {\let\solucio\solucio@i%
  \let\endsolucio\endsolucio@i
  \let\historia\comment
@@ -319,6 +314,15 @@
  \let\endobservacio\endcomment
  \let\quadricula\comment
  \let\endquadricula\endcomment
+}
+{\let\solucio\comment
+ \let\endsolucio\endcomment
+ \let\historia\historia@i
+ \let\endhistoria\endhistoria@i
+ \let\observacio\observacio@i
+ \let\endobservacio\endobservacio@i
+ \let\quadricula\quadricula@i
+ \let\endquadricula\endquadricula@i
 }
 %
 \let\@@@newpage\newpage

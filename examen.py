@@ -140,7 +140,7 @@ class Examen:
             with open(f"{filename}.tex",'w') as f:
                 f.write(examen)
                 f.close()
-            examen = examen.replace('NIC','sol')
+            examen = examen.replace('NIC','nicsol')
             if self.options.solucions:
                 with open(f"{filename}-solucio.tex",'w') as f:
                     f.write(examen)
