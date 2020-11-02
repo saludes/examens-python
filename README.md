@@ -61,9 +61,9 @@ Se'ns obre una finestra del navegador i ens torna a demanar el nostre correu ele
 **Advertència**: Si fem servir un ordinador compartit, hem se tenir present que qualsevol persona que tingui accés als fitxers _credentials.json_ i  _token.pickle_ pot accedir al nostre correu de GMail. És una bona idea que, una vegada utilitzats, els encriptem, per exemple amb les comandes
 ```
 ~$ openssl enc -pbkdf2 -aes-256-cbc -in credentials.json -out credentials.json.data
-~$ shred -n 5 credentials.py
+~$ shred -n 64 credentials.json
 ~$ openssl enc -pbkdf2 -aes-256-cbc -in token.pickle -out token.pickle.data
-~$ shred -n 5 token.pickle
+~$ shred -n 64 token.pickle
 ```
 
 Quan els vulguem tornar a utilitzar, els hem de desencriptar:
