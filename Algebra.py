@@ -36,6 +36,12 @@ var('x y z t')
 ddict = collections.OrderedDict([(x,1),(y,2), (z,3), (t,4)])
 
 class Impresora(Printer):
+    """
+       La funció latex() del sympy té la mania d'escriure les variables x, y, z i t
+       en l'ordre t, x, y i z. L'única manera que, de moment, he trobat per resoldre
+       aquest inconvenient és definir la classe Impresorai la funció mylatex().
+       Ho he trobat a StackOverflow.
+    """
     printmethod = 'impresora'
     #
     #
@@ -92,6 +98,13 @@ class Impresora(Printer):
 def mcd_llista(list):
     x = reduce(gcd, list)
     return x
+
+def mcm_llista(list):
+    x = reduce(gcd, list)
+    p = 1
+    for k in list:
+        p *= k
+    return p // x
 
 def norma(m):
     f, c = m.shape
@@ -189,7 +202,7 @@ def matriu_latex(m,format=None):
     for i in range(f):
         line = []
         for j in range(c):
-            line.append(m[i,j])
+            line.append(latex(m[i,j]))
         lines.append(" & ".join(map(str,line)))
     return (text.replace('LINES',"\\\\ ".join(lines)))
 
@@ -268,8 +281,11 @@ def sistema_equacions(m,b):
         x1, x2, x3, x4, x5, x6, x7 = symbols('x1 x2 x3 x4 x5 x6 x7')
         incg = [x1,x2,x3,x4,x5,x6,x7]
     incg = Matrix(c,1,incg[0:c])
-    n = m * incg
-    eqs = " \\\\ ".join([f"{mylatex(n[i,0])} &= {mylatex(b[i,0])}" for i in range(f)])
+    n = m * incg - b
+    eqs = []
+    for i in range(f):
+        eqs.append(simplificar_equacio(n[i]))
+    eqs = " \\\\ ".join(eqs)
     return f"\\left.\\aligned {eqs} \\endaligned\\;\\right\\}}"
 
 def solucio_general_sistema(u,s):
@@ -307,3 +323,81 @@ def equacio_continua(p,v):
         else:
             eq.append(f"\\frac{{{latex(incg[i]-p[i])}}}{{{v[i]}}}")
     return " = ".join(eq)
+
+def simplificar_equacio(eq,r=None):
+    d = eq.as_coefficients_dict()
+    l = d.values()
+    mcd = mcd_llista(l)
+    eq = 0
+    for k in d.keys():
+        d[k] = d[k] // mcd
+        eq += d[k] * k
+    eq -= d[1]
+    str = f"{mylatex(eq)} &= {-d[1]}"
+    if r is None:
+        return str
+    for k,v in r.items():
+        str = str.replace(k,v)
+    return str
+
+def eliminacio_dos_parametres(n,m):
+    a = n.col_insert(2,Matrix(4,1,[x,y,z,t]) - m)
+    options = ((0,1),(0,2),(0,3),(1,2),(1,3),(2,3))
+    for o in options:
+        if n[o,:].det() != 0:
+            break
+    all = [0,1,2,3]
+    for e in o:
+        all.remove(e)
+    eqs = []
+    for e in all:
+        f = [el for el in o]
+        f.append(e)
+        f.sort()
+        d = a[f,:].det()
+        eq = simplificar_equacio(d)
+        eqs.append(eq)
+    eqs = " \\\\ ".join(eqs)
+    return f"\\left.\\aligned {eqs} \\endaligned\\;\\right\\}}"
+
+def equacions_parametriques(a,b,r=None):
+    u,v =  symbols('u v')
+    f, c = a.shape
+    if f <= 4:
+        x, y, z, t = symbols('x y z t')
+        incg = [x,y,z,t]
+    else:
+        x1, x2, x3, x4, x5, x6, x7 = symbols('x1 x2 x3 x4 x5 x6 x7')
+        incg = [x1,x2,x3,x4,x5,x6,x7]
+    m = a * Matrix(2,1,[u,v]) + b
+    eqs = []
+    for i in range(f):
+        str = f"{latex(incg[i])} &= {latex(m[i,0])}"
+        for k,v in r.items():
+            str = str.replace(k,v)
+        eqs.append(str)
+    eqs = " \\\\ ".join(eqs)
+    return f"\\left.\\aligned {eqs} \\endaligned\\;\\right\\}}"
+
+def multiplicar_matriu(a):
+    l = matriu_a_llista(a)
+    d = []
+    for k in l:
+        if not k.is_integer:
+            d.append(k.q)
+    if len(d) == 0:
+        return a
+    if len(d) == 1:
+        return d[0] * a
+    return mcm_llista(d) * a
+
+def solucio_equacio_matricial(a,x):
+    f,c = a.shape
+    z1, z2, z3, z4, z5, z6, z7 = symbols('z1 z2 z3 z4 z5 z6 z7')
+    incg = [z1,z2,z3,z4,z5,z6,z7]
+    n = a.nullspace(simplify=True)
+    n = multiplicar_matriu(n[0])
+    s = x.col(0) + z1 * n
+    for i in range(1,c):
+        s = s.col_insert(i,x.col(i) + incg[i] * n)
+    return matriu_latex(s,format='*{%d}c' % c)
