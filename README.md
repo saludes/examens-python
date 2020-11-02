@@ -68,7 +68,7 @@ Se'ns obre una finestra del navegador i ens torna a demanar el nostre correu ele
 
 Quan els vulguem tornar a utilitzar, els hem de desencriptar:
 ```
-~$ openssl enc -aes-256-cbc -d -in credentials.py.data -out credentials.py
+~$ openssl enc -aes-256-cbc -d -in credentials.json.data -out credentials.json
 ~$ openssl enc -aes-256-cbc -d -in token.pickle.data -out token.pickle
 ```
 
