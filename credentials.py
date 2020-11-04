@@ -23,7 +23,7 @@ def main():
     # created automatically when the authorization flow completes for the first
     # time.
     #
-    if os.path.exists('token.pickle'):
+    if os.path.exists(f"{HOME}/credentials/token.pickle"):
         with open(f"{HOME}/credentials/token.pickle", 'rb') as token:
             creds = pickle.load(token)
     #

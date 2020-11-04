@@ -101,6 +101,7 @@ parser.add_option("--subject",dest="subject",default=None)
 parser.add_option("--message",dest="message",default=None)
 parser.add_option("--sender",dest="sender",default=None)
 parser.add_option("--ajuda",action="store_true",dest="ajuda",default=False)
+parser.add_option("--solucions",action="store_true",dest="solucions",default=False)
 (options,args) = parser.parse_args()
 
 HOME = os.path.expanduser('~')
@@ -147,6 +148,8 @@ if not creds or not creds.valid:
     print(f"Fitxer {HOME}/credentials/token.pickle incorrecte")
     sys.exit(0)
 
+service = build('gmail', 'v1', credentials=creds)
+
 for e in estudiants:
     relacio = relacio = {'COGNOMS' : e['cognoms'], 'NOM' : e['nom']
     m = message
@@ -154,5 +157,9 @@ for e in estudiants:
         m = m.replace(k,v)
     filename = f"{e['cognoms']}-{e['nom']}".lower().replace(' ','-')
     filename = unidecode.unidecode(filename)
+    if solucions:
+        filename += ".pdf"
+    else:
+        filename += "-solucio.pdf"
     correu = create_message(sender,e['email'],subject,m,[filename])
     send_message(service,'me', correu)
