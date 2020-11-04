@@ -41,6 +41,7 @@ parser.add_option("--subject",dest="subject",default=None)
 parser.add_option("--message",dest="message",default=None)
 parser.add_option("--sender",dest="sender",default=None)
 parser.add_option("--ajuda",action="store_true",dest="ajuda",default=False)
+parser.add_option("--solucions",action="store_true",dest="solucions",default=False)
 (options,args) = parser.parse_args()
 
 def create_message(sender,to,subject,message_text,files):
@@ -157,9 +158,9 @@ for e in estudiants:
         m = m.replace(k,v)
     filename = f"{e['cognoms']}-{e['nom']}".lower().replace(' ','-')
     filename = unidecode.unidecode(filename)
-    if solucions:
-        filename += ".pdf"
-    else:
+    if oprions.solucions:
         filename += "-solucio.pdf"
+    else:
+        filename += ".pdf"
     correu = create_message(sender,e['email'],subject,m,[filename])
     send_message(service,'me', correu)
