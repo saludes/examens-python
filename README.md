@@ -7,6 +7,7 @@ Es fa servir el _LaTeX_ per a generar els diferents models d'examen. Per tant, p
 1. **LaTeX**, preferiblement el TeXLive, que està disponible per a Linux, Windows 10 i MacOS (https://www.tug.org/texlive/).
 2. **Python**, la versió 3.7 o posterior (https://www.python.org/).
 3. **SymPy**, que és una llibreria de _Python_ per a càlcul simbòlic (https://www.sympy.org).
+4. **Python unidecode**, que serveix, entre altres coses, per treure els accents de qualsevol text. Es fa servir per treure els accents del nom i cognoms dels estudiants ja que poden donar problemes a l'hora d'ajuntar fitxers amb nom que conté aquests nom i cognoms.
 
 Per fer servir aquesta utilitat des de qualsevol carpeta on tinguem els model d'examen, les diferents preguntes i el fitxer amb les dades dels estudiants, hem de procedir a
 
@@ -39,6 +40,14 @@ Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<ent
 
 ```
 
+Si en l'examen hi volem incloure gràfics generats amb l'asymptote (https://asymptote.sourceforge.io/), hem d'instal·lar-lo i també convé instal·lar el
+_latexmk_:
+ ```
+~# apt install asymptote
+~# apt install latexmk
+ ```
+i copiar el fitxer _LatexMk_ a la carpeta _/etc_. Aleshores, per generar els PDF executarem la comanda  _examen.py_ amb l'opció _--tex-engine=latexmk-pdf_.
+
 ## Enviament de correus amb Google API
 
 ### Credencials
@@ -58,18 +67,7 @@ El segon pas consisteix en executar el programa _credentials.py_ des d'un termin
 ```
 Se'ns obre una finestra del navegador i ens torna a demanar el nostre correu electrònic i contrasenya de GMail. Una vegada completat tindrem el fitxer _token.pickle_ a la carpeta $HOME/credentials/
 
-**Advertència**: Si fem servir un ordinador compartit, hem se tenir present que qualsevol persona que tingui accés als fitxers _credentials.json_ i  _token.pickle_ pot accedir al nostre correu de GMail. És una bona idea que, una vegada utilitzats, els encriptem, per exemple amb les comandes
-```
-~$ openssl enc -pbkdf2 -aes-256-cbc -in credentials.json -out credentials.json.data
-~$ shred -n 64 credentials.json
-~$ openssl enc -pbkdf2 -aes-256-cbc -in token.pickle -out token.pickle.data
-~$ shred -n 64 token.pickle
-```
+El fitxer _token.pickle_ conté una autorització per llegir i enviar correus que té una validesa limitada. Aproximadament al cap d'una hora d'haver-lo descarregat, caduca, és a dir, probablement només ens servira per enviar correus una vegada. Per aquest motiu, el programa _enviar-correus.py_ torna a descarregar aquest fitxer si està caducat i per això ha d'obrir un navegador.
 
-Quan els vulguem tornar a utilitzar, els hem de desencriptar:
-```
-~$ openssl enc -aes-256-cbc -d -in credentials.json.data -out credentials.json
-~$ openssl enc -aes-256-cbc -d -in token.pickle.data -out token.pickle
-```
-
+Per tant hem d'executar el programa _enviar-correus.py_ des d'una sessió en la que es pugui obrir un navegador i, si no necessitem el fitxer _token.pickle_ en la propera el podem esborrar.
 ### Enviament dels correus

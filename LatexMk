@@ -1,0 +1,5 @@
+$pdf_previewer     = 'start xpdf';
+$pdf_update_method = 1;
+sub asy {return system("asy -f pdf \"$_[0]\"");}
+add_cus_dep("asy","pdf",0,"asy");
+add_cus_dep("asy","tex",0,"asy");
