@@ -156,7 +156,7 @@ for e in estudiants:
     m = message
     for k,v in relacio.items():
         m = m.replace(k,v)
-    filename = f"{e['cognoms']}-{e['nom']}".lower().replace(' ','-')
+    filename = f"tex/{e['cognoms']}-{e['nom']}".lower().replace(' ','-')
     filename = unidecode.unidecode(filename)
     if options.solucions:
         filename += "-solucio.pdf"
