@@ -151,7 +151,7 @@ if not creds or not creds.valid:
 service = build('gmail', 'v1', credentials=creds)
 
 for e in estudiants:
-    relacio = relacio = {'COGNOMS' : e['cognoms'], 'NOM' : e['nom']
+    relacio = relacio = {'COGNOMS' : e['cognoms'], 'NOM' : e['nom']}
     m = message
     for k,v in relacio.items():
         m = m.replace(k,v)
