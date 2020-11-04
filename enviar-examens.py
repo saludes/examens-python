@@ -158,7 +158,7 @@ for e in estudiants:
         m = m.replace(k,v)
     filename = f"{e['cognoms']}-{e['nom']}".lower().replace(' ','-')
     filename = unidecode.unidecode(filename)
-    if oprions.solucions:
+    if options.solucions:
         filename += "-solucio.pdf"
     else:
         filename += ".pdf"
