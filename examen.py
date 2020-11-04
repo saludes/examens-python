@@ -18,6 +18,7 @@ License:    This program is free software: you can redistribute it and/or modify
 import sys
 import os
 import re
+import unidecode
 from optparse import OptionParser
 sys.path.append('.')
 from Problemes import Problemes
@@ -132,12 +133,12 @@ class Examen:
                 for k,v in relacio.items():
                     p = p.replace(k,v)
                 enunciats += "\n"  + p
-
             relacio = {'COGNOMS' : e['cognoms'], 'NOM' : e['nom'], 'ENUNCIATS' : enunciats}
             examen = self.examen
             for k,v in relacio.items():
                 examen = examen.replace(k,v)
             filename = f"{e['cognoms']}-{e['nom']}".lower().replace(' ','-')
+            filename = unidecode.unidecode(filename)
             with open(f"{filename}.tex",'w') as f:
                 f.write(examen)
                 f.close()
@@ -154,7 +155,7 @@ class Examen:
                     comanda = f"{engine} {filename}-solucio.tex > /dev/null 2>&1 "
                     print (comanda)
                     os.system(comanda)
-        os.system('rm -f *.log *.aux')
+        os.system('rm -f *.log *.aux *.asy *-1.pdf *.pre *.fls *.fdb_*')
         os.chdir(dir)
     #
     #
