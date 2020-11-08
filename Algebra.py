@@ -34,7 +34,10 @@ from sympy.core.basic import Basic
 from itertools import permutations
 
 var('x y z t')
-ddict = collections.OrderedDict([(x,1),(y,2), (z,3), (t,4)])
+ddict = collections.OrderedDict([(x**2,1),(y**2,2),(z**2,3),(t**2,4),
+                                ((x,y),5),((x,z),6),((x,t),7),
+                                ((y,z),8),((y,t),9),((z,t),10),
+                                (x,11),(y,12), (z,13), (t,14)])
 
 class Impresora(Printer):
     """
@@ -61,11 +64,18 @@ class Impresora(Printer):
                 return new_place(el)
             elif el.is_symbol:
                 return new_place(el)
-            elif len(el.args)>0:
-                if el.args[len(el.args)-1].is_symbol:
-                    return new_place(el.args[len(el.args)-1])
+            if len(el.args) == 2:
+                if el.args[0].is_symbol and el.args[1].is_symbol:
+                    return new_place(el.args)
+                q = el.args[len(el.args)-1]
+                if q.is_symbol:
+                    return new_place(q)
+                elif q.args[0].is_symbol:
+                    return new_place(q)
                 else:
                     return 0
+            elif len(el.args) == 3:
+                return new_place(el.args[1:])
             else:
                 return 0
 
@@ -76,7 +86,9 @@ class Impresora(Printer):
                 else:
                     return "%s" % el
             elif el.is_symbol:
-                return "+%s" %el
+                return "+%s" % el
+            elif len(el.args) == 2 and el.args[0].is_symbol and el.args[1].is_symbol:
+                return "+%s" % latex(el)
             elif len(el.args) > 0:
                 if el.args[len(el.args)-1].is_symbol:
                     if el.args[0].is_rational:
@@ -95,6 +107,9 @@ class Impresora(Printer):
         to_print = [write_coeff(a) for a in expr_args]
         to_print[0] = str(latex(expr_args[0]))
         return "".join(a for a in to_print)
+
+def mylatex(e):
+    return (Impresora().doprint(e))
 
 def mcd_llista(list):
     x = reduce(gcd, list)
@@ -128,7 +143,7 @@ def nzeros(m):
 def simplifica(v):
     s = 1
     mcd = mcd_llista(v)
-    v = [x / mcd for x in v]
+    v = [x // mcd for x in v]
     if v[0] < 0:
         v = [-x for x in v]
     return v
@@ -142,6 +157,15 @@ def matriu_aleatoria(f=3,c=3,maxim=5,nuls=True):
                 if m[i,j] == 0:
                     m[i,j] = values[random.randint(0,2 * maxim - 1)]
     return m
+
+def llista_aleatoria(l=3,maxim=5,nuls=True):
+    c = [random.randint(-maxim,maxim) for i in range(l)]
+    if not nuls:
+        values = [i for i in range(1,maxim + 1)] + [-i for i in range(1,maxim + 1)]
+        for i in range(l):
+            if c[i] == 0:
+                c[i] = values[random.randint(0,2 * maxim - 1)]
+    return c
 
 def matriu_amb_rang(f=3,c=3,r=3,maxim=5,nuls=True):
     trobat = False
@@ -176,7 +200,6 @@ def matriu_invertible(ordre=3,maxim=5,mzeros=-1,unitaria=False):
     unitats = (-1,1)
     els = len(opcions)
     random.shuffle(opcions)
-
     trobat = False
     while not trobat:
         if unitaria:
@@ -193,12 +216,51 @@ def matriu_invertible(ordre=3,maxim=5,mzeros=-1,unitaria=False):
         trobat = True
     return m
 
-def matriu_latex(m,format=None):
+def matriu_diagonalitzable(ordre=3,maxim=5,mzeros=-1,mvaps=3,vapsnuls=False):
+    trobat = False
+    while not trobat:
+        random.seed()
+        c = matriu_invertible(ordre,maxim=3,mzeros=0,unitaria=True)
+        v = [-i for i in range(1,mvaps+1)] + [i for i in range(1,mvaps+1)]
+        if vapsnuls:
+            vaps = [random.randint(-mvaps,mvaps) for i in range(ordre)]
+        else:
+            vaps = [v[random.randint(0,2*mvaps-1)] for i in range(ordre)]
+        if not vapsnuls and 0 in vaps:
+            continue
+        if len(set(vaps)) == 1:
+            continue
+        d = diag(*vaps)
+        a = c * d * c**(-1)
+        if norma(a) > maxim:
+            continue
+        if mzeros >= 0 and nzeros(a) > mzeros:
+            continue
+        trobat = True
+    return a, vaps
+
+def matriu_gram(ordre=3,maxim=5,mzeros=-1):
+    trobat = False
+    while not trobat:
+        c = matriu_invertible(ordre,maxim=5)
+        g = c.T * c
+        if mzeros >= 0 and nzeros(g) > mzeros:
+            continue
+        if norma(g) > maxim:
+            continue
+        trobat = True
+    return g
+
+def matriu_latex(m,format=None,det=False):
     f, c = m.shape
+    tipus = "pmatrix"
+    if det:
+        tipus = "vmatrix"
     if format is None:
-        text = "\\begin{pmatrix}{*{%d}r} LINES\end{pmatrix}" % c
+        text = "\\begin{TIPUS}{*{%d}r} LINES\end{TIPUS}" % c
     else:
-        text = "\\begin{pmatrix}{%s} LINES\end{pmatrix}" % format
+        text = "\\begin{TIPUS}{%s} LINES\end{TIPUS}" % format
+    text = text.replace('TIPUS',tipus)
     lines = []
     for i in range(f):
         line = []
@@ -206,6 +268,14 @@ def matriu_latex(m,format=None):
             line.append(latex(m[i,j]))
         lines.append(" & ".join(map(str,line)))
     return (text.replace('LINES',"\\\\ ".join(lines)))
+
+def vector_latex(v,unitari=False):
+    s = list(map(latex,v))
+    s = ",".join(s)
+    r = ""
+    if unitari:
+        r = f"\\deufrac{{1}}{{{longitud_latex(v)}}}"
+    return r + f"({s})"
 
 def matriu_a_llista(m):
     l = []
@@ -235,6 +305,17 @@ def matriu_inversa_latex(m,format=None):
         text = ("\\deufrac{1}{%d}" % d) + text
     return text
 
+def combinacio_lineal(v,l):
+    s = set(list(map(len,v)))
+    if len(s) != 1:
+        return None
+    s = s.pop()
+    r =  []
+    for i in range(s):
+        t = sum([l[k]*v[k][i] for k in range(len(l))])
+        r.append(t)
+    return r
+
 def text_vectors_matriu(m,simplificar=True):
     f, c = m.shape
     vecs = []
@@ -258,6 +339,18 @@ def vectors_matriu(m,simplificar=True):
         vecs.append(v)
     return vecs
 
+def vectors_fila_matriu(m,simplificar=True):
+    f, c = m.shape
+    vecs = []
+    for i in range(f):
+        v = []
+        for j in range(c):
+            v.append(m[i,j])
+        if simplificar:
+            v = simplifica(v)
+        vecs.append(v)
+    return vecs
+
 def producte_vectorial(v1,v2,simplificar=True):
     v = [v1[1] * v2[2] - v1[2] * v2[1],- v1[0] * v2[2] + v1[2] * v2[0],v1[0] * v2[1] - v1[1] * v2[0]]
     if simplificar:
@@ -270,11 +363,10 @@ def producte_escalar(v1,v2):
         p += v1[i] * v2[i]
     return p
 
-def mylatex(e):
-    return (Impresora().doprint(e))
-
-def sistema_equacions(m,b):
+def sistema_equacions(m,b=None,simplificar=True):
     f, c = m.shape
+    if b is None:
+        b = zeros(f,1)
     if c <= 4:
         x, y, z, t = symbols('x y z t')
         incg = [x,y,z,t]
@@ -282,10 +374,15 @@ def sistema_equacions(m,b):
         x1, x2, x3, x4, x5, x6, x7 = symbols('x1 x2 x3 x4 x5 x6 x7')
         incg = [x1,x2,x3,x4,x5,x6,x7]
     incg = Matrix(c,1,incg[0:c])
-    n = m * incg - b
     eqs = []
-    for i in range(f):
-        eqs.append(simplificar_equacio(n[i]))
+    if simplificar:
+        n = m * incg - b
+        for i in range(f):
+            eqs.append(simplificar_equacio(n[i]))
+    else:
+        a = m * incg
+        for i in range(f):
+            eqs.append(f"{mylatex(a[i])} &= {latex(b[i])}")
     eqs = " \\\\ ".join(eqs)
     return f"\\left.\\aligned {eqs} \\endaligned\\;\\right\\}}"
 
@@ -325,7 +422,7 @@ def equacio_continua(p,v):
             eq.append(f"\\frac{{{latex(incg[i]-p[i])}}}{{{v[i]}}}")
     return " = ".join(eq)
 
-def simplificar_equacio(eq,r=None):
+def simplificar_equacio(eq,r=None,amp=True,positiu=None):
     d = eq.as_coefficients_dict()
     l = d.values()
     mcd = mcd_llista(l)
@@ -333,8 +430,14 @@ def simplificar_equacio(eq,r=None):
     for k in d.keys():
         d[k] = d[k] // mcd
         eq += d[k] * k
+    if positiu is not None and d[positiu] < 0:
+        eq *= -1
+        d[1] *= -1
     eq -= d[1]
-    str = f"{mylatex(eq)} &= {-d[1]}"
+    if amp:
+        str = f"{mylatex(eq)} &= {-d[1]}"
+    else:
+        str = f"{mylatex(eq)} = {-d[1]}"
     if r is None:
         return str
     for k,v in r.items():
@@ -418,3 +521,23 @@ def solucio_equacio_matricial(a,x):
     else:
         print('No implementat')
         sys.exit(0)
+
+def nucli(m):
+    n = m.nullspace()
+    v = []
+    for i in range(len(n)):
+        v.append(vectors_matriu(n[i])[0])
+    return v
+
+def base_ortogonal_nucli(m):
+    v1, v2 = nucli(m)
+    t1 = producte_escalar(v1,v1)
+    t2 = producte_escalar(v1,v2)
+    u2 = simplifica([t1*v2[i]-t2*v1[i] for i in range(len(v1))])
+    return v1,u2
+
+def longitud_latex(v):
+    s = 0
+    for i in range(len(v)):
+        s += v[i]**2
+    return latex(sqrt(s))

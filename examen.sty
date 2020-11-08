@@ -127,7 +127,7 @@
 \ifthenelse{\boolean{use@mtpro}}{
  \usepackage{times}
  \usepackage[mtphrd]{mtpro2}
-}
+}{}
 \ifthenelse{\boolean{use@times}\or\boolean{use@stix}\or\boolean{use@mtpro}}{}
 {
  \usepackage{amsfonts}
@@ -357,7 +357,7 @@
 %
 \renewcommand{\cal}[1]{{\mathcal #1}}
 \newcommand{\rn}[1]{{\mathbb R}^{#1}}
-\newcommand{\deufrac}[2]{\scalebox{0.875}{\hbox{\ensuremath{\dfrac{#1}{#2}}}}}
+\newcommand{\deufrac}[2]{\scalebox{0.75}{\hbox{\ensuremath{\dfrac{#1}{#2}}}}}
 %
 % Ela geminada
 %
