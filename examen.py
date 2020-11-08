@@ -105,8 +105,9 @@ class Examen:
         for i in range(1,self.problemes + 1):
             try:
                 with open(f"p{i}.tex") as f:
-                    self.enunciats.append(f.read())
+                    e = f.read()
                     f.close()
+                self.enunciats.append(e)
             except:
                 print("Error en els enunciats dels problemes")
                 sys.exit(0)

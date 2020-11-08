@@ -141,7 +141,11 @@ def nzeros(m):
     return z
 
 def simplifica(v):
-    s = 1
+    m = 1
+    for i in range(len(v)):
+        if isinstance(v[i],Rational):
+            m *= v [i].q
+    v = [m * x for x in v]
     mcd = mcd_llista(v)
     v = [x // mcd for x in v]
     if v[0] < 0:
