@@ -32,7 +32,7 @@ class Examen:
         self.parser.add_option("--problemes",dest="problemes",default=None)
         self.parser.add_option("--tex-engine",dest="engine",default=None)
         self.parser.add_option("--no-solucions",action="store_false",dest="solucions",default=True)
-        self.parser.add_option("--aleatori",action="store_false",dest="aleatori",default=True)
+        self.parser.add_option("--aleatori",action="store_true",dest="aleatori",default=False)
         self.parser.add_option("--ajuda",action="store_true",dest="ajuda",default=False)
         (self.options,self.args) = self.parser.parse_args()
         self.estudiants = []
