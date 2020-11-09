@@ -19,6 +19,7 @@ import sys
 import os
 import re
 import unidecode
+import random
 from optparse import OptionParser
 sys.path.append('.')
 from Problemes import Problemes
@@ -31,10 +32,12 @@ class Examen:
         self.parser.add_option("--problemes",dest="problemes",default=None)
         self.parser.add_option("--tex-engine",dest="engine",default=None)
         self.parser.add_option("--no-solucions",action="store_false",dest="solucions",default=True)
+        self.parser.add_option("--aleatori",action="store_false",dest="aleatori",default=True)
         self.parser.add_option("--ajuda",action="store_true",dest="ajuda",default=False)
         (self.options,self.args) = self.parser.parse_args()
         self.estudiants = []
-        self.problemes = 0
+        self.problemes = []
+        self.maxproblema = 0
         self.enunciats = []
         if self.options.ajuda:
             self.ajuda()
@@ -49,6 +52,7 @@ class Examen:
         print("   --problemes=<nombre>     : Nombre de problemes")
         print("   --tex-engine=<programa>  : Nom del programa de LaTeX utilitzat")
         print("                            : Si no s'especifica, no es generen els PDF")
+        print("   --no-solucions           : L'ordre dels problemes serà aleatori")
         print("   --no-solucions           : No es generen els fitxers amb les solucions")
         sys.exit(0)
     #
@@ -58,6 +62,11 @@ class Examen:
         ex = self.options.examen
         est = self.options.estudiants
         prob = self.options.problemes
+        if isinstance(prob,int):
+            prob = list(range(prob + 1))
+        else:
+            l = prob.split(",")
+            prob = list(map(int,l))
         regex = re.compile('^\s*#.$',re.IGNORECASE)
         if ex is None or est is None or prob is None:
             self.ajuda()
@@ -95,14 +104,15 @@ class Examen:
         # Nombre de problemes
         #
         try:
-            self.problemes = int(prob)
+            self.problemes = prob
         except:
             print("Error en el nombre de problemes")
             sys.exit(0)
         #
         # Enunciats dels problemes
         #
-        for i in range(1,self.problemes + 1):
+        self.maxproblema = max(self.problemes)
+        for i in range(1,self.maxproblema + 1):
             try:
                 with open(f"p{i}.tex") as f:
                     e = f.read()
@@ -126,14 +136,18 @@ class Examen:
                 sys.exit(0)
         os.chdir('tex')
         for e in self.estudiants:
-            enunciats = ""
+            examen = []
             problemes = probs.problemes()
-            for i in range(self.problemes):
+            for i in range(self.maxproblema):
+                if i + 1 not in self.problemes:
+                    continue
                 relacio = problemes[i]()
                 p = self.enunciats[i]
                 for k,v in relacio.items():
                     p = p.replace(k,v)
-                enunciats += "\n"  + p
+                examen.append(p)
+            random.shuffle(examen)
+            enunciats = "\n\n".join(examen)
             relacio = {'COGNOMS' : e['cognoms'], 'NOM' : e['nom'], 'ENUNCIATS' : enunciats}
             examen = self.examen
             for k,v in relacio.items():
