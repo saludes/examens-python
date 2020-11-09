@@ -52,7 +52,7 @@ class Examen:
         print("   --problemes=<nombre>     : Nombre de problemes")
         print("   --tex-engine=<programa>  : Nom del programa de LaTeX utilitzat")
         print("                            : Si no s'especifica, no es generen els PDF")
-        print("   --no-solucions           : L'ordre dels problemes serà aleatori")
+        print("   --aleatori               : L'ordre dels problemes serà aleatori")
         print("   --no-solucions           : No es generen els fitxers amb les solucions")
         sys.exit(0)
     #
@@ -146,7 +146,8 @@ class Examen:
                 for k,v in relacio.items():
                     p = p.replace(k,v)
                 examen.append(p)
-            random.shuffle(examen)
+            if self.options.aleatori:
+                random.shuffle(examen)
             enunciats = "\n\n".join(examen)
             relacio = {'COGNOMS' : e['cognoms'], 'NOM' : e['nom'], 'ENUNCIATS' : enunciats}
             examen = self.examen
