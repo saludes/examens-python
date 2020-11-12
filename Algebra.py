@@ -421,7 +421,6 @@ def equacio_del_pla_afi(w,p):
     return f"{mylatex(w[0] * x + w[1] * y + w[2] * z)} = {t}"
 
 def equacio_continua(p,v):
-    print()
     v = simplifica(v)
     x, y, z = symbols('x y z')
     incg = [x,y,z]
