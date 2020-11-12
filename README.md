@@ -36,8 +36,8 @@ Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<ent
    --problemes=<nombre>     : Nombre de problemes
    --tex-engine=<programa>  : Nom del programa de LaTeX utilitzat
                             : Si no s'especifica, no es generen els PDF
+   --aleatori               : L'ordre dels problemes serà aleatori
    --no-solucions           : No es generen els fitxers amb les solucions
-
 ```
 
 Si en l'examen hi volem incloure gràfics generats amb l'asymptote (https://asymptote.sourceforge.io/), hem d'instal·lar-lo i també convé instal·lar el
@@ -67,7 +67,21 @@ El segon pas consisteix en executar el programa _credentials.py_ des d'un termin
 ```
 Se'ns obre una finestra del navegador i ens torna a demanar el nostre correu electrònic i contrasenya de GMail. Una vegada completat tindrem el fitxer _token.pickle_ a la carpeta $HOME/credentials/
 
-El fitxer _token.pickle_ conté una autorització per llegir i enviar correus que té una validesa limitada. Aproximadament al cap d'una hora d'haver-lo descarregat, caduca, és a dir, probablement només ens servira per enviar correus una vegada. Per aquest motiu, el programa _enviar-correus.py_ torna a descarregar aquest fitxer si està caducat i per això ha d'obrir un navegador.
+El fitxer _token.pickle_ conté una autorització per llegir i enviar correus que té una validesa limitada. Aproximadament al cap d'una hora d'haver-lo descarregat. Per aquest motiu, el programa _enviar-correus.py_, si és necessari actualitza aquest fitxer o torna a descarregar-lo si no el pot actualitzar i per això ha d'obrir un navegador.
 
-Per tant hem d'executar el programa _enviar-correus.py_ des d'una sessió en la que es pugui obrir un navegador i, si no necessitem el fitxer _token.pickle_ en la propera el podem esborrar.
+Per tant és millor executar el programa _enviar-correus.py_ des d'una sessió en la que es pugui obrir un navegador.
+
+**Advertència**: Si fem servir un ordinador compartit, hem se tenir present que qualsevol persona que tingui accés al fitxer _token.pickle_, pot accedir al nostre correu de GMail. És una bona idea que, una vegada utilitzats, els encriptem, per exemple amb les comandes
+```
+~$ openssl enc -pbkdf2 -aes-256-cbc -in credentials.json -out credentials.json.data
+~$ shred -n 64 credentials.json
+~$ openssl enc -pbkdf2 -aes-256-cbc -in token.pickle -out token.pickle.data
+~$ shred -n 64 token.pickle
+```
+Quan els vulguem tornar a utilitzar, els hem de desencriptar:
+```
+~$ openssl enc -aes-256-cbc -d -in credentials.json.data -out credentials.json
+~$ openssl enc -aes-256-cbc -d -in token.pickle.data -out token.pickle
+```
+
 ### Enviament dels correus
