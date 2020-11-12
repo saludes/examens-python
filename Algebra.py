@@ -162,13 +162,19 @@ def matriu_aleatoria(f=3,c=3,maxim=5,nuls=True):
                     m[i,j] = values[random.randint(0,2 * maxim - 1)]
     return m
 
-def llista_aleatoria(l=3,maxim=5,nuls=True):
-    c = [random.randint(-maxim,maxim) for i in range(l)]
-    if not nuls:
+def llista_aleatoria(l=3,maxim=5,nuls=True,positius=False):
+    if positius:
+        c = [random.randint(1,maxim) for i in range(l)]
+        values = [i for i in range(1,maxim + 1)]
+        m = maxim
+    else:
+        c = [random.randint(-maxim,maxim) for i in range(l)]
         values = [i for i in range(1,maxim + 1)] + [-i for i in range(1,maxim + 1)]
+        m = 2 * maxim - 1
+    if not nuls:
         for i in range(l):
             if c[i] == 0:
-                c[i] = values[random.randint(0,2 * maxim - 1)]
+                c[i] = values[random.randint(0,m)]
     return c
 
 def matriu_amb_rang(f=3,c=3,r=3,maxim=5,nuls=True):

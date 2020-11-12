@@ -62,9 +62,10 @@ class Examen:
         ex = self.options.examen
         est = self.options.estudiants
         prob = self.options.problemes
-        if isinstance(prob,int):
+        try:
+            prob = int(prob)
             prob = list(range(prob + 1))
-        else:
+        except:
             l = prob.split(",")
             prob = list(map(int,l))
         regex = re.compile('^\s*#.$',re.IGNORECASE)
