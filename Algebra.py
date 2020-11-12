@@ -421,12 +421,13 @@ def equacio_del_pla_afi(w,p):
     return f"{mylatex(w[0] * x + w[1] * y + w[2] * z)} = {t}"
 
 def equacio_continua(p,v):
+    print()
     v = simplifica(v)
     x, y, z = symbols('x y z')
     incg = [x,y,z]
     eq = []
     for i in range(3):
-        if abs(v[i]) == 1:
+        if v[i] == 1:
             eq.append(latex(incg[i]-p[i]))
         else:
             eq.append(f"\\frac{{{latex(incg[i]-p[i])}}}{{{v[i]}}}")
