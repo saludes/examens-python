@@ -3,7 +3,7 @@
 """
 Filename:   Algebra.py
 Author:     Rafel Amer (rafel.amer AT upc.edu)
-Copyright:  Rafel Amer 2018
+Copyright:  Rafel Amer 2020
 Disclaimer: This code is presented "as is" and it has been written to
             generate random models of exams for the subject of Linear
             at ESEIAAT
@@ -347,6 +347,67 @@ class Vector:
             l = latex(sqrt(self.length()))
             r = f"\\deufrac{{1}}{{{l}}}"
         return r + f"{s}"
+    #
+    #
+    #
+    def components(self,base=None):
+        if base is None:
+            return Vector(self.components)
+        else:
+            if not isinstance(base,Base):
+                return None
+            if self.dimensio != base.dimensio:
+                return None
+            c = base.matriu()
+            return c.inversa() * self
+
+class Base:
+    #
+    #
+    #
+    def __init__(self,vecs,unitaria=False):
+        if len(vecs) == 0:
+            return None
+        if not isinstance(vecs[0],Vector):
+            return None
+        d = vecs[0].dimensio
+        for v in vecs:
+            if not isinstance(v,Vector):
+                return None
+            if v.dimensio != d:
+                return None
+        self.vecs = vecs
+        self.dimensio = d
+        m = Matriu.from_vectors_columna(self.vecs)
+        if m.columnes != d:
+            return None
+        if m.rank() != d:
+            return None
+        self.unitaria = unitaria
+    #
+    #
+    #
+    def matriu(self):
+        return Matriu.from_vectors_columna(self.vecs)
+    #
+    #
+    #
+    @classmethod
+    def from_matriu(cls,m):
+        if m.files != m.columnes:
+            return None
+        if m.rank() != m.columnes:
+            return None
+        return cls(m.vectors_columna())
+    #
+    #
+    #
+    def __repr__(self):
+        if not self.unitaria:
+            base = ",".join(map(str,self.vecs))
+            return f"\\{{{base}\\}}"
+        else:
+            return ""
 
 class Matriu:
     #
@@ -358,11 +419,19 @@ class Matriu:
         self.columnes = c
         self.matriu = matrix
         self.vaps = None
+        self.veps = None
     #
     #
     #
     def set_vaps(self,vaps):
         self.vaps = vaps
+    #
+    #
+    #
+    def set_veps(self,veps):
+        for v in veps:
+            v.simplificar()
+        self.veps = veps
     #
     #
     #
@@ -396,6 +465,13 @@ class Matriu:
     #
     def determinant(self):
         return self.matriu.det()
+    #
+    #
+    #
+    def polinomi_caracteristic(self):
+        lamda = symbols('lamda')
+        p = self.matriu.charpoly(lamda)
+        return p
     #
     #
     #
@@ -449,11 +525,13 @@ class Matriu:
         for i in range(self.files):
             for j in range(self.columnes):
                 if isinstance(self.matriu[i,j],Rational):
-                    m * self.matriu[i,j].q
+                    l.append(self.matriu[i,j].q)
                 elif isinstance(self.matriu[i,j],int):
                     pass
                 else:
                     return matriu_latex(self.matriu)
+        m = mcm_llista(l)
+        l = []
         for i in range(self.files):
             for j in range(self.columnes):
                 l.append(m * self.matriu[i,j])
@@ -463,9 +541,18 @@ class Matriu:
         s = ""
         if q > 1:
             s = f"\\deufrac{{1}}{{{q}}}"
-        l = [p * x for x in l]
         m = Matrix(self.files,self.columnes,l)
         return s + matriu_latex(m)
+    #
+    #
+    #
+    @classmethod
+    def diagonal(cls,vals):
+        d = len(vals)
+        if d == 0:
+            return None
+        m = diag(*vals)
+        return cls(m)
     #
     #
     #
@@ -503,7 +590,7 @@ class Matriu:
             ti = Matrix(ordre,ordre,lambda i, j : mti(i,j))
             ts = Matrix(ordre,ordre,lambda i, j : mts(i,j,values))
             m = ti * ts
-            if norma(m) > maxim:
+            if norma_maxim(m) > maxim:
                 continue
             if mzeros >= 0 and nzeros(m) > mzeros:
                 continue
@@ -516,7 +603,6 @@ class Matriu:
     def diagonalitzable(cls,ordre=3,maxim=5,mzeros=-1,mvaps=3,vapsnuls=False):
         trobat = False
         while not trobat:
-            random.seed()
             c = Matriu.invertible(ordre=ordre,maxim=3,mzeros=0,unitaria=True)
             v = [-i for i in range(1,mvaps+1)] + [i for i in range(1,mvaps+1)]
             if vapsnuls:
@@ -536,6 +622,7 @@ class Matriu:
             trobat = True
         m = cls(a)
         m.set_vaps(vaps)
+        m.set_veps(c.vectors_columna())
         return m
     #
     #
@@ -617,13 +704,11 @@ class Matriu:
         vecs = []
         m = self.matriu
         for i in range(self.columnes):
-            v = []
-            for j in range(self.files):
-                v.append(m[j,i])
-            m = Vector(v)
+            v = [m[j,i] for j in range(self.files)]
+            u = Vector(v)
             if simplificar:
-                m.simplificar()
-            vecs.append(m)
+                u.simplificar()
+            vecs.append(u)
         return vecs
     #
     #
@@ -632,9 +717,7 @@ class Matriu:
         vecs = []
         m = self.matriu
         for i in range(self.files):
-            v = []
-            for j in range(self.columnes):
-                v.append(m[i,j])
+            v = [m[i,j] for j in range(self.columnes)]
             u = Vector(v)
             if simplificar:
                 u.simplificar()
@@ -837,9 +920,7 @@ class SistemaEquacions:
             if len(m) == 0:
                 factor = 1
             else:
-                print(m)
                 factor = mcm_llista(m)
-                print(factor)
             eq = 0
             for k in d.keys():
                 d[k] = factor * d[k]
@@ -1179,3 +1260,132 @@ class SubespaiVectorial:
             v.simplificar()
             base.append(v)
         return base
+
+class TransformacioLineal:
+    #
+    #
+    #
+    def __init__(self,matriu,base=None):
+        if matriu.files != matriu.columnes:
+            return None
+        self.dimensio = matriu.files
+        self.base = base
+        self.matriu = matriu
+        if self.base is None:
+            self.canonica = Matriu(self.matriu.matriu)
+        else:
+            if not isinstance(base,Base):
+                return None
+            c = base.matriu()
+            if c is None:
+                return None
+            if c.files != self.dimensio:
+                return None
+            if c.coulumnes != self.dimensio:
+                return None
+            m = c.matriu * self.matriu.matriu * c.matriu**(-1)
+            self.canonica = m
+    #
+    #
+    #
+    def latex(self,base=None):
+        if self.dimensio <= 3:
+            x, y, z = symbols('x y z')
+            u, v, w = symbols('u v w')
+            o = [x,y,z]
+            d = [u,v,w]
+        else:
+            x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
+            u1, u2, u3, u4, u5, u6, u7, u8 = symbols('u1 u2 u3 u4 u5 u6 u7 u8')
+            o = [x1, x2, x3, x4, x5, x6, x7, x8]
+            d = [u1, u2, u3, u4, u5, u6, u7, u8]
+        o = o[0:self.dimensio]
+        d = d[0:self.dimensio]
+        if base is None:
+             o = " \\\\ ".join([latex(x) for x in o])
+             d = " \\\\ ".join([latex(x) for x in d])
+             m = self.canonica
+        else:
+            if not isinstance(base,Base):
+                return None
+            c = base.matriu()
+            o = " \\\\ ".join([latex(x) + "'" for x in o])
+            d = " \\\\ ".join([latex(x) + "'" for x in d])
+            m = c.matriu**(-1) * self.canonica.matriu * c.matriu
+            m = Matriu(m)
+        s = "\\begin{pmatrix}{c} " + d + "\\end{pmatrix} = \n"
+        s += f"{m}\n"
+        s += "\\begin{pmatrix}{c} " + o + "\\end{pmatrix}"
+        return s
+    #
+    #
+    #
+    def __repr__(self):
+        return self.latex()
+    #
+    #
+    #
+    def transforma(self,vec,base=None):
+        if not isinstance(vec,Vector):
+            return None
+        if vec.dimensio != self.dimensio:
+            return None
+        if base is None:
+            return self.canonica * vec
+        else:
+            if not isinstance(base,Base):
+                return None
+            c = base.matriu()
+            m = c.matriu**(-1) * self.canonica.matriu * c.matriu
+            m = Matriu(m)
+            return m * vec
+
+class TransformacioAfi:
+    #
+    #
+    #
+    def __init__(self,terme,matriu):
+        if not isinstance(terme,Vector):
+            return None
+        self.terme = terme
+        if not isinstance(matriu,Matriu):
+            return None
+        if matriu.files != matriu.columnes:
+            return None
+        if terme.dimensio != matriu.columnes:
+            return None
+        self.matriu = matriu
+        self.dimensio = terme.dimensio
+    #
+    #
+    #
+    def __repr__(self):
+        if self.dimensio <= 3:
+            x, y, z = symbols('x y z')
+            u, v, w = symbols('u v w')
+            o = [x,y,z]
+            d = [u,v,w]
+        else:
+            x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
+            u1, u2, u3, u4, u5, u6, u7, u8 = symbols('u1 u2 u3 u4 u5 u6 u7 u8')
+            o = [x1, x2, x3, x4, x5, x6, x7, x8]
+            d = [u1, u2, u3, u4, u5, u6, u7, u8]
+        o = o[0:self.terme.dimensio]
+        d = d[0:self.terme.dimensio]
+        o = " \\\\ ".join([latex(x) for x in o])
+        d = " \\\\ ".join([latex(x) for x in d])
+        m = Matriu.matriu_columna(self.terme)
+        s = "\\begin{pmatrix}{c} " + d + "\\end{pmatrix} = \n"
+        s += f"{m} + \n"
+        s += f"{self.matriu}\n"
+        s += "\\begin{pmatrix}{c} " + o + "\\end{pmatrix}"
+        return s
+    #
+    #
+    #
+    def transforma(self,p):
+        if not isinstance(p,Vector):
+            return None
+        if self.dimensio != p.dimensio:
+            return None
+        return self.terme + self.matriu * p
