@@ -1160,10 +1160,32 @@ class Matriu:
         return Matriu.from_vectors_columna(columnes)
 
 class EquacioLineal:
+    """
+    Classe per treballar amb equacions lineals
+    """
     #
     #
     #
     def __init__(self,eq,amp=True,prime=0):
+        """
+        Constructor.
+        Paràmentres:
+           eq: expressió lineal que ha de contenir tots els termes, aleshores
+               l'equació serà "eq = 0". Només guardem la part "eq"
+           amp: quan escrivim l'equació en latex ha d'aparèixer &= o només =
+           prime: nombre de primes que s'han de posar a les incògnites
+
+         Per exemple:
+         x, y, z, t = symbols('x y z t')
+         eq = 2*x-3*y+4*z-3*t-4
+         e = EquacioLineal(eq)
+
+         Atributs:
+           equacio: terme de l'esquerra en la equacio "eq = 0"
+           unknowns: incògnites que apareixen a l'equació
+           amp: True o False
+           prime: nombre de primes que escriurem a l'equaqció
+        """
         self.equacio = eq
         self.amp = amp
         d = self.equacio.as_coefficients_dict()
@@ -1174,6 +1196,10 @@ class EquacioLineal:
     #
     @classmethod
     def coeficients(cls,a,b,amp=True,prime=0):
+        """
+        Retorna una nova equació amb coeficients de les incògnites el vector "a" i
+        terme independent b
+        """
         if not isinstance(a,Vector):
             return None
         if a.dimensio <= 4:
@@ -1190,6 +1216,10 @@ class EquacioLineal:
     #
     #
     def set_coeficient_positiu(self,k):
+        """
+        Si el coeficient de "k" és negatiu, canvia de signe tota l'equació, de
+        manera que el coeficients de "k" passa a ser positiu
+        """
         d = self.equacio.as_coefficients_dict()
         if d[k] < 0:
             self.equacio *= -1
@@ -1197,24 +1227,32 @@ class EquacioLineal:
     #
     #
     def __repr__(self):
+        """
+        Retorna l'expressió en latex de l'equació.
+        Si els coeficients són enters o racionals, treu el denominador comú
+        """
+        other = False
         d = self.equacio.as_coefficients_dict()
         l = list(d.values())
         m = []
-        for i in range(len(l)):
-            if isinstance(l[i],Rational):
-                m.append(l[i].q)
-            elif isinstance(l[i],int):
+        for k in l:
+            if isinstance(k,Rational):
+                m.append(k.q)
+            elif isinstance(k,int) or isinstance(k,Integer):
                 pass
             else:
-                return ""
-        mcm = mcm_llista(m)
-        v = [mcm * x for x in l]
-        mcd = mcd_llista(v)
-        factor = Rational(mcm,mcd)
-        eq = 0
-        for k in d.keys():
-            d[k] = factor * d[k]
-            eq += d[k] * k
+                other = True
+        if not other:
+            mcm = mcm_llista(m)
+            v = [mcm * x for x in l]
+            mcd = mcd_llista(v)
+            factor = Rational(mcm,mcd)
+            eq = 0
+            for k in d.keys():
+                d[k] = factor * d[k]
+                eq += d[k] * k
+        else:
+            eq = self.equacio
         eq -= d[1]
         if t in self.unknowns:
             str = mylatex(eq)
@@ -1233,6 +1271,9 @@ class EquacioLineal:
     #
     #
     def __add__(self,other):
+        """
+        Serveix per sumar equacions
+        """
         if not isinstance(other,EquacioLineal):
             return None
         eq = self.equacio + other.equacio
@@ -1241,6 +1282,9 @@ class EquacioLineal:
     #
     #
     def __sub__(self,other):
+        """
+        Serveix per restar equacions
+        """
         if not isinstance(other,EquacioLineal):
             return None
         eq = self.equacio - other.equacio
@@ -1249,6 +1293,9 @@ class EquacioLineal:
     #
     #
     def __mul__(self,other):
+        """
+        Serveix per multiplicar un escalar per una equació
+        """
         types = [Rational,float,int,Float,Pow,Add,Mul]
         for t in types:
             if isinstance(other,t):
@@ -1261,10 +1308,27 @@ class EquacioLineal:
 
 
 class SistemaEquacions:
+    """
+    Classe per treballar amb sistemes d'equacions lineals
+    """
     #
     #
     #
     def __init__(self,a,b):
+        """
+        Constructor.
+        Paràmetres:
+          a: matriu dels coeficients de les incògnites
+          b: Termes independents
+
+        Atributs:
+          A: matriu dels coeficients de les incógnites
+          B: vector de termes independents
+          equacions: llista de EquacioLineal
+          nombre: nombre d'equacions
+          solucio: solucio del sistema d'equacions
+          unknowns: llista d'incògnites
+        """
         if not isinstance(a,Matriu):
             return None
         if not isinstance(b,Vector):
@@ -1292,6 +1356,11 @@ class SistemaEquacions:
     #
     @classmethod
     def from_equacions(cls,eqs):
+        """
+        Retorna un sistema d'equacions amb equacions "eqs"
+        Paràmetre:
+          eqs: llista de EquacioLineal
+        """
         if len(eqs) <= 4:
             x, y, z, t = symbols('x y z t')
             unknowns = [x,y,z,t]
@@ -1314,6 +1383,9 @@ class SistemaEquacions:
     #
     #
     def __repr__(self):
+        """
+        Retorna l'expressió en latex del sistema d'equacions
+        """
         eqs = list(map(str,self.equacions))
         if len(eqs) == 0:
             return ""
@@ -1325,12 +1397,20 @@ class SistemaEquacions:
     #
     #
     def resol(self):
+        """
+        Resol el sistema d'equacions utilitzant la funció linsolve del sympy.
+        El resultat és una llista d'expressions on hi poden aparèixer les
+        incògnites del sistema com a paràmetres
+        """
         system = (self.A.matriu,Matrix(self.B.dimensio,1,self.B.components))
         self.solucio = list(linsolve(system,*self.unknowns))[0]
     #
     #
     #
     def solucio_latex(self):
+        """
+        Retorna l'expressió en latexs de la solució del sistema d'equacions
+        """
         if len(self.solucio) == 0:
             return ""
         eqs = []
@@ -1365,10 +1445,28 @@ class SistemaEquacions:
         return f"\\left.\\aligned {eqs} \\endaligned\\;\\right\\}}"
 
 class EquacioParametrica:
+    """
+    Classe per treballar amb equacions paramètriques
+    """
     #
     #
     #
     def __init__(self,eq,amp=True):
+        """
+        Contructor.
+        Paràmetres:
+          eq: equació paramètrica. Ha de ser del tipus
+              -x + 2*t1 - 3*t2 + t3 - 4
+             amb el signe menys a la incògnita
+          amp: True o False en funció si hem d'escriure &= o només = en la representació
+               en latex de l'equació
+
+        Atributs:
+          equacio: l'equació paramètrica
+          b: terme independent de l'equaqció
+          coefs: coeficients dels paràmetres
+          unknown: incògina de l'equació paramètrica
+        """
         x, y, z, t = symbols('x y z t')
         x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
         unknowns = [x1,x2,x3,x4,x5,x6,x7,x8] + [x,y,z,t]
@@ -1389,6 +1487,16 @@ class EquacioParametrica:
     #
     @classmethod
     def coeficients(cls,a,b,p=0,total=1,amp=True):
+        """
+        Genera una equació amb coeficients dels paràmtres el vector "a", terme
+        independent b i incògnita número p d'un total de "total". Per exemple:
+
+           e = EquacioParametrica(Vector([3,-2,1],5,1,4) genera l'equació
+               - y + 3*t1 - 2*t2 + t3 + 5
+
+           e = EquacioParametrica(Vector([3,-2,1,3,7],-5,3,7) genera l'equació
+               - x6 + 3*t1 - 2*t2 + t3 + 3*t4 + 7*t5 - 5
+        """
         if not isinstance(a,Vector):
             return None
         if p >= total:
@@ -1412,6 +1520,9 @@ class EquacioParametrica:
     #
     #
     def __repr__(self):
+        """
+        Retorna l'expessió en latex de l'equació paramètrica
+        """
         t1, t2, t3, t4, t5, t6, t7, t8 = symbols('t1 t2 t3 t4 t5 t6 t7 t8')
         x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
         x, y, z, t = symbols('x y z t')
@@ -1453,10 +1564,29 @@ class EquacioParametrica:
         return s
 
 class EquacionsParametriques:
+    """
+    Classe per treballar amb sistemes d'equacions paramètriques
+    """
     #
     #
     #
     def __init__(self,a,b,amp=True):
+        """
+        Contructor.
+        Genera les equacions X = b + a.T on X són les inognites i T els paràmetres
+
+        Paràmetres:
+          a: matriu dels coeficients dels paràmetres
+          b: vector de termes independents
+          amp: True o False en funció si hem d'escriure &= o només = en la representació
+               en latex del sistema
+
+        Atributs:
+          A: matriu dels coeficients dels paràmetres
+          B: vector dels termes independents
+          equacions: llista de EquacioParametrica
+          noimbre: nombre d'equacions
+        """
         if not isinstance(a,Matriu):
             return None
         if not isinstance(b,Vector):
@@ -1475,6 +1605,9 @@ class EquacionsParametriques:
     #
     #
     def __repr__(self):
+        """
+        Retorna la representació en latex del sistema d'equacions paramètriques
+        """
         l = list(map(str,self.equacions))
         eqs = " \\\\ ".join(l)
         return f"\\left.\\aligned {eqs} \\endaligned\\;\\right\\}}"
@@ -1482,6 +1615,10 @@ class EquacionsParametriques:
     #
     #
     def eliminar_parametres(self):
+        """
+        Retorna el SistemaEquacions que s'obté en eliminar els paràmetres dels
+        sistema
+        """
         L, U, _ = self.A.matriu.LUdecomposition()
         r = U.rank()
         v = Vector([e.unknown for e in self.equacions])
@@ -1489,15 +1626,27 @@ class EquacionsParametriques:
         t = (L**(-1) * t)[r:]
         return SistemaEquacions.from_equacions(t)
 
-
 class PlaVectorial:
+    """
+    Classe per treballar amb plans vectorials
+    """
     #
     #
     #
     def __init__(self,u1,u2):
+        """
+        Constructor.
+        Paràmetres:
+          u1, u2: generadors del pla
+        """
         if not isinstance(u1,Vector):
             return None
         if not isinstance(u2,Vector):
+            return None
+        if u1.dimensio != 3 or u2.dimensio != 3:
+            return None
+        m = Matriu.from_vectors_columna([u1,u2])
+        if m.rank() != 2:
             return None
         self.u1 = u1
         self.u2 = u2
@@ -1505,11 +1654,19 @@ class PlaVectorial:
     #
     #
     def __repr__(self):
+        """
+        Retorna l'expressió en latex dels dos vectors generadors
+        """
         return f"{self.u1}, {self.u2}"
     #
     #
     #
     def equacio_implicita(self,base=None,prime=0):
+        """
+        Retorna l'equació implícita del pla en la base "base" en format latex.
+        Normalment, si la base no és la canònica posarem prime > 0 perquè el resultat
+        sigui de l'estil 2x'-3y'+4z'=0
+        """
         if base is None:
             w = self.u1.cross(self.u2)
             return EquacioLineal.coeficients(w,0,False)
@@ -1524,6 +1681,9 @@ class PlaVectorial:
     #
     @classmethod
     def from_matriu(cls,m):
+        """
+        Genera el pla vectorial generat per les columnes de la matriu "m"
+        """
         if not isinstance(m,Matriu):
             return None
         if m.files != 3 or m.columnes != 2 or m.rank() != 2:
@@ -1533,12 +1693,26 @@ class PlaVectorial:
     #
     #
     #
+    @classmethod
+    def amb_associat(cls,w):
+        """
+        Genera el pla vectorial que té vector perpendicular "w"
+        """
+        a = Matriu.from_vectors_fila([w])
+        l = a.nucli()
+        return cls(l[0],l[1])
+    #
+    #
+    #
     def base_ortogonal(self):
+        """
+        Retorna una base orogonal del pla vectorial
+        """
         v1 = self.u1
         u2 = self.u2
         v2 = v1.dot(v1) * u2 - v1.dot(u2) * v1
         v2.simplificar()
-        return [v1,v2]
+        return Base([v1,v2])
 
 class PlaAfi:
     #
