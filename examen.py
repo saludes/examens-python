@@ -92,8 +92,8 @@ class Examen:
                         continue
                     try:
                         data = line.split(':')
-                        self.estudiants.append({'nom' : data[0],
-                                                'cognoms' : data[1]
+                        self.estudiants.append({'nom' : data[0].strip(),
+                                                'cognoms' : data[1].strip()
                                                 })
                     except:
                         continue

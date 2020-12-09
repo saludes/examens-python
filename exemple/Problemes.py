@@ -12,53 +12,48 @@ class Problemes:
     #
     #
     def problema1(self):
-        m = matriu_invertible(mzeros=0)
-        matriu = matriu_latex(m)
-        inversa = matriu_inversa_latex(m)
-        return {'MATRIU' : matriu, 'INVERSA' : inversa}
+        m = Matriu.invertible()
+        inversa = m.inversa()
+        return {'MATRIU' : f"{m}", 'INVERSA' : f"{inversa}"}
     #
     #
     #
     def problema2(self):
-        r = {'x' : "x'", 'y' : "y'", 'z' : "z'"}
-        m = matriu_invertible(maxim=2,mzeros=1,unitaria=True)
+        m = Matriu.invertible(maxim=2,mzeros=1,unitaria=True)
         trobat = False
         while not trobat:
-            n = matriu_aleatoria(f=3,c=2,maxim=2,nuls=False)
+            n = Matriu.aleatoria(f=3,c=2,maxim=2,nuls=False)
             if n.rank() < 2:
                 continue
             trobat = True
-        vecs = text_vectors_matriu(n)
-        base = text_vectors_matriu(m)
-        eq = equacio_del_pla_vectorial(n,m,r)
-        return {'VECTORS' : vecs, 'BASE' : base, 'EQUACIO' : eq}
+        base = Base.from_matriu(m)
+        p = PlaVectorial.from_matriu(n)
+        e = p.equacio_implicita(base,prime=1)
+        return {'VECTORS' : f"{p}", 'BASE' : f"{base}", 'EQUACIO' : f"{e}"}
 
     def problema3(self):
-        x = matriu_aleatoria(f=3,c=1,maxim=4,nuls=False)
-        m = matriu_invertible(maxim=3,mzeros=1)
-        p = [0,1,2]
-        random.shuffle(p)
+        x = Vector.aleatori(l=3,maxim=4,nuls=False)
+        m = Matriu.invertible(maxim=3,mzeros=1)
+        r = m.reordena_aleatoriament_files()
         q = random.randint(0,3)
         trobat = False
         while not trobat:
-            c = matriu_aleatoria(f=1,c=2,maxim=2,nuls=False)
-            row = c[0,0] * m.row(p[0])  +  c[0,1] * m.row(p[1])
-            if nzeros(row) > 0:
-                continue
-            trobat = True
-        m = m.row_insert(q,row)
+            c = Vector.aleatori(l=3,maxim=2,nuls=False)
+            c[2] = 0
+            c = c * r
+            trobat = c.nzeros() == 0
+        m = m.inserta_fila(q,c)
         b = m * x
-        sistema = sistema_equacions(m,b)
+        s = SistemaEquacions(m,b)
         solucio = f"$x={latex(x[0])}$, $y={latex(x[1])}$, $z={latex(x[2])}$."
-        return {'SISTEMA' : sistema, 'SOLUCIO' : solucio}
+        return {'SISTEMA' : f"{s}", 'SOLUCIO' : solucio}
 
     def problema4(self):
-        m = matriu_amb_rang(f=3,c=3,r=3,maxim=5,nuls=False)
-        p, v, q = vectors_matriu(m)
-        eq = equacio_continua(p,v)
-        punt = text_vectors_matriu(Matrix(3,1,q))
-        sol = equacio_del_pla_afi(v,q)
-        return {'RECTA' : eq, 'PUNT' : punt, 'SOLUCIO' : sol}
+        m = Matriu.amb_rang(f=3,c=3,r=3,maxim=5,nuls=False)
+        p0, v, q0 = m.vectors_columna(m)
+        r = RectaAfi(v,p0)
+        p = PlaAfi.amb_associat(v,q0)
+        return {'RECTA' : f"{r.equacio_continua()}", 'PUNT' : f"{q0}", 'SOLUCIO' : f"{p.equacio_implicita()}"}
     #
     #
     #
