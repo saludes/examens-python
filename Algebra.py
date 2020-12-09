@@ -552,6 +552,28 @@ class Vector:
                 n += 1
         return n
 
+class Punt(Vector):
+    """
+    Classe per treballar amb punts.
+    Internament un punt és el mateix que un vector
+    """
+    def __init__(self,c):
+        """
+        Constructor.
+        Paràmetres:
+           c: Llista de nombres
+        """
+        super().__init__(c)
+    #
+    #
+    #
+    def coordenades_en_referencia(self,ref):
+        """
+        Retorna les coordenades del punt en la referència "ref"
+        """
+        op = self - ref.origen
+        return op.components_en_base(ref.base)
+
 class Base:
     """
     Classe que ens permetrà representar bases de R^n
@@ -629,6 +651,19 @@ class Base:
             return f"\\{{{base}\\}}"
         base = ",".join([v.latex(True) for v in self.vecs])
         return f"\\left\\{{{base}\\right\\}}"
+    #
+    #
+    #
+    def vectors_latex(self):
+        """
+        Retorna l'expressió en latex dels vector de la base, sense les claus
+        inicial i final
+        """
+        if not self.unitaria:
+            base = ",".join(map(str,self.vecs))
+        else:
+            base = ",".join([v.latex(True) for v in self.vecs])
+        return f"{base}"
 
 class Matriu:
     """
@@ -1161,7 +1196,12 @@ class Matriu:
 
 class EquacioLineal:
     """
-    Classe per treballar amb equacions lineals
+    Classe per treballar amb equacions lineals.
+    Atributs:
+      equacio: terme de l'esquerra en la equacio "eq = 0"
+      unknowns: incògnites que apareixen a l'equació
+      amp: True o False
+      prime: nombre de primes que escriurem a l'equació
     """
     #
     #
@@ -1179,12 +1219,6 @@ class EquacioLineal:
          x, y, z, t = symbols('x y z t')
          eq = 2*x-3*y+4*z-3*t-4
          e = EquacioLineal(eq)
-
-         Atributs:
-           equacio: terme de l'esquerra en la equacio "eq = 0"
-           unknowns: incògnites que apareixen a l'equació
-           amp: True o False
-           prime: nombre de primes que escriurem a l'equaqció
         """
         self.equacio = eq
         self.amp = amp
@@ -1310,6 +1344,13 @@ class EquacioLineal:
 class SistemaEquacions:
     """
     Classe per treballar amb sistemes d'equacions lineals
+    Atributs:
+      A: matriu dels coeficients de les incógnites
+      B: vector de termes independents
+      equacions: llista de EquacioLineal
+      nombre: nombre d'equacions
+      solucio: solucio del sistema d'equacions
+      unknowns: llista d'incògnites
     """
     #
     #
@@ -1320,14 +1361,6 @@ class SistemaEquacions:
         Paràmetres:
           a: matriu dels coeficients de les incògnites
           b: Termes independents
-
-        Atributs:
-          A: matriu dels coeficients de les incógnites
-          B: vector de termes independents
-          equacions: llista de EquacioLineal
-          nombre: nombre d'equacions
-          solucio: solucio del sistema d'equacions
-          unknowns: llista d'incògnites
         """
         if not isinstance(a,Matriu):
             return None
@@ -1447,6 +1480,11 @@ class SistemaEquacions:
 class EquacioParametrica:
     """
     Classe per treballar amb equacions paramètriques
+    Atributs:
+      equacio: l'equació paramètrica
+      b: terme independent de l'equaqció
+      coefs: coeficients dels paràmetres
+      unknown: incògina de l'equació paramètrica
     """
     #
     #
@@ -1460,12 +1498,6 @@ class EquacioParametrica:
              amb el signe menys a la incògnita
           amp: True o False en funció si hem d'escriure &= o només = en la representació
                en latex de l'equació
-
-        Atributs:
-          equacio: l'equació paramètrica
-          b: terme independent de l'equaqció
-          coefs: coeficients dels paràmetres
-          unknown: incògina de l'equació paramètrica
         """
         x, y, z, t = symbols('x y z t')
         x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
@@ -1566,6 +1598,11 @@ class EquacioParametrica:
 class EquacionsParametriques:
     """
     Classe per treballar amb sistemes d'equacions paramètriques
+    Atributs:
+      A: matriu dels coeficients dels paràmetres
+      B: vector dels termes independents
+      equacions: llista de EquacioParametrica
+      nombre: nombre d'equacions
     """
     #
     #
@@ -1580,12 +1617,6 @@ class EquacionsParametriques:
           b: vector de termes independents
           amp: True o False en funció si hem d'escriure &= o només = en la representació
                en latex del sistema
-
-        Atributs:
-          A: matriu dels coeficients dels paràmetres
-          B: vector dels termes independents
-          equacions: llista de EquacioParametrica
-          noimbre: nombre d'equacions
         """
         if not isinstance(a,Matriu):
             return None
@@ -1706,7 +1737,7 @@ class PlaVectorial:
     #
     def base_ortogonal(self):
         """
-        Retorna una base orogonal del pla vectorial
+        Retorna una base ortogonal del pla vectorial
         """
         v1 = self.u1
         u2 = self.u2
@@ -1714,16 +1745,134 @@ class PlaVectorial:
         v2.simplificar()
         return Base([v1,v2])
 
+class RectaVectorial:
+    """
+    Classe per treballar amb rectes vectorials, dimensió 2 o 3
+    Atributs:
+      u: generador de la recta vectorial
+    """
+    #
+    #
+    #
+    def __init__(self,u):
+        """
+        Constructor.
+        Paràmetres:
+          u: vector amb dimensió 2 o 3
+        """
+        if not isinstance(u,Vector):
+            return None
+        if u.dimensio not in [2,3]:
+            return None
+        self.u = u
+    #
+    #
+    #
+    def equacions_implicites(self,base=None,prime=0,aleatori=False):
+        """
+        Retorna l'equació implícita (dimensió 2) o el sistema d'equacions implícites
+        (dimensió 3) en la base "base".
+        Paràmetres:
+          base: Base en la que calculem les equacions implícites
+          prime: Quantes primes volem posar a les equacions
+          aleatori: només s'aplica a dimensió 3 i genera unes equacions implícites
+                    no trivials
+        """
+        if base is None:
+            a = Matriu.matriu_fila(self.u)
+        else:
+            a = Matriu.matriu_fila(self.u.components_en_base(base))
+        l = a.nucli()
+        if len(l) == 1:
+            return EquacioLineal.coeficients(l[0],0,False,prime)
+        a = Matriu.from_vectors_fila(l)
+        b = Vector.nul(len(l))
+        if aleatori:
+            m = Matriu.amb_rang(f=2,c=2,r=2,maxim=3,nuls=False)
+            a = m * a
+        return SistemaEquacions(a,b,prime=prime)
+    #
+    #
+    #
+    def equacio_continua(self,base=None,prime=0):
+        """
+        Retorna l'expressió en latex de l'equqció contínua de la recta vectorial
+        en la base "base". El valor prime "determina" si l'equació o equacions
+        s'escriuran amb primes
+        """
+        if base is None:
+            v = Vector(self.u.components)
+        else:
+            v = self.u.components_en_base(base)
+        v.simplificar()
+        x, y, z = symbols('x y z')
+        incg = [x,y,z]
+        eq = []
+        p = ""
+        if prime > 0:
+            p = prime * "'"
+        for i in range(v.dimensio):
+            if v[i] == 1:
+                eq.append(latex(incg[i]) + p)
+            else:
+                eq.append(f"\\frac{{{latex(incg[i]) + p}}}{{{v[i]}}}")
+        return " = ".join(eq)
+
+class ReferenciaAfi:
+    """
+    Classe per treballar amb referències afins
+    """
+    #
+    #
+    #
+    def __init__(self,origen,base):
+        """
+        Constructor.
+        Paràmetres:
+          origen: origen de la referència
+          base: base de la referència u2: generadors del pla
+        """
+        if not isinstance(origen,Vector):
+            return None
+        if not isinstance(base,Base):
+            return None
+        if origen.dimensio != base.dimensio:
+            return None
+        self.origen = origen
+        self.base = base
+    #
+    #
+    #
+    def __repr__(self):
+        return f"\\left\\{{{self.origen};{self.base}\\right\\}}"
+
 class PlaAfi:
+    """
+    Classe per treballar amb plans afins.
+    Atributs:
+      u1, u2: vectors directors del pla
+      p: punt de pas
+    """
     #
     #
     #
     def __init__(self,u1,u2,p):
+        """
+        Constructor.
+        Paràmetres:
+          u1, u2: generadors del pla
+          p: punt de pas
+        """
         if not isinstance(u1,Vector):
             return None
         if not isinstance(u2,Vector):
             return None
-        if not isinstance(p,Vector):
+        if not isinstance(p,Punt):
+            return None
+        if u1.dimensio != 3 or u2.dimensio != 3:
+            return None
+        m = Matriu.from_vectors_columna([u1,u2])
+        if m.rank() != 2:
             return None
         self.u1 = u1
         self.u2 = u2
@@ -1733,109 +1882,129 @@ class PlaAfi:
     #
     @classmethod
     def amb_associat(cls,w,p):
+        """
+        Genera el pla afí que té vector perpendicular "w" i passa pel punt p
+        """
+        if not isinstance(w,Vector):
+            return None
+        if not isinstance(p,Punt):
+            return None
         a = Matriu.from_vectors_fila([w])
         l = a.nucli()
         return cls(l[0],l[1],p)
     #
     #
     #
-    def equacio_implicita(self):
-        w = self.u1.cross(self.u2)
-        return EquacioLineal.coeficients(w,w.dot(self.p),False)
+    def equacio_implicita(self,ref=None,prime=0):
+        """
+        Retorna l'expressió de l'equació implícta del pla en la referència "ref"
+        """
+        if ref is None:
+            w = self.u1.cross(self.u2)
+            return EquacioLineal.coeficients(w,w.dot(self.p),False)
+        if not isinstance(ref,ReferenciaAfi):
+            return None
+        c = self.p.coordenades_en_referencia(ref)
+        v1 = self.u1.components_en_base(ref.base)
+        v2 = self.u2.components_en_base(ref.base)
+        w = v1.cross(v2)
+        return EquacioLineal.coeficients(w,w.dot(c),False,prime)
     #
     #
     #
     def base_ortogonal(self):
+        """
+        Retorna una base orogonal (vectors directors perpendiculars) del pla
+        """
         v1 = self.u1
         u2 = self.u2
         v2 = v1.dot(v1) * u2 - v1.dot(u2) * v1
         v2.simplificar()
         return [v1,v2]
 
-class RectaVectorial:
-    #
-    #
-    #
-    def __init__(self,u):
-        if not isinstance(u,Vector):
-            return None
-        self.u = u
-        self.set_equacions_implicites()
-    #
-    #
-    #
-    def equacio_continua(self):
-        self.u.simplificar()
-        x, y, z = symbols('x y z')
-        incg = [x,y,z]
-        eq = []
-        for i in range(3):
-            if self.u[i] == 1:
-                eq.append(latex(incg[i]))
-            else:
-                eq.append(f"\\frac{{{latex(incg[i])}}}{{{v[i]}}}")
-        return " = ".join(eq)
-    #
-    #
-    #
-    def set_equacions_implicites(self):
-        a = Matriu.matriu_fila(self.u)
-        l = a.nucli()
-        a = Matriu.from_vectors_fila(l)
-        b = Vector.nul(len(l))
-        self.implicites = SistemaEquacions(a,b)
-    #
-    #
-    #
-    def equacions_implicites(self):
-        m = Matriu.amb_rang(f=2,c=2,r=2,maxim=3,nuls=False)
-        a = m * self.implicites.A
-        b = Vector.nul(2)
-        return SistemaEquacions(a,b)
-
 class RectaAfi:
+    """
+    Classe per treballar amb rectes afins, dimensió 2 o 3
+    Atributs:
+      u: generador de la recta vectorial
+      p: punt de pas
+    """
     #
     #
     #
     def __init__(self,u,p):
         if not isinstance(u,Vector):
             return None
-        if not isinstance(p,Vector):
+        if not isinstance(p,Punt):
+            return None
+        if p.dimensio != u.dimensio:
+            return None
+        if p.dimensio not in [2,3]:
             return None
         self.u = u
         self.p = p
-        self.set_equacions_implicites()
     #
     #
     #
-    def equacio_continua(self):
-        self.u.simplificar()
+    def equacio_continua(self,ref=None,prime=0):
+        """
+        Retorna l'expressió en latex de l'equqció contínua de la recta afí
+        en la referència "ref". El valor prime "determina" si l'equació o equacions
+        s'escriuran amb primes
+        """
+        if ref is None:
+            v = Vector(self.u.components)
+            q = Punt(self.p.components)
+        else:
+            v = self.u.components_en_base(ref.base)
+            q = sel.p.coordenades_en_referencia(ref)
+        v.simplificar()
         x, y, z = symbols('x y z')
         incg = [x,y,z]
         eq = []
-        for i in range(3):
-            if self.u[i] == 1:
-                eq.append(latex(incg[i]-self.p[i]))
+        p = ""
+        if prime > 0:
+            p = prime * "'"
+        for i in range(v.dimensio):
+            if v[i] == 1:
+                eq.append(latex(incg[i]) + p)
             else:
-                eq.append(f"\\frac{{{latex(incg[i]-self.p[i])}}}{{{self.u[i]}}}")
-        return " = ".join(eq)
+                eq.append(f"\\frac{{{latex(incg[i] - q[i])}}}{{{v[i]}}}")
+        eq = " = ".join(eq)
+        for k in inc:
+            eq = replace(latex(k),latex(k) + p)
+        return eq
     #
     #
     #
-    def set_equacions_implicites(self):
-        a = Matriu.matriu_fila(self.u)
+    def equacions_implicites(self,ref=None,prime=0,aleatori=False):
+        """
+        Retorna l'equació implícita (dimensió 2) o el sistema d'equacions implícites
+        (dimensió 3) de la recta afí en la referència "ref".
+        Paràmetres:
+           ref: Referència en la que calculem les equacions implícites
+           prime: Quantes primes volem posar a les equacions
+           aleatori: només s'aplica a dimensió 3 i genera unes equacions implícites
+                     no trivials
+        """
+        if ref is None:
+            v = Vector(self.u.components)
+            a = Matriu.matriu_fila(self.u)
+            q = Punt(self.p.components)
+        else:
+            v = self.u.components_en_base(ref.base)
+            a = Matriu.matriu_fila(v)
+            q = self.p.coordenades_en_referencia(ref)
         l = a.nucli()
+        if len(l) == 1:
+            return EquacioLineal.coeficients(l[0],v.dot(p),False,prime)
         a = Matriu.from_vectors_fila(l)
-        b = a * self.p
-        self.implicites = SistemaEquacions(a,b)
-    #
-    #
-    #
-    def equacions_implicites(self):
-        m = Matriu.amb_rang(f=2,c=2,r=2,maxim=3,nuls=False)
-        a = m * self.implicites.A
-        b = m * self.implicites.B
-        return SistemaEquacions(a,b)
+        b = a * q
+        if aleatori:
+            m = Matriu.amb_rang(f=2,c=2,r=2,maxim=3,nuls=False)
+            a = m * a
+            b = m * b
+        return SistemaEquacions(a,b,prime=prime)
 
 class SubespaiVectorial:
     #
