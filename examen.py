@@ -3,7 +3,7 @@
 """
 Filename:   examen.py
 Author:     Rafel Amer (rafel.amer AT upc.edu)
-Copyright:  Rafel Amer 2018
+Copyright:  Rafel Amer 2020
 Disclaimer: This code is presented "as is" and it has been written to
             generate random models of exams for the subject of Linear
             at ESEIAAT

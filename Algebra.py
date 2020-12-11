@@ -43,7 +43,7 @@ class Impresora(Printer):
     """
        La funció latex() del sympy té la mania d'escriure les variables x, y, z i t
        en l'ordre t, x, y i z. L'única manera que, de moment, he trobat per resoldre
-       aquest inconvenient és definir la classe Impresorai la funció mylatex().
+       aquest inconvenient és definir la classe Impresora i la funció mylatex().
        Ho he trobat a StackOverflow.
     """
     printmethod = 'impresora'
@@ -180,13 +180,19 @@ def nzeros(m):
                 z += 1
     return z
 
-def matriu_latex(m,format=None):
+def matriu_latex(m,format=None,ampliada=False):
     """
     Retorna l'expressió en latex d'una matriu del tipus Matrix del sympy
     """
     f, c = m.shape
+    vert = ""
+    if ampliada:
+        cols = c - 1
+        vert = "|r"
+    else:
+        cols = c
     if format is None:
-        text = "\\begin{pmatrix}{*{%d}r} LINES\end{pmatrix}" % c
+        text = "\\begin{pmatrix}{*{%d}r%s} LINES\end{pmatrix}" % (cols,vert)
     else:
         text = "\\begin{pmatrix}{%s} LINES\end{pmatrix}" % format
     lines = []
@@ -208,13 +214,20 @@ def primer_no_nul(list):
             return i
     return None
 
-class Vector:
+class Vector(object):
     """
     Classe que ens permetrà representar vectors i punts
     Atributs:
         dimensio: el nombre de components o longitud del vector
         components: llista amb les components del vector
     """
+    #
+    #
+    #
+    def __new__(cls,c):
+        if isinstance(c,list) or isinstance(c,tuple):
+            return super(Vector,cls).__new__(cls)
+        return None
     #
     #
     #
@@ -313,9 +326,7 @@ class Vector:
             return f"\\left({s}\\right)"
         mcm = mcm_llista(d)
         v = [mcm * k for k in self.components]
-        mcd = mcd_llista(v)
-        v = [k // mcd for k in v]
-        f = Rational(mcd,mcm)
+        f = Rational(1,mcm)
         if f == 1:
             s = ",".join([latex(k) for k in v])
             return f"({s})"
@@ -557,13 +568,20 @@ class Punt(Vector):
     Classe per treballar amb punts.
     Internament un punt és el mateix que un vector
     """
-    def __init__(self,c):
+    def __new__(cls,c):
         """
         Constructor.
         Paràmetres:
            c: Llista de nombres
         """
-        super().__init__(c)
+        if isinstance(c,list) or isinstance(c,tuple):
+            return super(Vector,cls).__new__(cls)
+        return None
+    #
+    #
+    #
+    def __init__(self,c):
+        Vector.__init__(self,c)
     #
     #
     #
@@ -574,7 +592,8 @@ class Punt(Vector):
         op = self - ref.origen
         return op.components_en_base(ref.base)
 
-class Base:
+
+class Base(object):
     """
     Classe que ens permetrà representar bases de R^n
     Atributs:
@@ -586,7 +605,7 @@ class Base:
     #
     #
     #
-    def __init__(self,vecs,unitaria=False):
+    def __new__(cls,vecs,unitaria=False):
         """
         Contructor.
         Paràmetres:
@@ -595,7 +614,6 @@ class Base:
                      Serveix per si volem imprimir o fer servir els seus
                      vectors com a unitaris
         """
-        self.unitaria = unitaria
         if len(vecs) == 0:
             return None
         if not isinstance(vecs[0],Vector):
@@ -606,13 +624,19 @@ class Base:
                 return None
             if v.dimensio != d:
                 return None
+        m = Matriu.from_vectors_columna(vecs)
+        if m.files != d:
+            return None
+        if m.rank() != len(vecs):
+            return None
+        return super(Base,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,vecs,unitaria=False):
+        self.unitaria = unitaria
         self.vecs = vecs
-        self.dimensio = d
-        m = Matriu.from_vectors_columna(self.vecs)
-        if m.columnes != d:
-            return None
-        if m.rank() != d:
-            return None
+        self.dimensio = vecs[0].dimensio
     #
     #
     #
@@ -664,6 +688,24 @@ class Base:
         else:
             base = ",".join([v.latex(True) for v in self.vecs])
         return f"{base}"
+    #
+    #
+    #
+    def vector_de_components(self,vec):
+        """
+        Retorna un nou vector expressat en la base canònica del vectors
+        que em aqiesta base té components "vec"
+        """
+        if not isinstance(vec,Vector):
+            return None
+        if vec.dimensio != self.dimensio:
+            return None
+        if not self.unitaria:
+            c = self.matriu()
+        else:
+            unitaris = [(1 / v.length()) * v for v in self.vecs]
+            c = Matriu.from_vectors_columna(unitaris)
+        return c * vec
 
 class Matriu:
     """
@@ -776,7 +818,7 @@ class Matriu:
         """
         lamda = symbols('lamda')
         p = self.matriu.charpoly(lamda)
-        return p
+        return latex(p.as_expr())
     #
     #
     #
@@ -854,6 +896,11 @@ class Matriu:
                 c.append(v[i,0])
             return Vector(c)
         return None
+    #
+    #
+    #
+    def transposada(self):
+        return Matriu(self.matriu.T)
     #
     #
     #
@@ -1077,6 +1124,8 @@ class Matriu:
         Retorna una nova matriu a partir d'una llista de vectors.
         Les components dels vectors seran les columnes de la nova matriu
         """
+        if not (isinstance(vecs,list) or isinstance(vecs,tuple)):
+            return None
         if len(vecs) == 0:
             return None
         if not isinstance(vecs[0],Vector):
@@ -1136,6 +1185,8 @@ class Matriu:
         for i in range(len(n)):
             m = Matriu(n[i])
             vecs += m.vectors_columna()
+        for v in vecs:
+            v.simplificar()
         return vecs
     #
     #
@@ -1184,13 +1235,13 @@ class Matriu:
         """
         Retorna una nova matriu amb la columna "columna" insertada a la posició "pos"
         """
-        if not isinstance(fila,Vector):
+        if not isinstance(columna,Vector):
             return None
         if columna.dimensio != self.files:
             return None
         if pos > self.columnes:
-            return None
-        columnes = self.vectors_fila()
+            pos = self.columnes
+        columnes = self.vectors_columna()
         columnes.insert(pos,columna)
         return Matriu.from_vectors_columna(columnes)
 
@@ -1206,7 +1257,7 @@ class EquacioLineal:
     #
     #
     #
-    def __init__(self,eq,amp=True,prime=0):
+    def __init__(self,eq,amp=False,prime=0):
         """
         Constructor.
         Paràmentres:
@@ -1223,13 +1274,13 @@ class EquacioLineal:
         self.equacio = eq
         self.amp = amp
         d = self.equacio.as_coefficients_dict()
-        self.unknowns = d.keys()
+        self.unknowns = [k for k in d.keys() if k != 1]
         self.prime = prime
     #
     #
     #
     @classmethod
-    def coeficients(cls,a,b,amp=True,prime=0):
+    def coeficients(cls,a,b,amp=False,prime=0):
         """
         Retorna una nova equació amb coeficients de les incògnites el vector "a" i
         terme independent b
@@ -1310,6 +1361,8 @@ class EquacioLineal:
         """
         if not isinstance(other,EquacioLineal):
             return None
+        if self.prime != other.prime:
+            return None
         eq = self.equacio + other.equacio
         return EquacioLineal(eq,self.amp or other.amp)
     #
@@ -1320,6 +1373,8 @@ class EquacioLineal:
         Serveix per restar equacions
         """
         if not isinstance(other,EquacioLineal):
+            return None
+        if self.prime != other.prime:
             return None
         eq = self.equacio - other.equacio
         return EquacioLineal(eq,self.amp or other.amp)
@@ -1351,11 +1406,12 @@ class SistemaEquacions:
       nombre: nombre d'equacions
       solucio: solucio del sistema d'equacions
       unknowns: llista d'incògnites
+      prime: nombre de primes que escriurem a l'equació
     """
     #
     #
     #
-    def __init__(self,a,b):
+    def __new__(cls,a,b,prime=0):
         """
         Constructor.
         Paràmetres:
@@ -1368,13 +1424,18 @@ class SistemaEquacions:
             return None
         if a.files != b.dimensio:
             return None
+        return super(SistemaEquacions,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,a,b,prime=0):
         self.A = a
         self.B = b
         self.solucio = None
         eq = []
         files = a.vectors_fila()
         for k in range(self.A.files):
-            eq.append(EquacioLineal.coeficients(files[k],b[k]))
+            eq.append(EquacioLineal.coeficients(files[k],b[k],prime))
         self.equacions = eq
         self.nombre = len(eq)
         if self.A.columnes <= 4:
@@ -1384,17 +1445,20 @@ class SistemaEquacions:
             x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
             unknowns = [x1,x2,x3,x4,x5,x6,x7,x8]
         self.unknowns = unknowns[0:self.A.columnes]
+        self.prime = prime
     #
     #
     #
     @classmethod
-    def from_equacions(cls,eqs):
+    def from_equacions(cls,eqs,number,prime=0):
         """
         Retorna un sistema d'equacions amb equacions "eqs"
         Paràmetre:
           eqs: llista de EquacioLineal
+          number: nombre d'incògnites
+          prime: nombre de primes que escriurem a les equacions
         """
-        if len(eqs) <= 4:
+        if number <= 4:
             x, y, z, t = symbols('x y z t')
             unknowns = [x,y,z,t]
         else:
@@ -1405,13 +1469,13 @@ class SistemaEquacions:
         for e in eqs:
             d = e.as_coefficients_dict()
             c = []
-            for i in unknowns:
-                c.append(d[i])
+            for k in unknowns:
+                c.append(d[k])
             t.append(-d[1])
             vecs.append(Vector(c))
         a = Matriu.from_vectors_fila(vecs)
         b = Vector(t)
-        return cls(a,b)
+        return cls(a,b,prime)
     #
     #
     #
@@ -1429,6 +1493,17 @@ class SistemaEquacions:
     #
     #
     #
+    def matriu_incognites(self):
+        return f"{self.A}"
+    #
+    #
+    #
+    def matriu_ampliada(self):
+        c = self.A.inserta_columna(self.A.columnes,self.B)
+        return matriu_latex(c.matriu,ampliada=True)
+    #
+    #
+    #
     def resol(self):
         """
         Resol el sistema d'equacions utilitzant la funció linsolve del sympy.
@@ -1442,8 +1517,10 @@ class SistemaEquacions:
     #
     def solucio_latex(self):
         """
-        Retorna l'expressió en latexs de la solució del sistema d'equacions
+        Retorna l'expressió en latex de la solució del sistema d'equacions
         """
+        if self.solucio is None:
+            self.resol()
         if len(self.solucio) == 0:
             return ""
         eqs = []
@@ -1507,13 +1584,17 @@ class EquacioParametrica:
         d = eq.as_coefficients_dict()
         self.b = 0
         self.coefs = {}
+        self.params = []
         for k in d.keys():
             if k == 1:
                 self.b = d[k]
             elif k in unknowns:
                 self.unknown = k
             else:
+                if k not in self.params:
+                    self.params.append(k)
                 self.coefs[k] = d[k]
+        self.params.sort(key=latex)
     #
     #
     #
@@ -1527,7 +1608,7 @@ class EquacioParametrica:
                - y + 3*t1 - 2*t2 + t3 + 5
 
            e = EquacioParametrica(Vector([3,-2,1,3,7],-5,3,7) genera l'equació
-               - x6 + 3*t1 - 2*t2 + t3 + 3*t4 + 7*t5 - 5
+               - x3 + 3*t1 - 2*t2 + t3 + 3*t4 + 7*t5 - 5
         """
         if not isinstance(a,Vector):
             return None
@@ -1541,9 +1622,8 @@ class EquacioParametrica:
             unknowns = [x1,x2,x3,x4,x5,x6,x7,x8]
         t1, t2, t3, t4, t5, t6, t7, t8 = symbols('t1 t2 t3 t4 t5 t6 t7 t8')
         parameters = [t1,t2,t3,t4,t5,t6,t7,t8]
-        eq = - unknowns[p]
+        eq = - unknowns[p - 1]
         cls.unknown = unknowns[p]
-        cls.params = parameters[0:a.dimensio]
         for k in range(a.dimensio):
             eq += a[k] * parameters[k]
         eq += b
@@ -1559,9 +1639,9 @@ class EquacioParametrica:
         x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
         x, y, z, t = symbols('x y z t')
         if self.amp:
-            s = f"{self.unknown} &= "
+            s = f"{latex(self.unknown)} &= "
         else:
-            s = f"{self.unknown} = "
+            s = f"{latex(self.unknown)} = "
         d = []
         if isinstance(self.b,Rational):
             d.append(self.b.q)
@@ -1584,18 +1664,18 @@ class EquacioParametrica:
             except:
                 continue
             if first is None and self.coefs[k] != 0:
-                first = self.coefs[k]
+                first = k
             e += factor * self.coefs[k] * k
         f = ""
         if first is not None and self.b != 0:
-            if first > 0:
+            if self.coefs[first] > 0:
                 f = f"{factor*self.b} + "
             else:
                 f = f"{factor*self.b} "
         s = s.replace('NUMERADOR',f + latex(e))
         return s
 
-class EquacionsParametriques:
+class EquacionsParametriques(object):
     """
     Classe per treballar amb sistemes d'equacions paramètriques
     Atributs:
@@ -1607,7 +1687,7 @@ class EquacionsParametriques:
     #
     #
     #
-    def __init__(self,a,b,amp=True):
+    def __new__(cls,a,b,amp=True):
         """
         Contructor.
         Genera les equacions X = b + a.T on X són les inognites i T els paràmetres
@@ -1624,6 +1704,11 @@ class EquacionsParametriques:
             return None
         if a.files != b.dimensio:
             return None
+        return super(EquacionsParametriques,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,a,b,amp=True):
         self.A = a
         self.B = b
         eq = []
@@ -1645,7 +1730,7 @@ class EquacionsParametriques:
     #
     #
     #
-    def eliminar_parametres(self):
+    def eliminar_parametres(self,prime=0):
         """
         Retorna el SistemaEquacions que s'obté en eliminar els paràmetres dels
         sistema
@@ -1655,16 +1740,16 @@ class EquacionsParametriques:
         v = Vector([e.unknown for e in self.equacions])
         t = Matrix(self.nombre,1,(v - self.B).components)
         t = (L**(-1) * t)[r:]
-        return SistemaEquacions.from_equacions(t)
+        return SistemaEquacions.from_equacions(t,self.A.files,prime)
 
-class PlaVectorial:
+class PlaVectorial(object):
     """
     Classe per treballar amb plans vectorials
     """
     #
     #
     #
-    def __init__(self,u1,u2):
+    def __new__(cls,u1,u2):
         """
         Constructor.
         Paràmetres:
@@ -1679,6 +1764,11 @@ class PlaVectorial:
         m = Matriu.from_vectors_columna([u1,u2])
         if m.rank() != 2:
             return None
+        return super(PlaVectorial,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,u1,u2):
         self.u1 = u1
         self.u2 = u2
     #
@@ -1713,7 +1803,7 @@ class PlaVectorial:
     @classmethod
     def from_matriu(cls,m):
         """
-        Genera el pla vectorial generat per les columnes de la matriu "m"
+        Crea el pla vectorial generat per les columnes de la matriu "m"
         """
         if not isinstance(m,Matriu):
             return None
@@ -1729,6 +1819,10 @@ class PlaVectorial:
         """
         Genera el pla vectorial que té vector perpendicular "w"
         """
+        if not isinstance(w,Vector):
+            return None
+        if w.dimensio != 3:
+            return None
         a = Matriu.from_vectors_fila([w])
         l = a.nucli()
         return cls(l[0],l[1])
@@ -1745,7 +1839,7 @@ class PlaVectorial:
         v2.simplificar()
         return Base([v1,v2])
 
-class RectaVectorial:
+class RectaVectorial(object):
     """
     Classe per treballar amb rectes vectorials, dimensió 2 o 3
     Atributs:
@@ -1754,7 +1848,7 @@ class RectaVectorial:
     #
     #
     #
-    def __init__(self,u):
+    def __new__(cls,u):
         """
         Constructor.
         Paràmetres:
@@ -1764,6 +1858,11 @@ class RectaVectorial:
             return None
         if u.dimensio not in [2,3]:
             return None
+        return super(RectaVectorial,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,u):
         self.u = u
     #
     #
@@ -1818,14 +1917,18 @@ class RectaVectorial:
                 eq.append(f"\\frac{{{latex(incg[i]) + p}}}{{{v[i]}}}")
         return " = ".join(eq)
 
-class ReferenciaAfi:
+class ReferenciaAfi(object):
     """
-    Classe per treballar amb referències afins
+    Classe per treballar amb referències afins de P^n
+    Atributs:
+      origen = origen de la referència
+      base = base de la referència
+      dimensio: n
     """
     #
     #
     #
-    def __init__(self,origen,base):
+    def __new__(cls,origen,base):
         """
         Constructor.
         Paràmetres:
@@ -1838,15 +1941,39 @@ class ReferenciaAfi:
             return None
         if origen.dimensio != base.dimensio:
             return None
+        return super(ReferenciaAfi,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__ (self,origen,base):
         self.origen = origen
         self.base = base
+        sel.dimensio = origen.dimensio
     #
     #
     #
     def __repr__(self):
         return f"\\left\\{{{self.origen};{self.base}\\right\\}}"
+    #
+    #
+    #
+    def punt_de_coordenades(self,punt):
+        """
+        Retorna un nou punt expressat en la referència canònica del
+        punt que en aquesta referencia té coordenades "punt"
+        """
+        if not isinstance(punt,Punt):
+            return None
+        if vec.dimensio != self.dimensio:
+            return None
+        if not self.base.unitaria:
+            c = self.base.matriu()
+        else:
+            unitaris = [(1 / v.length()) * v for v in self.base.vecs]
+            c = Matriu.from_vectors_columna(unitaris)
+        return self.origen + c * punt
 
-class PlaAfi:
+class PlaAfi(object):
     """
     Classe per treballar amb plans afins.
     Atributs:
@@ -1856,7 +1983,7 @@ class PlaAfi:
     #
     #
     #
-    def __init__(self,u1,u2,p):
+    def __new__(cls,u1,u2,p):
         """
         Constructor.
         Paràmetres:
@@ -1874,6 +2001,11 @@ class PlaAfi:
         m = Matriu.from_vectors_columna([u1,u2])
         if m.rank() != 2:
             return None
+        return super(RectaAfi,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,u1,u2,p):
         self.u1 = u1
         self.u2 = u2
         self.p = p
@@ -1922,7 +2054,7 @@ class PlaAfi:
         v2.simplificar()
         return [v1,v2]
 
-class RectaAfi:
+class RectaAfi(object):
     """
     Classe per treballar amb rectes afins, dimensió 2 o 3
     Atributs:
@@ -1932,7 +2064,7 @@ class RectaAfi:
     #
     #
     #
-    def __init__(self,u,p):
+    def __new__(cls,u,p):
         if not isinstance(u,Vector):
             return None
         if not isinstance(p,Punt):
@@ -1941,6 +2073,11 @@ class RectaAfi:
             return None
         if p.dimensio not in [2,3]:
             return None
+        return super(RectaAfi,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,u,p):
         self.u = u
         self.p = p
     #
@@ -2006,15 +2143,33 @@ class RectaAfi:
             b = m * b
         return SistemaEquacions(a,b,prime=prime)
 
-class SubespaiVectorial:
+class SubespaiVectorial(object):
+    """
+    Classe per treballar amb subespais vectorials
+    Atributs:
+       generadors: generadors del subespai
+       base: base del subespai
+       dimensio: dimensio del subespai
+       espai: n si és un suespai de R^n
+    """
+    #
+    #
+    #
+    def __new__(cls,vecs):
+        """
+        Constructor.
+        Paràmetres:
+           vecs: llista de vectors
+        """
+        a = Matriu.from_vectors_columna(vecs)
+        if a is None:
+            return None
+        return super(SubespaiVectorial,cls).__new__(cls)
     #
     #
     #
     def __init__(self,vecs):
         self.generadors = [v.simplificar() for v in vecs]
-        a = Matriu.from_vectors_columna(vecs)
-        if a is None:
-            return None
         L, U, _ = a.matriu.LUdecomposition()
         files = Matriu(U).vectors_fila()
         self.base = []
@@ -2023,26 +2178,40 @@ class SubespaiVectorial:
             if k is not None:
                 self.base.append(vecs[k])
         self.dimensio = len(self.base)
+        self.espai = self.base[0].dimensio
     #
     #
     #
-    def equacions_implicites(self):
+    def equacions_implicites(self,basern=None,prime=0):
+        """
+        Retorna les equacions implícites del subespai
+        """
         if len(self.base) == 0:
             return None
-        a = Matriu.from_vectors_columna(self.base)
-        b = Vector.nul(self.base[0].dimensio)
+        b = Vector.nul(self.espai)
+        if basern is not None:
+            a = Matriu.from_vectors_columna(self.base)
+        else:
+            c = [v.components_en_base(basern) for v in self.base]
+            a = Matriu.from_vectors_columna(c)
         p = EquacionsParametriques(a,b)
-        return (p.eliminar_parametres())
+        return (p.eliminar_parametres(prime))
     #
     #
     #
     def suplementari(self):
+        """
+        Retorna el suplementari ortogonal
+        """
         a = Matriu.from_vectors_fila(self.base)
         return SubespaiVectorial(a.nucli())
     #
     #
     #
     def base_ortogonal(self):
+        """
+        Retorna una base ortogonal del subespai
+        """
         if self.dimensio == 0:
             return None
         if len(self.base) == 1:
@@ -2061,33 +2230,58 @@ class SubespaiVectorial:
         return base
 
 class TransformacioLineal:
+    """
+    Classe per treballar amb transformacions lineals T:R^n ----> R^n
+    Atributs:
+       matriu: matriu de la transformacio lineal en la base "base"
+       base: base de R^n. Si és None serà la canònica
+       dimensio: n
+       canonica: matriu de la transformació en la base canònica
+    """
+    #
+    #
+    #
+    def __new__(cls,matriu,base=None):
+        """
+        Constructor.
+        Paràmetres:
+          matriu: matriu de la transformació lineal en la base "base"
+          base: base de R^n. Si és None serà la canònica
+        """
+        if not isinstance(matriu,Matriu):
+            return None
+        if matriu.files != matriu.columnes:
+            return None
+        if base is not None:
+            if not isinstance(base,Base):
+                return None
+            if base.dimensio != matriu.files:
+                return None
+        return super(TransformacioLineal,cls).__new__(cls)
     #
     #
     #
     def __init__(self,matriu,base=None):
-        if matriu.files != matriu.columnes:
-            return None
+        self.matriu = matriu
         self.dimensio = matriu.files
         self.base = base
-        self.matriu = matriu
         if self.base is None:
             self.canonica = Matriu(self.matriu.matriu)
         else:
-            if not isinstance(base,Base):
-                return None
-            c = base.matriu()
-            if c is None:
-                return None
-            if c.files != self.dimensio:
-                return None
-            if c.coulumnes != self.dimensio:
-                return None
+            c = self.base.matriu()
             m = c.matriu * self.matriu.matriu * c.matriu**(-1)
             self.canonica = m
     #
     #
     #
-    def latex(self,base=None):
+    def latex(self,base=None,prime=0):
+        """
+        Retorna l'expressió en latex de la transformació lineal en la base "base"
+        Si base és None, serà en la base canònica
+        Paràmetres:
+          base: base de R^n
+          prime: nombre de primes que s'han d'escriure
+        """
         if self.dimensio <= 3:
             x, y, z = symbols('x y z')
             u, v, w = symbols('u v w')
@@ -2100,16 +2294,17 @@ class TransformacioLineal:
             d = [u1, u2, u3, u4, u5, u6, u7, u8]
         o = o[0:self.dimensio]
         d = d[0:self.dimensio]
+        p = prime * "'"
         if base is None:
-             o = " \\\\ ".join([latex(x) for x in o])
-             d = " \\\\ ".join([latex(x) for x in d])
+             o = " \\\\ ".join([latex(x)+p for x in o])
+             d = " \\\\ ".join([latex(x)+p for x in d])
              m = self.canonica
         else:
             if not isinstance(base,Base):
                 return None
             c = base.matriu()
-            o = " \\\\ ".join([latex(x) + "'" for x in o])
-            d = " \\\\ ".join([latex(x) + "'" for x in d])
+            o = " \\\\ ".join([latex(x) + p for x in o])
+            d = " \\\\ ".join([latex(x) + p for x in d])
             m = c.matriu**(-1) * self.canonica.matriu * c.matriu
             m = Matriu(m)
         s = "\\begin{pmatrix}{c} " + d + "\\end{pmatrix} = \n"
@@ -2120,11 +2315,19 @@ class TransformacioLineal:
     #
     #
     def __repr__(self):
+        """
+        Retorna el latex de l'expressió en la base canònica de la transformació lineal
+        """
         return self.latex()
     #
     #
     #
     def transforma(self,vec,base=None):
+        """
+        Calcula el transformat del vector "vec". vec seran les components d'aquest
+        vector en la base "base" i el transformat també estarà expressat en la base
+        "base"
+        """
         if not isinstance(vec,Vector):
             return None
         if vec.dimensio != self.dimensio:
@@ -2140,25 +2343,65 @@ class TransformacioLineal:
             return m * vec
 
 class TransformacioAfi:
+    """
+    Classe per treballar amb transformacions afins T:P^n ----> P^n, on
+    T(p) = T + A(p)
+    Atributs:
+       referencia: referència en la que està expressada la transformacio afí.
+                   Si és None serà la canònica
+       tl: Tranformació lineal corresponent a la transforma afí
+       translacio: vector que representa la translació T en la referència "ref"
+       translacioc: translació de la transformació afí en la referència canònica
+       dimensio: n
+    """
     #
     #
     #
-    def __init__(self,terme,matriu):
-        if not isinstance(terme,Vector):
+    def __new__(cls,t,m,ref=None):
+        """
+        Contructor:
+        Paràmetres:
+           t: Vector que representa la translació en la referencia "ref"
+           m: Matriu del la transformació lineal en la base "ref.base"
+           ref: ReferenciaAfi
+        """
+        if not isinstance(t,Vector):
             return None
-        self.terme = terme
-        if not isinstance(matriu,Matriu):
+        if not isinstance(m,Matriu):
             return None
-        if matriu.files != matriu.columnes:
+        if m.files != m.columnes:
             return None
-        if terme.dimensio != matriu.columnes:
+        if t.dimensio != m.files:
             return None
-        self.matriu = matriu
-        self.dimensio = terme.dimensio
+        if ref is not None:
+            if not isinstance(ref,ReferenciaAfi):
+                return None
+            if ref.dimensio != t.dimensio:
+                return None
+        return super(TransformacioAfi,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,t,m,ref=None):
+        if ref is not None:
+            self.tl = TransformacioLineal(m,ref.base)
+        else:
+            self.tl = TransformacioLineal(m)
+        self.dimensio = t.dimensio
+        self.t = t
+        self.referencia = ref
+        if ref is None:
+            self.tc = Vector(t.components)
+        else:
+            self.tc = ref.origen + ref.base.vector_de_components(t - ref.origen)
     #
     #
     #
     def __repr__(self):
+        """
+        Restorna en format latex l'expressió de la transformació afí en la
+        referència canònica
+        """
         if self.dimensio <= 3:
             x, y, z = symbols('x y z')
             u, v, w = symbols('u v w')
@@ -2169,22 +2412,28 @@ class TransformacioAfi:
             u1, u2, u3, u4, u5, u6, u7, u8 = symbols('u1 u2 u3 u4 u5 u6 u7 u8')
             o = [x1, x2, x3, x4, x5, x6, x7, x8]
             d = [u1, u2, u3, u4, u5, u6, u7, u8]
-        o = o[0:self.terme.dimensio]
-        d = d[0:self.terme.dimensio]
+        o = o[0:self.tc.dimensio]
+        d = d[0:self.tc.dimensio]
         o = " \\\\ ".join([latex(x) for x in o])
         d = " \\\\ ".join([latex(x) for x in d])
-        m = Matriu.matriu_columna(self.terme)
+        m = Matriu.matriu_columna(self.tc)
         s = "\\begin{pmatrix}{c} " + d + "\\end{pmatrix} = \n"
         s += f"{m} + \n"
-        s += f"{self.matriu}\n"
+        s += f"{self.tl.canonica}\n"
         s += "\\begin{pmatrix}{c} " + o + "\\end{pmatrix}"
         return s
     #
     #
     #
-    def transforma(self,p):
-        if not isinstance(p,Vector):
+    def transforma(self,p,ref=None):
+        """
+        Calcula el transformat del punt "p". vec seran les components d'aquest
+        vector en la referència "ref" i el transformat també estarà expressat
+        en aquesta referència
+        """
+        if not isinstance(p,Punt):
             return None
         if self.dimensio != p.dimensio:
             return None
-        return self.terme + self.matriu * p
+        if ref is None:
+            return self.tc + self.tl.transforma(p)
