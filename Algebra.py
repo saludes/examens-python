@@ -8,7 +8,7 @@ Disclaimer: This code is presented "as is" and it has been written to
             generate random models of exams for the subject of Linear
             at ESEIAAT
 License:    This program is free software: you can redistribute it and/or modify
-            it under the terms of the GNU General Public License as published by
+            it under the terms of the GNU General Public License as def Base by
             the Free Software Foundation, either version 3 of the License, or
             (at your option) any later version.
 
@@ -312,30 +312,40 @@ class Vector(object):
         """
         Retorna l'expressió en latex del vector
         """
-        d = []
+        l = []
+        s = []
+        square = False
         other = False
         for k in self.components:
             if isinstance(k,Rational):
-                d.append(k.q)
-            elif (isinstance(k,int) or isinstance(k,Integer)):
-                pass
+                l.append(k.q)
+                s.append(False)
+            elif isinstance(k,int) or isinstance(k,Integer):
+                l.append(1)
+                s.append(False)
+            elif isinstance(k**2,Rational):
+                square = True
+                k2 = k**2
+                l.append(k2.q)
+                s.append(True)
             else:
                 other = True
         if other:
             s = ",".join([latex(k) for k in self.components])
             return f"\\left({s}\\right)"
-        mcm = mcm_llista(d)
-        v = [mcm * k for k in self.components]
-        f = Rational(1,mcm)
-        if f == 1:
-            s = ",".join([latex(k) for k in v])
-            return f"({s})"
-        elif f == -1:
-            s = ",".join([latex(-k) for k in v])
-            return f"({s})"
-        else:
-            s = ",".join([latex(k) for k in v])
-            return f"\\deufrac{{{f.p}}}{{{f.q}}}({s})"
+        if square:
+            for k in range(len(l)):
+                if not s[k]:
+                    l[k] = l[k]**2
+        m = mcm_llista(l)
+        if square:
+            m = sqrt(m)
+        l = [m*k for k in self.components]
+        s = ""
+        if m != 1:
+            s = f"\\deufrac{{1}}{{{latex(m)}}}"
+        r = ",".join([latex(k) for k in l])
+        return f"{s}({r})"
     #
     #
     #
@@ -589,9 +599,12 @@ class Punt(Vector):
         """
         Retorna les coordenades del punt en la referència "ref"
         """
+        if not isinstance(ref,ReferenciaAfi):
+            return None
+        if self.dimensio != ref.dimensio:
+            return None
         op = self - ref.origen
-        return op.components_en_base(ref.base)
-
+        return Punt(op.components_en_base(ref.base).components)
 
 class Base(object):
     """
@@ -908,27 +921,39 @@ class Matriu:
         """
         Retorna l'expressió en latex de la matriu
         """
-        m = 1
         l = []
+        s = []
+        square = False
         for i in range(self.files):
             for j in range(self.columnes):
-                if isinstance(self.matriu[i,j],Rational):
-                    l.append(self.matriu[i,j].q)
-                elif isinstance(self.matriu[i,j],int):
-                    pass
+                k = self.matriu[i,j]
+                if isinstance(k,Rational):
+                    l.append(k.q)
+                    s.append(False)
+                elif isinstance(k,int) or isinstance(k,Integer):
+                    l.append(1)
+                    s.append(False)
+                elif isinstance(k**2,Rational):
+                    square = True
+                    k2 = k**2
+                    l.append(k2.q)
+                    s.append(True)
                 else:
                     return matriu_latex(self.matriu)
+        if square:
+            for k in range(len(l)):
+                if not s[k]:
+                    l[k] = l[k]**2
         m = mcm_llista(l)
+        if square:
+            m = sqrt(m)
         l = []
         for i in range(self.files):
             for j in range(self.columnes):
                 l.append(m * self.matriu[i,j])
-        mcd = mcd_llista(l)
-        f = Rational(mcd,m)
-        p, q = f.p, f.q
         s = ""
-        if q > 1:
-            s = f"\\deufrac{{1}}{{{q}}}"
+        if m != 1:
+            s = f"\\deufrac{{1}}{{{latex(m)}}}"
         m = Matrix(self.files,self.columnes,l)
         return s + matriu_latex(m)
     #
@@ -1935,7 +1960,7 @@ class ReferenciaAfi(object):
           origen: origen de la referència
           base: base de la referència u2: generadors del pla
         """
-        if not isinstance(origen,Vector):
+        if not isinstance(origen,Punt):
             return None
         if not isinstance(base,Base):
             return None
@@ -1948,12 +1973,12 @@ class ReferenciaAfi(object):
     def __init__ (self,origen,base):
         self.origen = origen
         self.base = base
-        sel.dimensio = origen.dimensio
+        self.dimensio = origen.dimensio
     #
     #
     #
     def __repr__(self):
-        return f"\\left\\{{{self.origen};{self.base}\\right\\}}"
+        return f"\\left\\{{{self.origen};{self.base.vectors_latex()}\\right\\}}"
     #
     #
     #
@@ -1964,7 +1989,7 @@ class ReferenciaAfi(object):
         """
         if not isinstance(punt,Punt):
             return None
-        if vec.dimensio != self.dimensio:
+        if punt.dimensio != self.dimensio:
             return None
         if not self.base.unitaria:
             c = self.base.matriu()
@@ -1972,6 +1997,45 @@ class ReferenciaAfi(object):
             unitaris = [(1 / v.length()) * v for v in self.base.vecs]
             c = Matriu.from_vectors_columna(unitaris)
         return self.origen + c * punt
+    #
+    #
+    #
+    def canvi_coordenades(self,prime1=0,prime2=1):
+        """
+        Restorna en format latex l'expressió del canvi de coordenades de la referència
+        a la canònica
+        prime:
+        """
+        if self.dimensio <= 3:
+            x, y, z = symbols('x y z')
+            coords = [x,y,z]
+        else:
+            x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
+            coords = [x1, x2, x3, x4, x5, x6, x7, x8]
+        coords = coords[0:self.dimensio]
+        p1 = ""
+        p2 = ""
+        if prime1 > 0:
+            p1 = prime1 * "'"
+        if prime2 > 0:
+            p2 = prime2 * "'"
+        o = " \\\\ ".join([latex(k) + p1 for k in coords])
+        d = " \\\\ ".join([latex(k) + p2 for k in coords])
+        m = Matriu.matriu_columna(self.origen)
+        s = "\\begin{pmatrix}{c} " + o + "\\end{pmatrix} = \n"
+        s += f"{m} + \n"
+        s += f"{self.base.matriu()}\n"
+        s += "\\begin{pmatrix}{c} " + d + "\\end{pmatrix}"
+        return s
+    #
+    #
+    #
+    def referencia_inversa(self):
+        p = Punt.nul(self.dimensio)
+        q = p.coordenades_en_referencia(self)
+        m = self.base.matriu().inversa()
+        b = Base.from_matriu(m)
+        return ReferenciaAfi(q,b)
 
 class PlaAfi(object):
     """

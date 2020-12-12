@@ -171,7 +171,30 @@ print(r.equacio_continua())
 r = RectaVectorial(Vector([3,2,-2]))
 print(r.equacions_implicites(aleatori=True))
 print(r.equacio_continua())
+print()
 
 #
 # Tests amb la classe ReferenciaAfi
+#
+p = Punt([1,2,-1])
+b = Base([Vector([1,1,0]),Vector([-1,1,1]),Vector([1,-1,2])])
+r = ReferenciaAfi(p,b)
+print(r)
+q = r.punt_de_coordenades(Punt([1,5,2]))
+print(q)
+print(p.coordenades_en_referencia(r))
+b = Base([Vector([1,1,0]),Vector([-1,1,1]),Vector([1,-1,2])],unitaria=True)
+r = ReferenciaAfi(p,b)
+print(r.canvi_coordenades())
+p = Punt([3,-2])
+b = Base([Vector([1,2]),Vector([-2,1])],unitaria=True)
+r = ReferenciaAfi(p,b)
+print(r.canvi_coordenades())
+r2 = r.referencia_inversa()
+print(r2)
+print(r2.canvi_coordenades(1,0))
+print()
+
+#
+# Tests amb la classe PlaAfi
 #
