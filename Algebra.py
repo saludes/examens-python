@@ -2,7 +2,7 @@
 # -*- coding: utf-8
 """
 Filename:   Algebra.py
-Author:     Rafel Amer (rafel.amer AT upc.edu)
+Author:     Rafel Amer (rafel.amer AT upc.edu
 Copyright:  Rafel Amer 2020
 Disclaimer: This code is presented "as is" and it has been written to
             generate random models of exams for the subject of Linear
@@ -213,6 +213,9 @@ def primer_no_nul(list):
         if list[i] != 0:
             return i
     return None
+
+def vectors_latex(l):
+    return ",".join([str(k) for k in l])
 
 class Vector(object):
     """
@@ -1581,6 +1584,7 @@ class SistemaEquacions:
         else:
             x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
             unknowns = [x1,x2,x3,x4,x5,x6,x7,x8]
+        unknowns = unknowns[0:number]
         t = []
         vecs = []
         for e in eqs:
@@ -1635,6 +1639,7 @@ class SistemaEquacions:
         incògnites del sistema com a paràmetres
         """
         system = (self.A.matriu,Matrix(self.B.dimensio,1,self.B.components))
+        s = linsolve(system,*self.unknowns)
         self.solucio = list(linsolve(system,*self.unknowns))[0]
     #
     #
@@ -2394,6 +2399,12 @@ class SubespaiVectorial(object):
     #
     #
     #
+    @classmethod
+    def from_equacions_implicites(cls,eqs):
+        return cls(eqs.A.nucli())
+    #
+    #
+    #
     def es_zero(self):
         """
         Retorna True si és el subespai {0}
@@ -2643,6 +2654,9 @@ class TransformacioLineal(object):
         eix.normalitzar()
         q = Quaternion.from_axis_angle(eix.components,angle)
         m = Matriu(q.to_rotation_matrix())
+        for i in range(m.files):
+            for j in range(m.columnes):
+                m[(i,j)] = simplify(m[(i,j)].expand())
         return cls(m)
     #
     #
@@ -2770,14 +2784,17 @@ class TransformacioLineal(object):
         if vec.dimensio != self.dimensio:
             return None
         if base is None:
-            return self.canonica * vec
+            t = self.canonica * vec
         else:
             if not isinstance(base,Base):
                 return None
             c = base.matriu()
             m = c.matriu**(-1) * self.canonica.matriu * c.matriu
             m = Matriu(m)
-            return m * vec
+            t = m * vec
+        for k in range(t.dimensio):
+            t[k] = simplify(t[k].expand())
+        return t
 
 class TransformacioAfi:
     """
@@ -2880,7 +2897,7 @@ class TransformacioAfi:
         o = " \\\\ ".join([latex(x)+p for x in o])
         d = " \\\\ ".join([latex(x)+p for x in d])
         z = Punt.nul(self.dimensio)
-        tz = self.transforma(z,ref)
+        tz = Matriu.matriu_columna(self.transforma(z,ref))
         if ref is None:
             m = self.transformacio.canonica
         else:
