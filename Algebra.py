@@ -1,14 +1,14 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8
 """
 Filename:   Algebra.py
 Author:     Rafel Amer (rafel.amer AT upc.edu)
 Copyright:  Rafel Amer 2020
 Disclaimer: This code is presented "as is" and it has been written to
             generate random models of exams for the subject of Linear
-            at ESEIAAT
+            Algebra at ESEIAAT, Technic University of Catalonia
 License:    This program is free software: you can redistribute it and/or modify
-            it under the terms of the GNU General Public License as def Base by
+            it under the terms of the GNU General Public License as published by
             the Free Software Foundation, either version 3 of the License, or
             (at your option) any later version.
 
@@ -303,7 +303,7 @@ class Vector(object):
         f = Rational(mcd,mcm)
         if f < 0:
             f *= -1
-            v = [-k for k in self.components]
+            v = [-k for k in v]
         return (f,Vector(v))
     #
     #
@@ -389,6 +389,12 @@ class Vector(object):
     #
     #
     #
+    def __neg__(self):
+        p = [-k for k in self.components]
+        return Vector(p)
+    #
+    #
+    #
     def __mul__(self,other):
         """
         Defineix el producte d'un escalar per un vector i el
@@ -442,6 +448,16 @@ class Vector(object):
     #
     #
     #
+    def __eq__(self,other):
+        if self.dimensio != other.dimensio:
+            return False
+        for k in range(self.dimensio):
+            if self[k] != other[k]:
+                return False
+        return True
+    #
+    #
+    #
     def dot(self,other):
         """
         Retorna el producte escalar de dos vectors: Per exemple:
@@ -471,6 +487,12 @@ class Vector(object):
     #
     #
     #
+    def normalitzar(self):
+        l = self.length()
+        self.components = [k / l for k in self.components]
+    #
+    #
+    #
     def simplificar(self):
         """
         Simplifica el vector, és a dir, converteix les seves components en una
@@ -478,6 +500,8 @@ class Vector(object):
         Només té sentit si totes les components del vector són nombres enters
         o racionals
         """
+        if self.length() == 0:
+            return
         d = []
         for i in range(self.dimensio):
             if isinstance(self.components[i],Rational):
@@ -491,10 +515,10 @@ class Vector(object):
         mcm = mcm_llista(d)
         v = [mcm * x for x in self.components]
         mcd = mcd_llista(v)
-        v = [x // mcd for x in v]
+        v = [k // mcd for k in v]
         if v[0] < 0:
-            v = [-x for x in v]
-        self.components = v
+            v = [-k for k in v]
+        self.components = list(v)
     #
     #
     #
@@ -835,6 +859,32 @@ class Matriu:
     #
     #
     #
+    def __getitem__(self,tup):
+        """
+        Permet indexar els elements d'una matriu. Per exemple:
+        m = Matriu.aleatoria()
+        k = m[2,1]
+        """
+        i, j = tup
+        try:
+            return self.matriu[i,j]
+        except:
+            return None
+    #
+    #
+    #
+    def __setitem__(self,tup,value):
+        """
+        Permet assignar valors mitjançant índexs. Per exemple:
+        m = Matriu.aleatoria()
+        m[2,1] = 5
+        """
+        i, j = tup
+        self.matriu[i,j] = value
+
+    #
+    #
+    #
     def __add__(self,other):
         """
         Defineix la suma de matrius. Per exemple:
@@ -868,6 +918,11 @@ class Matriu:
             return None
         m = self.matriu - other.matriu
         return Matriu(m)
+    #
+    #
+    #
+    def __neg__(self):
+        return Matriu(-self.matriu)
     #
     #
     #
@@ -956,6 +1011,19 @@ class Matriu:
             s = f"\\deufrac{{1}}{{{latex(m)}}}"
         m = Matrix(self.files,self.columnes,l)
         return s + matriu_latex(m)
+    #
+    #
+    #
+    def __eq__(self,other):
+        if self.files != other.files:
+            return False
+        if self.columnes != other.columnes:
+            return False
+        for i in range(self.files):
+            for j in range(self.columnes):
+                if self.matriu[i,j] != other.matriu[i,j]:
+                    return False
+        return True
     #
     #
     #
@@ -1213,6 +1281,30 @@ class Matriu:
         for v in vecs:
             v.simplificar()
         return vecs
+    #
+    #
+    #
+    def es_simetrica(self):
+        """
+        Retorna True si és simètrica
+        """
+        return self == self.transposada()
+    #
+    #
+    #
+    def intercanvia_columnes(self,i,j):
+        """
+        Intercanvia les columnes i i j
+        """
+        if i >= self.columnes or j >= self.columnes:
+            return None
+        if i == j:
+            return Matriu(self.matriu)
+        c = self.vectors_columna()
+        k = c[i]
+        c[i] = c[j]
+        c[j] = k
+        return Matriu.from_vectors_columna(c)
     #
     #
     #
@@ -1509,11 +1601,18 @@ class SistemaEquacions:
         Retorna l'expressió en latex del sistema d'equacions
         """
         eqs = list(map(str,self.equacions))
+        p = ""
+        if self.prime > 0:
+            p = self.prime * "'"
         if len(eqs) == 0:
             return ""
         if len(eqs) == 1:
+            for k in self.unknowns:
+                eqs[0] = eqs[0].replace(latex(k),latex(k) + p)
             return eqs[0].replace('&','')
         eqs = " \\\\ ".join(eqs)
+        for k in self.unknowns:
+            eqs = eqs.replace(latex(k),latex(k) + p)
         return f"\\left.\\aligned {eqs} \\endaligned\\;\\right\\}}"
     #
     #
@@ -1647,7 +1746,7 @@ class EquacioParametrica:
             unknowns = [x1,x2,x3,x4,x5,x6,x7,x8]
         t1, t2, t3, t4, t5, t6, t7, t8 = symbols('t1 t2 t3 t4 t5 t6 t7 t8')
         parameters = [t1,t2,t3,t4,t5,t6,t7,t8]
-        eq = - unknowns[p - 1]
+        eq = - unknowns[p]
         cls.unknown = unknowns[p]
         for k in range(a.dimensio):
             eq += a[k] * parameters[k]
@@ -1996,7 +2095,8 @@ class ReferenciaAfi(object):
         else:
             unitaris = [(1 / v.length()) * v for v in self.base.vecs]
             c = Matriu.from_vectors_columna(unitaris)
-        return self.origen + c * punt
+        p = self.origen + c * punt
+        return Punt(p.components)
     #
     #
     #
@@ -2047,7 +2147,7 @@ class PlaAfi(object):
     #
     #
     #
-    def __new__(cls,u1,u2,p):
+    def __new__(cls,p,u1,u2,ref=None):
         """
         Constructor.
         Paràmetres:
@@ -2062,17 +2162,29 @@ class PlaAfi(object):
             return None
         if u1.dimensio != 3 or u2.dimensio != 3:
             return None
+        if p.dimensio != 3:
+            return None
+        if ref is not None:
+            if not isinstance(ref,ReferenciaAfi):
+                return None
+            if ref.dimensio != 3:
+                return None
         m = Matriu.from_vectors_columna([u1,u2])
         if m.rank() != 2:
             return None
-        return super(RectaAfi,cls).__new__(cls)
+        return super(PlaAfi,cls).__new__(cls)
     #
     #
     #
-    def __init__(self,u1,u2,p):
-        self.u1 = u1
-        self.u2 = u2
-        self.p = p
+    def __init__(self,p,u1,u2,ref=None):
+        if ref is None:
+            self.u1 = u1
+            self.u2 = u2
+            self.p = p
+        else:
+            self.u1 = ref.base.vector_de_components(u1)
+            self.u2 = ref.base.vector_de_components(u2)
+            self.p = ref.punt_de_coordenades(p)
     #
     #
     #
@@ -2088,6 +2200,11 @@ class PlaAfi(object):
         a = Matriu.from_vectors_fila([w])
         l = a.nucli()
         return cls(l[0],l[1],p)
+    #
+    #
+    #
+    def __repr__(self):
+        return f"(x,y,z)={self.p}+t_1{self.u1}+t_2{self.u2}"
     #
     #
     #
@@ -2128,7 +2245,7 @@ class RectaAfi(object):
     #
     #
     #
-    def __new__(cls,u,p):
+    def __new__(cls,p,u,ref=None):
         if not isinstance(u,Vector):
             return None
         if not isinstance(p,Punt):
@@ -2137,13 +2254,30 @@ class RectaAfi(object):
             return None
         if p.dimensio not in [2,3]:
             return None
+        if ref is not None:
+            if not isinstance(ref,ReferenciaAfi):
+                return None
+            if ref.dimensio != p.dimensio:
+                return None
         return super(RectaAfi,cls).__new__(cls)
     #
     #
     #
-    def __init__(self,u,p):
-        self.u = u
-        self.p = p
+    def __init__(self,p,u,ref=None):
+        if ref is None:
+            self.u = u
+            self.p = p
+        else:
+            self.u = ref.base.vector_de_components(u)
+            self.p = ref.punt_de_coordenades(p)
+    #
+    #
+    #
+    def __repr__(self):
+        if self.u.dimensio == 2:
+            return f"(x,y)={self.p}+t{self.u}"
+        else:
+            return f"(x,y,z)={self.p}+t{self.u}"
     #
     #
     #
@@ -2158,7 +2292,7 @@ class RectaAfi(object):
             q = Punt(self.p.components)
         else:
             v = self.u.components_en_base(ref.base)
-            q = sel.p.coordenades_en_referencia(ref)
+            q = self.p.coordenades_en_referencia(ref)
         v.simplificar()
         x, y, z = symbols('x y z')
         incg = [x,y,z]
@@ -2168,12 +2302,12 @@ class RectaAfi(object):
             p = prime * "'"
         for i in range(v.dimensio):
             if v[i] == 1:
-                eq.append(latex(incg[i]) + p)
+                eq.append(latex(incg[i] - q[i]))
             else:
                 eq.append(f"\\frac{{{latex(incg[i] - q[i])}}}{{{v[i]}}}")
         eq = " = ".join(eq)
-        for k in inc:
-            eq = replace(latex(k),latex(k) + p)
+        for i in incg:
+            eq = eq.replace(latex(i),latex(i) + p)
         return eq
     #
     #
@@ -2219,7 +2353,7 @@ class SubespaiVectorial(object):
     #
     #
     #
-    def __new__(cls,vecs):
+    def __new__(cls,vecs,basern=None):
         """
         Constructor.
         Paràmetres:
@@ -2228,21 +2362,51 @@ class SubespaiVectorial(object):
         a = Matriu.from_vectors_columna(vecs)
         if a is None:
             return None
+        if basern is not None:
+            if not isinstance(basern,Base):
+                return None
+            if basern.dimensio != a.files:
+                return None
         return super(SubespaiVectorial,cls).__new__(cls)
     #
     #
     #
-    def __init__(self,vecs):
-        self.generadors = [v.simplificar() for v in vecs]
+    def __init__(self,vecs,basern=None):
+        if basern is None:
+            for k in vecs:
+                k.simplificar()
+            self.generadors = [k for k in vecs]
+        else:
+            v = [basern.vector_de_components(k) for k in vecs]
+            for k in v:
+                k.simplificar()
+            self.generadors = [k for k in v]
+        a = Matriu.from_vectors_columna(self.generadors)
         L, U, _ = a.matriu.LUdecomposition()
         files = Matriu(U).vectors_fila()
         self.base = []
         for f in files:
             k = primer_no_nul(f.components)
             if k is not None:
-                self.base.append(vecs[k])
+                self.base.append(self.generadors[k])
         self.dimensio = len(self.base)
-        self.espai = self.base[0].dimensio
+        self.espai = self.generadors[0].dimensio
+    #
+    #
+    #
+    def es_zero(self):
+        """
+        Retorna True si és el subespai {0}
+        """
+        return len(self.base) == 0
+    #
+    #
+    #
+    def es_total(self):
+        """
+        Retorna True si és el subespai R^n
+        """
+        return len(self.base) == self.espai
     #
     #
     #
@@ -2250,10 +2414,10 @@ class SubespaiVectorial(object):
         """
         Retorna les equacions implícites del subespai
         """
-        if len(self.base) == 0:
+        if self.es_total():
             return None
         b = Vector.nul(self.espai)
-        if basern is not None:
+        if basern is None:
             a = Matriu.from_vectors_columna(self.base)
         else:
             c = [v.components_en_base(basern) for v in self.base]
@@ -2263,7 +2427,7 @@ class SubespaiVectorial(object):
     #
     #
     #
-    def suplementari(self):
+    def suplementari_ortogonal(self):
         """
         Retorna el suplementari ortogonal
         """
@@ -2293,12 +2457,104 @@ class SubespaiVectorial(object):
             base.append(v)
         return base
 
-class TransformacioLineal:
+class VarietatLineal(object):
+    """
+    Classe per treballar amb varietats lineal
+    Atributs:
+       punt: punt de pas
+       subespai: SubespaiVectorial
+    """
+    #
+    #
+    #
+    def __new__(cls,p,s,ref=None):
+        """
+        Constructor.
+        Paràmetres:
+           p: punt de pas
+           s: subespai director
+           ref: referència afí
+        """
+        if not isinstance(p,Punt):
+            return None
+        if not isinstance(s,SubespaiVectorial):
+            return None
+        if p.dimensio != s.espai:
+            return None
+        if ref is not None:
+            if not isinstance(ref,ReferenciaAfi):
+                return None
+            if ref.dimensio != p.dimensio:
+                return None
+        return super(VarietatLineal,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,p,s,ref=None):
+        self.subespai = s
+        if ref is None:
+            self.punt = p
+        else:
+            self.punt = ref.punt_de_coordenades(p)
+    #
+    #
+    #
+    def es_un_punt(self):
+        """
+        Retorna True si la varietat lineal és un punt
+        """
+        return self.subespai.es_zero()
+    #
+    #
+    #
+    def es_total(self):
+        """
+        Retorna True si la varietat lineal és P_n
+        """
+        return self.subespai.es_total()
+    #
+    #
+    #
+    def equacions_implicites(self,ref=None,prime=0):
+        """
+        Retorna les equacions implícites del subespai
+        """
+        if self.es_total():
+            return None
+        if ref is None:
+            q = self.punt
+            base = self.subespai.base
+        else:
+            q = self.punt.coordenades_en_referencia(ref)
+            base = [v.components_en_base(ref.base) for v in self.subespai.base]
+        a = Matriu.from_vectors_columna(base)
+        p = EquacionsParametriques(a,q)
+        return (p.eliminar_parametres(prime))
+    #
+    #
+    #
+    def base_ortogonal(self):
+        """
+        Retorna una base ortogonal del subespai director
+        de la varietat lineal
+        """
+        return self.subespai.base_ortogonal()
+    #
+    #
+    #
+    def varietat_ortogonal(self,p):
+        if not isinstance(p,Punt):
+            return None
+        if p.dimensio != self.subespai.espai:
+            return None
+        s = self.subespai.suplementari_ortogonal()
+        return VarietatLineal(p,s)
+
+
+class TransformacioLineal(object):
     """
     Classe per treballar amb transformacions lineals T:R^n ----> R^n
     Atributs:
-       matriu: matriu de la transformacio lineal en la base "base"
-       base: base de R^n. Si és None serà la canònica
        dimensio: n
        canonica: matriu de la transformació en la base canònica
     """
@@ -2326,15 +2582,107 @@ class TransformacioLineal:
     #
     #
     def __init__(self,matriu,base=None):
-        self.matriu = matriu
         self.dimensio = matriu.files
-        self.base = base
-        if self.base is None:
-            self.canonica = Matriu(self.matriu.matriu)
+        if base is None:
+            self.canonica = Matriu(matriu.matriu)
         else:
-            c = self.base.matriu()
-            m = c.matriu * self.matriu.matriu * c.matriu**(-1)
-            self.canonica = m
+            c = base.matriu()
+            m = c.matriu * matriu.matriu * c.matriu**(-1)
+            self.canonica = Matriu(m)
+    #
+    #
+    #
+    def determinant(self):
+        return self.canonica.determinant()
+    #
+    #
+    #
+    def es_rotacio(self):
+        if self.dimensio != 3:
+            return False
+        d = self.determinant()
+        if abs(N(d) - 1.0) > 10**(-8):
+            return False
+        m = self.canonica
+        u = Matriu()
+        k = m.transposada() * m
+        for i in range(k.files):
+            for j in range(k.columnes):
+                p = N(k[i,j])
+                if abs(p - u[i,j]) > 10**(-8):
+                    return False
+        return True
+    #
+    #
+    #
+    def eix_angle_rotacio(self,radians=False):
+        if not self.es_rotacio():
+            return None
+        m = self.canonica - Matriu()
+        e = m.nucli()[0]
+        e = Vector([simplify(k.expand()) for k in e.components])
+        q = Quaternion.from_rotation_matrix(self.canonica.matriu)
+        v, alpha = q.to_axis_angle()
+        alpha = alpha.expand()
+        v = [simplify(k.expand()) for k in v]
+        u = Vector(v)
+        l = e.length()
+        u = l * u
+        if e[0] != u[0]:
+            alpha = 2 * pi - alpha
+        if not radians:
+            alpha = alpha * 180/pi
+        return e,alpha
+    #
+    #
+    #
+    @classmethod
+    def rotacio(cls,eix,angle,radians=False):
+        if not radians:
+            angle *= pi / 180
+        eix.normalitzar()
+        q = Quaternion.from_axis_angle(eix.components,angle)
+        m = Matriu(q.to_rotation_matrix())
+        return cls(m)
+    #
+    #
+    #
+    @classmethod
+    def projeccio_ortogonal(cls,s):
+        if not isinstance(s,SubespaiVectorial):
+            return None
+        n = s.espai
+        m = s.dimensio
+        uns = [1 for k in range(m)]
+        zeros = [0 for k in range(n-m)]
+        d = uns + zeros
+        b = Base(s.base + s.suplementari_ortogonal().base)
+        m = Matriu.diagonal(d)
+        return cls(m,b)
+    #
+    #
+    #
+    @classmethod
+    def simetria(cls,s):
+        if not isinstance(s,SubespaiVectorial):
+            return None
+        n = s.espai
+        m = s.dimensio
+        uns = [1 for k in range(m)]
+        menys = [-1 for k in range(n-m)]
+        d = uns + menys
+        b = Base(s.base + s.suplementari_ortogonal().base)
+        m = Matriu.diagonal(d)
+        return cls(m,b)
+    #
+    #
+    #
+    def matriu_en_base(base):
+        if base is None:
+            return self.canonica
+        c = base.matriu()
+        m = c.matriu**(-1) * self.canonica.matriu * c.matriu
+        return Matriu(m)
     #
     #
     #
@@ -2346,11 +2694,11 @@ class TransformacioLineal:
           base: base de R^n
           prime: nombre de primes que s'han d'escriure
         """
-        if self.dimensio <= 3:
-            x, y, z = symbols('x y z')
-            u, v, w = symbols('u v w')
-            o = [x,y,z]
-            d = [u,v,w]
+        if self.dimensio <= 4:
+            x, y, z, t = symbols('x y z t')
+            u, v, w, r = symbols('u v w r')
+            o = [x,y,z,t]
+            d = [u,v,w,r]
         else:
             x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
             u1, u2, u3, u4, u5, u6, u7, u8 = symbols('u1 u2 u3 u4 u5 u6 u7 u8')
@@ -2359,16 +2707,15 @@ class TransformacioLineal:
         o = o[0:self.dimensio]
         d = d[0:self.dimensio]
         p = prime * "'"
+        o = " \\\\ ".join([latex(x)+p for x in o])
+        d = " \\\\ ".join([latex(x)+p for x in d])
         if base is None:
-             o = " \\\\ ".join([latex(x)+p for x in o])
-             d = " \\\\ ".join([latex(x)+p for x in d])
+
              m = self.canonica
         else:
             if not isinstance(base,Base):
                 return None
             c = base.matriu()
-            o = " \\\\ ".join([latex(x) + p for x in o])
-            d = " \\\\ ".join([latex(x) + p for x in d])
             m = c.matriu**(-1) * self.canonica.matriu * c.matriu
             m = Matriu(m)
         s = "\\begin{pmatrix}{c} " + d + "\\end{pmatrix} = \n"
@@ -2383,6 +2730,32 @@ class TransformacioLineal:
         Retorna el latex de l'expressió en la base canònica de la transformació lineal
         """
         return self.latex()
+    #
+    #
+    #
+    def __eq__(self,other):
+        return self.canonica == other.canonica
+    #
+    #
+    #
+    def __add__(self,other):
+        if other.dimensio != self.dimensio:
+            return None
+        m = self.canonica + other.canonica
+        return TransformacioLineal(m)
+    #
+    #
+    #
+    def __mul__(self,other):
+        if other.dimensio != self.dimensio:
+            return None
+        m = self.canonica * other.canonica
+        return TransformacioLineal(m)
+    #
+    #
+    #
+    def es_simetrica(self):
+        return self.canonica == self.canonica.transposada()
     #
     #
     #
@@ -2411,53 +2784,73 @@ class TransformacioAfi:
     Classe per treballar amb transformacions afins T:P^n ----> P^n, on
     T(p) = T + A(p)
     Atributs:
-       referencia: referència en la que està expressada la transformacio afí.
-                   Si és None serà la canònica
-       tl: Tranformació lineal corresponent a la transforma afí
-       translacio: vector que representa la translació T en la referència "ref"
-       translacioc: translació de la transformació afí en la referència canònica
+       transformacio: Transformació lineal
+       translacio: translació de la transformació afí en la referència canònica
        dimensio: n
     """
     #
     #
     #
-    def __new__(cls,t,m,ref=None):
+    def __new__(cls,p,t):
         """
         Contructor:
         Paràmetres:
-           t: Vector que representa la translació en la referencia "ref"
-           m: Matriu del la transformació lineal en la base "ref.base"
-           ref: ReferenciaAfi
+           p: Punt que representa la translació en la referencia canònica,
+              és a dir, el transformat del punt zero
+           t: Transformació lineal
         """
-        if not isinstance(t,Vector):
+        if not isinstance(p,Vector):
             return None
-        if not isinstance(m,Matriu):
+        if not isinstance(t,TransformacioLineal):
             return None
-        if m.files != m.columnes:
+        if p.dimensio != t.dimensio:
             return None
-        if t.dimensio != m.files:
-            return None
-        if ref is not None:
-            if not isinstance(ref,ReferenciaAfi):
-                return None
-            if ref.dimensio != t.dimensio:
-                return None
         return super(TransformacioAfi,cls).__new__(cls)
     #
     #
     #
-    def __init__(self,t,m,ref=None):
-        if ref is not None:
-            self.tl = TransformacioLineal(m,ref.base)
-        else:
-            self.tl = TransformacioLineal(m)
-        self.dimensio = t.dimensio
-        self.t = t
-        self.referencia = ref
-        if ref is None:
-            self.tc = Vector(t.components)
-        else:
-            self.tc = ref.origen + ref.base.vector_de_components(t - ref.origen)
+    def __init__(self,p,t):
+        self.translacio = p
+        self.transformacio = t
+        self.dimensio = self.transformacio.dimensio
+    #
+    #
+    #
+    @classmethod
+    def simetria(cls,v):
+        if not isinstance(VarietatLineal):
+            return None
+        t = TransformacioLineal.simetria(v.subespai)
+        p = - t.transforma(v.punt) + v.punt
+        return cls(p,t)
+    #
+    #
+    #
+    @classmethod
+    def projeccio_ortogonal(cls,v):
+        if not isinstance(v,VarietatLineal):
+            return None
+        t = TransformacioLineal.projeccio_ortogonal(v.subespai)
+        p = - t.transforma(v.punt) + v.punt
+        return cls(p,t)
+    #
+    #
+    #
+    @classmethod
+    def moviment_helicoidal(cls,recta,angle,radians=False,alpha=0):
+        if not isinstance(recta,RectaAfi):
+            return None
+        if not recta.u.dimensio == 3:
+            return None
+        rotacio = TransformacioLineal.rotacio(recta.u,angle,radians)
+        p = - rotacio.transforma(recta.p) + recta.p + alpha * recta.u
+        return cls(p,rotacio)
+    #
+    #
+    #
+    @classmethod
+    def rotacio(cls,recta,angle,radians=False):
+        return cls.moviment_helicoidal(recta,angle,radians)
     #
     #
     #
@@ -2466,24 +2859,35 @@ class TransformacioAfi:
         Restorna en format latex l'expressió de la transformació afí en la
         referència canònica
         """
-        if self.dimensio <= 3:
-            x, y, z = symbols('x y z')
-            u, v, w = symbols('u v w')
-            o = [x,y,z]
-            d = [u,v,w]
+        return self.latex()
+    #
+    #
+    #
+    def latex(self,ref=None,prime=0):
+        if self.dimensio <= 4:
+            x, y, z, t = symbols('x y z t')
+            u, v, w, r = symbols('u v w r')
+            o = [x,y,z,t]
+            d = [u,v,w,r]
         else:
             x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
             u1, u2, u3, u4, u5, u6, u7, u8 = symbols('u1 u2 u3 u4 u5 u6 u7 u8')
             o = [x1, x2, x3, x4, x5, x6, x7, x8]
             d = [u1, u2, u3, u4, u5, u6, u7, u8]
-        o = o[0:self.tc.dimensio]
-        d = d[0:self.tc.dimensio]
-        o = " \\\\ ".join([latex(x) for x in o])
-        d = " \\\\ ".join([latex(x) for x in d])
-        m = Matriu.matriu_columna(self.tc)
+        o = o[0:self.dimensio]
+        d = d[0:self.dimensio]
+        p = prime * "'"
+        o = " \\\\ ".join([latex(x)+p for x in o])
+        d = " \\\\ ".join([latex(x)+p for x in d])
+        z = Punt.nul(self.dimensio)
+        tz = self.transforma(z,ref)
+        if ref is None:
+            m = self.transformacio.canonica
+        else:
+            m = self.transformacio.matriu_en_base(ref.base)
         s = "\\begin{pmatrix}{c} " + d + "\\end{pmatrix} = \n"
-        s += f"{m} + \n"
-        s += f"{self.tl.canonica}\n"
+        s += f"{tz} + \n"
+        s += f"{m}\n"
         s += "\\begin{pmatrix}{c} " + o + "\\end{pmatrix}"
         return s
     #
@@ -2491,13 +2895,15 @@ class TransformacioAfi:
     #
     def transforma(self,p,ref=None):
         """
-        Calcula el transformat del punt "p". vec seran les components d'aquest
-        vector en la referència "ref" i el transformat també estarà expressat
+        Calcula el transformat del punt "p". p seran les components d'aquest
+        punt en la referència "ref" i el transformat també estarà expressat
         en aquesta referència
         """
-        if not isinstance(p,Punt):
+        if not isinstance(p,Vector):
             return None
         if self.dimensio != p.dimensio:
             return None
         if ref is None:
-            return self.tc + self.tl.transforma(p)
+            return self.translacio + self.transformacio.transforma(p)
+        q = ref.base.punt_de_coordenades(p)
+        return q + self.transformacio.transforma(p,base=ref.base)

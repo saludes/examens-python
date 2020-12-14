@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
-Filename:   examen.py
+Filename:   test.py
 Author:     Rafel Amer (rafel.amer AT upc.edu)
 Copyright:  Rafel Amer 2020
 Disclaimer: This code is presented "as is" and it has been written to
             generate random models of exams for the subject of Linear
-            at ESEIAAT
+            Algebra at ESEIAAT, Technic University of Catalonia
 License:    This program is free software: you can redistribute it and/or modify
             it under the terms of the GNU General Public License as published by
             the Free Software Foundation, either version 3 of the License, or
@@ -18,6 +18,19 @@ License:    This program is free software: you can redistribute it and/or modify
 import sys
 from sympy import *
 from Algebra import *
+
+u1 = Vector([1,-1,0])
+u2 = Vector([1,0,-1])
+s = SubespaiVectorial([u1,u2])
+p = Punt([2,1,3])
+v = VarietatLineal(p,s)
+t = TransformacioAfi.projeccio_ortogonal(v)
+print (t)
+q = p + 5*Vector([1,1,1])
+print(q,t.transforma(q))
+
+
+sys.exit(0)
 
 #
 # Tests amb la classe Vector
@@ -198,3 +211,100 @@ print()
 #
 # Tests amb la classe PlaAfi
 #
+p = Punt([2,-3,-1])
+u1 = Vector([1,-3,-1])
+u2 = Vector([2,1,1])
+p = PlaAfi(p,u1,u2)
+print(p)
+print(p.equacio_implicita())
+p0 = Punt([1,2,-1])
+b = Base([Vector([1,1,0]),Vector([-1,1,1]),Vector([1,-1,2])])
+r = ReferenciaAfi(p0,b)
+print(p.equacio_implicita(ref=r,prime=1))
+p = Punt([1,1,1])
+u1 = Vector([1,0,-1])
+u2 = Vector([1,-1,0])
+p = PlaAfi(p,u1,u2,r)
+print(p.equacio_implicita(ref=r,prime=1))
+print()
+
+#
+# Tests amb la classe RectaAfi
+#
+p = Punt([3,2,-1])
+u = Vector([4,-3,2])
+p0 = Punt([1,2,-1])
+b = Base([Vector([1,1,0]),Vector([-1,1,1]),Vector([1,-1,2])])
+ref = ReferenciaAfi(p0,b)
+r = RectaAfi(p,u,ref)
+print(r)
+print(r.equacio_continua(ref=ref,prime=1))
+print(r.equacions_implicites())
+print(r.equacions_implicites(ref=ref,prime=1,aleatori=True))
+print()
+
+#
+# Tests amb la classe SubespaiVectorial
+#
+u1 = Vector([1,2,1,1])
+u2 = Vector([1,-1,1,-1])
+s = SubespaiVectorial([u1,u2])
+print(s.base)
+print(s.equacions_implicites())
+v = s.suplementari_ortogonal()
+print(v.base)
+print(v.equacions_implicites())
+print(v.base_ortogonal())
+m = Matriu.invertible(ordre=4,maxim=3,mzeros=2,unitaria=True)
+br4 = Base.from_matriu(m)
+s = SubespaiVectorial([u1,u2],basern=br4)
+print(s.equacions_implicites(basern=br4,prime=1))
+m = Matriu.invertible(ordre=4,maxim=1,mzeros=4,unitaria=True)
+cr4 = Base.from_matriu(m)
+print(s.equacions_implicites(basern=cr4,prime=2))
+print()
+
+#
+# Tests amb la classe VarietatLineal
+#
+u1 = Vector([1,1])
+u2 = Vector([1,-1])
+s = SubespaiVectorial([u1])
+b = Base([u1,u2])
+p = Punt([3,1])
+r = ReferenciaAfi(p,b)
+v = VarietatLineal(p,s)
+print(v.equacions_implicites())
+print (v.equacions_implicites(ref=r,prime=1))
+w = v.varietat_ortogonal(Punt([0,0]))
+print (w.equacions_implicites())
+print()
+
+#
+# Tests amb la classe TransformacioLineal
+#
+a = Matriu.aleatoria(f=2,c=2)
+b = Matriu.aleatoria(f=2,c=2)
+t1 = TransformacioLineal(a)
+t2 = TransformacioLineal(b)
+print(t1)
+print(t2)
+print(t1 * t2)
+s = SubespaiVectorial([Vector([2,1,1]),Vector([1,3,-1])])
+t = TransformacioLineal.projeccio_ortogonal(s)
+print(t)
+t = TransformacioLineal.simetria(s)
+print(t)
+b = t.base
+print(t.latex(b,prime=1))
+vecs = [Vector.aleatori(l=4,maxim=2,nuls=False) for k in range(3)]
+s =  SubespaiVectorial(vecs)
+t = TransformacioLineal.simetria(s)
+print(t)
+v = Vector([1,-1,1])
+t = TransformacioLineal.rotacio(v,60)
+e, angle = t.eix_angle_rotacio()
+print(angle)
+print(e)
+print(t)
+print()
