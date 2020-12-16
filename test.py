@@ -19,15 +19,8 @@ import sys
 from sympy import *
 from Algebra import *
 
-u1 = Vector([1,-1,0])
-u2 = Vector([1,0,-1])
-s = SubespaiVectorial([u1,u2])
-p = Punt([2,1,3])
-v = VarietatLineal(p,s)
-t = TransformacioAfi.projeccio_ortogonal(v)
-print (t)
-q = p + 5*Vector([1,1,1])
-print(q,t.transforma(q))
+q = FormaQuadratica.aleatoria()
+print(q)
 
 
 sys.exit(0)
@@ -308,3 +301,16 @@ print(angle)
 print(e)
 print(t)
 print()
+
+#
+# Tests amb la classe TransformacioAfi
+#
+u1 = Vector([1,-1,0])
+u2 = Vector([1,0,-1])
+s = SubespaiVectorial([u1,u2])
+p = Punt([2,1,3])
+v = VarietatLineal(p,s)
+t = TransformacioAfi.projeccio_ortogonal(v)
+print (t)
+q = p + 5*Vector([1,1,1])
+print(q,t.transforma(q))

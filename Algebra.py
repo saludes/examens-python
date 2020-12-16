@@ -33,11 +33,20 @@ from sympy.printing.latex import print_latex
 from sympy.core.basic import Basic
 from itertools import permutations
 
-var('x y z t')
-ddict = collections.OrderedDict([(x**2,1),(y**2,2),(z**2,3),(t**2,4),
-                                ((x,y),5),((x,z),6),((x,t),7),
-                                ((y,z),8),((y,t),9),((z,t),10),
-                                (x,11),(y,12), (z,13), (t,14)])
+var('a b c d')
+ddict = collections.OrderedDict([(a**2,1),(b**2,2),(c**2,3),(d**2,4),
+                                ((a,b),5),((a,c),6),((a,d),7),
+                                ((b,c),8),((b,d),9),((c,d),10),
+                                ((b,a),5),((c,a),6),((d,a),7),
+                                ((c,b),8),((d,b),9),((d,c),10),
+                                (a,11),(b,12), (c,13), (d,14)])
+
+# ddict = collections.OrderedDict([(x**2,1),(y**2,2),(z**2,3),(t**2,4),
+#                                 ((x,y),5),((x,z),6),((x,t),7),
+#                                 ((y,z),8),((y,t),9),((z,t),10),
+#                                 ((y,x),5),((z,x),6),((t,x),7),
+#                                 ((z,y),8),((t,y),9),((t,z),10),
+#                                 (x,11),(y,12), (z,13), (t,14)])
 
 class Impresora(Printer):
     """
@@ -60,6 +69,8 @@ class Impresora(Printer):
                 return len(ddict)+1
 
         def get_place(el):
+            if isinstance(el,Pow):
+                return new_place(el)
             if el.is_integer:
                 return new_place(el)
             elif el.is_symbol:
@@ -68,7 +79,7 @@ class Impresora(Printer):
                 if el.args[0].is_symbol and el.args[1].is_symbol:
                     return new_place(el.args)
                 q = el.args[len(el.args)-1]
-                if q.is_symbol:
+                if q.is_symbol or q.is_integer or q.is_rational:
                     return new_place(q)
                 elif q.args[0].is_symbol:
                     return new_place(q)
@@ -80,25 +91,31 @@ class Impresora(Printer):
                 return 0
 
         def write_coeff(el):
+            if isinstance(el,Pow):
+                return " + %s" % latex(el)
             if el.is_integer:
                 if el > 0:
-                    return "+%s" % el
+                    return " + %s" % el
                 else:
                     return "%s" % el
             elif el.is_symbol:
-                return "+%s" % el
+                return " + %s" % el
             elif len(el.args) == 2 and el.args[0].is_symbol and el.args[1].is_symbol:
-                return "+%s" % latex(el)
+                return " + %s" % latex(el)
             elif len(el.args) > 0:
                 if el.args[len(el.args)-1].is_symbol:
-                    if el.args[0].is_rational:
+                    if el.args[0].is_rational or el.args[0].is_integer:
                         if el.args[0] > 0:
-                            return "+%s" % latex(el)
+                            return " + %s" % latex(el)
                         else:
                             return "%s" % latex(el)
                     else:
+
                         return "%s" % latex(el)
                 else:
+                    if el.args[0].is_rational or el.args[0].is_integer:
+                        if el.args[0] > 0:
+                            return " + %s" % latex(el)
                     return "%s" % latex(el)
             else:
                 return "%s" % el
@@ -109,7 +126,19 @@ class Impresora(Printer):
         return "".join(a for a in to_print)
 
 def mylatex(e):
-    return (Impresora().doprint(e))
+    a, b, c, d = symbols('a b c d')
+    e = str(e)
+    e = e.replace('x','a')
+    e = e.replace('y','b')
+    e = e.replace('z','c')
+    e = e.replace('t','d')
+    e = sympify(e)
+    e = Impresora().doprint(e)
+    e = e.replace('a','x')
+    e = e.replace('b','y')
+    e = e.replace('c','z')
+    e = e.replace('d','t')
+    return e
 
 def mcd_llista(list):
     """
@@ -496,6 +525,19 @@ class Vector(object):
     #
     #
     #
+    def maxim(self):
+        """
+        Retorna el màxil dels valors absoluts de les seves components
+        """
+        m = 0
+        for k in self.components:
+            v = abs(k)
+            if v > m:
+                m = v
+        return m
+    #
+    #
+    #
     def simplificar(self):
         """
         Simplifica el vector, és a dir, converteix les seves components en una
@@ -746,6 +788,35 @@ class Base(object):
             unitaris = [(1 / v.length()) * v for v in self.vecs]
             c = Matriu.from_vectors_columna(unitaris)
         return c * vec
+    #
+    #
+    #
+    @classmethod
+    def ortogonal(cls,ordre=3,maxim=5,unitaria=False):
+        """
+        Retorna una base ortogonal "aleatòria"
+        """
+        trobat = False
+        while not trobat:
+            m = Matriu.invertible(ordre=ordre,maxim=2,mzeros=0,unitaria=True)
+            L = []
+            for v in m.vectors_columna():
+                a = Matriu.from_vectors_columna([v])
+                L.append(a.matriu)
+            Q = GramSchmidt(L)
+            base = []
+            for m in Q:
+                m = Matriu(m)
+                v = m.vectors_columna()[0]
+                v.simplificar()
+                base.append(v)
+            m = 0
+            for v in base:
+                a = v.maxim()
+                if a > m:
+                    m = a
+            trobat = m <= maxim
+        return cls(base,unitaria)
 
 class Matriu:
     """
@@ -884,7 +955,6 @@ class Matriu:
         """
         i, j = tup
         self.matriu[i,j] = value
-
     #
     #
     #
@@ -1035,6 +1105,10 @@ class Matriu:
         """
         Genera una matriu diagonal amb valors "vals" a la diagonal
         """
+        if isinstance(vals,Vector):
+            vals = vals.components
+        if not isinstance(vals,list) and not isinstance(vals,tuple):
+            return None
         d = len(vals)
         if d == 0:
             return None
@@ -1155,14 +1229,14 @@ class Matriu:
         """
         trobat = False
         while not trobat:
-            c = matriu_invertible(ordre,maxim=5)
-            g = c.T * c
-            if mzeros >= 0 and nzeros(g) > mzeros:
+            c = Matriu.invertible(ordre,maxim=5)
+            g = c.transposada() * c
+            if mzeros >= 0 and g.nzeros() > mzeros:
                 continue
-            if norma_maxim(g) > maxim:
+            if g.norma_maxim() > maxim:
                 continue
             trobat = True
-        return cls(g)
+        return cls(g.matriu)
     #
     #
     #
@@ -1364,6 +1438,22 @@ class Matriu:
         columnes = self.vectors_columna()
         columnes.insert(pos,columna)
         return Matriu.from_vectors_columna(columnes)
+    #
+    #
+    #
+    def factor_comu(self):
+        """
+        Retorna quin factor co,ú podem treure de la matriu
+        """
+        d = []
+        for i in range(self.files):
+            for j in range(self.columnes):
+                k = self[i,j]
+            if (isinstance(k,int) or isinstance(k,Integer)):
+                d.append(k)
+            else:
+                return 1
+        return (mcd_llista(d))
 
 class EquacioLineal:
     """
@@ -2924,3 +3014,87 @@ class TransformacioAfi:
             return self.translacio + self.transformacio.transforma(p)
         q = ref.base.punt_de_coordenades(p)
         return q + self.transformacio.transforma(p,base=ref.base)
+
+class FormaQuadratica(object):
+    """
+    Classe per treballar amb formes quadrètiques
+    Atributs:
+       matriu: Transformació lineal
+       dimensio: n
+       vaps: valors propis
+    """
+    #
+    #
+    #
+    def __new__(cls,matriu,vaps=None):
+        """
+        Contructor:
+        Paràmetres:
+           matriu: matriu de la forma quadratica
+        """
+        if not isinstance(matriu,Matriu):
+            return None
+        if matriu.files != matriu.columnes:
+            return None
+        if matriu != matriu.transposada():
+            return None
+        if vaps is not None:
+            if not isinstance(vaps,Vector):
+                return None
+            if vaps.dimensio != matriu.columnes:
+                return None
+        return super(FormaQuadratica,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,matriu,vaps=None):
+        self.matriu = matriu
+        self.dimensio = self.matriu.columnes
+        self.vaps = vaps
+    #
+    #
+    #
+    def __repr__(self):
+        """
+        Retorna l'expressió en latex de la forma quadrètica com a polinomi
+        de segon grau
+        """
+        if self.dimensio <= 4:
+            x, y, z, t = symbols('x y z t')
+            s = [x,y,z,t]
+        else:
+            x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
+            s = [x1, x2, x3, x4, x5, x6, x7, x8]
+        s = Vector(s[0:self.dimensio])
+        m = Matriu.matriu_columna(s)
+        r = m.transposada() * self.matriu * m
+        if self.dimensio <= 4:
+            return mylatex(r[0,0].expand())
+        return latex(r[0,0].expand())
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls,ordre=3,maxim=12):
+        """
+        Retorna una forma quadràtica aleatòria amb valors propis "vaps". Si "vaps"
+        és None, els genera aleatòriament
+        """
+        trobat = False
+        while not trobat:
+            vaps = Vector.aleatori(l=ordre,maxim=3)
+            if len(set(vaps.components)) == 1:
+                continue
+            d = Matriu.diagonal(vaps)
+            b = Base.ortogonal(ordre=ordre,maxim=5)
+            c = b.matriu()
+            m = c * d * c.transposada()
+            trobat = m.norma_maxim() <= maxim
+        l = m.matriu.eigenvals()
+        vaps = []
+        for k,v in l.items():
+            for p in range(v):
+                vaps.append(k)
+        vaps = Vector(vaps)
+        print(vaps)
+        return cls(m,vaps)
