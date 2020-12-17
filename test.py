@@ -19,9 +19,9 @@ import sys
 from sympy import *
 from Algebra import *
 
-q = FormaQuadratica.aleatoria()
-print(q)
-
+c = Conica.aleatoria()
+print(c)
+print(c.equacio_reduida())
 
 sys.exit(0)
 
@@ -314,3 +314,9 @@ t = TransformacioAfi.projeccio_ortogonal(v)
 print (t)
 q = p + 5*Vector([1,1,1])
 print(q,t.transforma(q))
+
+#
+# Tests amb la classe FormaQuadratica
+#
+q = FormaQuadratica.aleatoria()
+print(q.polinomi_caracteristic())

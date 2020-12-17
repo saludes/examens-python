@@ -41,13 +41,6 @@ ddict = collections.OrderedDict([(a**2,1),(b**2,2),(c**2,3),(d**2,4),
                                 ((c,b),8),((d,b),9),((d,c),10),
                                 (a,11),(b,12), (c,13), (d,14)])
 
-# ddict = collections.OrderedDict([(x**2,1),(y**2,2),(z**2,3),(t**2,4),
-#                                 ((x,y),5),((x,z),6),((x,t),7),
-#                                 ((y,z),8),((y,t),9),((z,t),10),
-#                                 ((y,x),5),((z,x),6),((t,x),7),
-#                                 ((z,y),8),((t,y),9),((t,z),10),
-#                                 (x,11),(y,12), (z,13), (t,14)])
-
 class Impresora(Printer):
     """
        La funció latex() del sympy té la mania d'escriure les variables x, y, z i t
@@ -97,7 +90,7 @@ class Impresora(Printer):
                 if el > 0:
                     return " + %s" % el
                 else:
-                    return "%s" % el
+                    return " %s" % el
             elif el.is_symbol:
                 return " + %s" % el
             elif len(el.args) == 2 and el.args[0].is_symbol and el.args[1].is_symbol:
@@ -108,17 +101,17 @@ class Impresora(Printer):
                         if el.args[0] > 0:
                             return " + %s" % latex(el)
                         else:
-                            return "%s" % latex(el)
+                            return " %s" % latex(el)
                     else:
 
-                        return "%s" % latex(el)
+                        return " %s" % latex(el)
                 else:
                     if el.args[0].is_rational or el.args[0].is_integer:
                         if el.args[0] > 0:
                             return " + %s" % latex(el)
-                    return "%s" % latex(el)
+                    return " %s" % latex(el)
             else:
-                return "%s" % el
+                return " %s" % el
         list_place = [get_place(a) for a in expr.args]
         expr_args = list(zip(*sorted(zip(list_place,expr_args))))[1]
         to_print = [write_coeff(a) for a in expr_args]
@@ -722,6 +715,32 @@ class Base(object):
     #
     #
     #
+    def es_unitaria(self):
+        return self.unitaria
+    #
+    #
+    #
+    def es_ortogonal(self):
+        for i in range(self.dimensio):
+            for j in range(i+1,self.dimensio):
+                if self.vecs[i].dot(self.vecs[j]) != 0:
+                    return False
+        return True
+    #
+    #
+    #
+    def te_orientacio_positiva(self):
+        m = Matriu.from_vectors_columna(self.vecs)
+        return m.determinant() > 0
+    #
+    #
+    #
+    def orientacio_positiva(self):
+        if not self.te_orientacio_positiva():
+            self.vecs[-1] = - self.vecs[-1]
+    #
+    #
+    #
     def matriu(self):
         """
         Retorna la matriu de la classe Matriu que té per coulumnes
@@ -798,7 +817,7 @@ class Base(object):
         """
         trobat = False
         while not trobat:
-            m = Matriu.invertible(ordre=ordre,maxim=2,mzeros=0,unitaria=True)
+            m = Matriu.invertible(ordre=ordre,maxim=4,mzeros=0,unitaria=True)
             L = []
             for v in m.vectors_columna():
                 a = Matriu.from_vectors_columna([v])
@@ -1454,6 +1473,39 @@ class Matriu:
             else:
                 return 1
         return (mcd_llista(d))
+    #
+    #
+    #
+    def simplificar(self):
+        """
+        Simplifica la matriu, és a dir, converteix les seves entrades en una
+        llista d'enters amb mcd igual a 1.
+        Només té sentit si totes les components del vector són nombres enters
+        o racionals
+        """
+        d = []
+        for i in range(self.columnes):
+            for j in range(self.files):
+                if isinstance(self.matriu[i,j],Rational):
+                    d.append(self.matriu[i,i].q)
+                elif isinstance(self.matriu[i,j],int):
+                    pass
+                elif isinstance(self.matriu[i,j],Integer):
+                    pass
+                else:
+                    return
+        mcm = mcm_llista(d)
+        m = mcm * self.matriu
+        d = []
+        for i in range(self.columnes):
+            for j in range(self.files):
+                d.append(m[i,j])
+        mcd = mcd_llista(d)
+        for i in range(self.columnes):
+            for j in range(self.files):
+                self.matriu[i,j] = m[i,j] // mcd
+        if self.matriu[0,0] < 0:
+            self.matriu = - self.matriu
 
 class EquacioLineal:
     """
@@ -2557,6 +2609,17 @@ class SubespaiVectorial(object):
             v.simplificar()
             base.append(v)
         return base
+    #
+    #
+    #
+    def amplia_base(self,unitaria=False):
+        """
+        Retorna una base ortogonal amb orientació positiva de R^n
+        """
+        h = self.suplementari_ortogonal()
+        b = Base(self.base_ortogonal() + h.base_ortogonal(),unitaria)
+        b.orientacio_positiva()
+        return b
 
 class VarietatLineal(object):
     """
@@ -2885,6 +2948,14 @@ class TransformacioLineal(object):
         for k in range(t.dimensio):
             t[k] = simplify(t[k].expand())
         return t
+    #
+    #
+    #
+    def polinomi_caracteristic(self):
+        """
+        Retorna el polinomi característic de la froma
+        """
+        return self.canonica.polinomi_caracteristic()
 
 class TransformacioAfi:
     """
@@ -3039,6 +3110,8 @@ class FormaQuadratica(object):
         if matriu != matriu.transposada():
             return None
         if vaps is not None:
+            if isinstance(c,list) or isinstance(c,tuple):
+                vaps = Vector(vaps)
             if not isinstance(vaps,Vector):
                 return None
             if vaps.dimensio != matriu.columnes:
@@ -3050,7 +3123,15 @@ class FormaQuadratica(object):
     def __init__(self,matriu,vaps=None):
         self.matriu = matriu
         self.dimensio = self.matriu.columnes
-        self.vaps = vaps
+        if vaps is None:
+            matriu.eigenvals()
+            vaps = []
+            for k,v in l.items():
+                for p in range(v):
+                    vaps.append(k)
+            self.vaps = Vector(vaps)
+        else:
+            self.vaps = vaps
     #
     #
     #
@@ -3075,7 +3156,7 @@ class FormaQuadratica(object):
     #
     #
     @classmethod
-    def aleatoria(cls,ordre=3,maxim=12):
+    def aleatoria(cls,ordre=3,maxim=20):
         """
         Retorna una forma quadràtica aleatòria amb valors propis "vaps". Si "vaps"
         és None, els genera aleatòriament
@@ -3096,5 +3177,456 @@ class FormaQuadratica(object):
             for p in range(v):
                 vaps.append(k)
         vaps = Vector(vaps)
-        print(vaps)
         return cls(m,vaps)
+    #
+    #
+    #
+    def signatura(self):
+        """
+        Retorna la signatura o índexs d'inèrcia de la forma quadràtica
+        """
+        r = 0
+        s = 0
+        for k in self.vaps.components:
+            if k > 0:
+                r += 1
+            elif k < 0:
+                s += 1
+        return (r,s)
+    #
+    #
+    #
+    def rank(self):
+        """
+        Retorna la signatura o índexs d'inèrcia de la forma quadràtica
+        """
+        r, s = self.signatura()
+        return r + s
+    #
+    #
+    #
+    def polinomi_caracteristic(self):
+        """
+        Retorna el polinomi característic de la froma
+        """
+        return self.matriu.polinomi_caracteristic()
+
+class Conica(object):
+    """
+    Classe per treballar amb còniques. L'objectiu no és classificar còniques,
+    sinó generar coniques a partir dels elements característics o de manera
+    aleatòria.
+    Atributs:
+      ref: Referència afí
+      matriu: matriu projectiva de la cònica en la referència "ref"
+      canonica: matriu projectiva de la cònica en la referència canònica
+    """
+    #
+    #
+    #
+    def __new__(cls,matriu,ref=None):
+        if not isinstance(matriu,Matriu):
+            return None
+        if matriu.files != matriu.columnes:
+            return None
+        if matriu.files != 3:
+            return None
+        if not matriu.es_simetrica():
+            return None
+        if ref is not None:
+            if ref.dimensio != 2:
+                return None
+            if not ref.base.es_unitaria():
+                return None
+            if not ref.base.es_ortogonal():
+                return None
+        return super(Conica,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,matriu,ref=None):
+        self.ref = ref
+        self.matriu = matriu
+        if ref is None:
+            self.canonica = matriu
+        else:
+            a = ref.base.matriu()
+            a = a.inserta_columna(2,ref.origen)
+            a = a.inserta_fila(2,Vector([0,0,1]))
+            b = a.inversa()
+            self.canonica = b.transposada() * matriu * b
+            self.canonica.simplificar()
+    #
+    #
+    #
+    def __repr__(self):
+        """
+        Retorna l'equació en latex de l'equació de la cònica en la referència
+        canònica
+        """
+        x, y = symbols('x y')
+        m = Matriu.matriu_columna(Vector([x,y,1]))
+        r = m.transposada() * self.canonica * m
+        return mylatex(r[0,0].expand())
+    #
+    #
+    #
+    @classmethod
+    def ellipse(cls,maxim=30):
+        trobat = False
+        while not trobat:
+            e = Ellipse.aleatoria()
+            trobat = e.canonica.norma_maxim() <= maxim
+        return e
+    #
+    #
+    #
+    @classmethod
+    def hiperbola(cls,maxim=30):
+        trobat = False
+        while not trobat:
+            h = Hiperbola.aleatoria()
+            trobat = h.canonica.norma_maxim() <= maxim
+        return h
+    #
+    #
+    #
+    @classmethod
+    def parabola(cls,maxim=30):
+        trobat = False
+        while not trobat:
+            p = Parabola.aleatoria()
+            trobat = p.canonica.norma_maxim() <= maxim
+        return p
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls,maxim=30):
+        """
+        Retorna una el·lipse, hipèrbola o paràbola aleatòria
+        """
+        r = random.randint(0,2)
+        if r == 0:
+            return Conica.ellipse(maxim)
+        if r == 1:
+            return Conica.hiperbola(maxim)
+        return Conica.parabola(maxim)
+    #
+    #
+    #
+    def tipus(self):
+        if isinstance(self,Ellipse):
+            return "Ellipse"
+        if isinstance(self,Hiperbola):
+            return "Hiperbola"
+        if isinstance(self,Parabola):
+            return "Parabola"
+        return ""
+
+class Ellipse(Conica):
+    """
+    Classe per treballar amb el·lipses
+    """
+    #
+    #
+    #
+    def __new__(cls,a2,b2,centre,eix):
+        """
+        Constructor.
+        Paràmetres:
+           a2: semieix major al quadrat
+           b2: semieix menor al quadrat
+           eix: direcció de l'eix principal (de les x')
+        """
+        if not isinstance(centre,Punt):
+            return None
+        if not isinstance(eix,Vector):
+            return None
+        if centre.dimensio != 2:
+            return None
+        if eix.dimensio != 2:
+            return None
+        if eix.length() == 0:
+            return None
+        if a2 <= 0:
+            return None
+        if b2 <= 0:
+            return None
+        if a2 < b2:
+            return None
+        return super(Conica,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,a2,b2,centre,eix):
+        s = SubespaiVectorial([eix])
+        base = s.amplia_base(unitaria=True)
+        r = ReferenciaAfi(centre,base)
+        g = gcd(a2,b2)
+        t = a2 * b2 // g
+        a2 = a2 // g
+        b2 = b2 // g
+        m = Matriu.diagonal(Vector([b2,a2,-t]))
+        Conica.__init__(self,m,r)
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls):
+        """
+        Retorna una el·lipse aleatòria
+        """
+        eix = Vector.aleatori(l=2,maxim=3,nuls=False)
+        trobat = False
+        while not trobat:
+            centre = Punt.aleatori(l=2,maxim=4)
+            trobat = centre.length() > 0
+        c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
+        trobat = False
+        while not trobat:
+            a = random.randint(0,len(c) - 1)
+            a2 = c[a]
+            a = random.randint(0,len(c) - 1)
+            b2 = c[a]
+            trobat = a2 != b2
+        if b2 > a2:
+            a2, b2 = b2, a2
+        return cls(a2,b2,centre,eix)
+    #
+    #
+    #
+    def centre(self):
+        """
+        Retorna el centre de la el·lipse
+        """
+        return (self.ref.origen)
+    #
+    #
+    #
+    def semieix_major(self):
+        """
+        Retorna el semieix major
+        """
+        l1 = self.matriu[0,0]
+        f = - self.matriu[2,2]
+        return sqrt(Rational(f,l1))
+    #
+    #
+    #
+    def semieix_menor(self):
+        """
+        Retorna el semieix menor
+        """
+        l2 = self.matriu[1,1]
+        f = - self.matriu[2,2]
+        return sqrt(Rational(f,l2))
+    #
+    #
+    #
+    def semidistancia_focal(self):
+        """
+        Retorna la simidistància focal
+        """
+        a2 = self.semieix_major()**2
+        b2 = self.semieix_menor()**2
+        return sqrt(a2 - b2)
+    #
+    #
+    #
+    def equacio_reduida(self):
+        a2 = self.semieix_major()**2
+        b2 = self.semieix_menor()**2
+        if a2 == 1:
+            return f"x'^2 + \\frac{{y'^2}}{{{b2}}} = 1"
+        if b2 == 1:
+            return f"\\frac{{x'^2}}{{{a2}}} + y'^2 = 1"
+        return f"\\frac{{x'^2}}{{{a2}}} + \\frac{{y'^2}}{{{b2}}} = 1"
+
+class Hiperbola(Conica):
+    """
+    Classe per treballar amb hipèrboles
+    """
+    #
+    #
+    #
+    def __new__(cls,a2,b2,centre,eix):
+        """
+        Constructor.
+        Paràmetres:
+           a2: semieix real al quadrat
+           b2: semieix imaginari al quadrat
+           eix: direcció de l'eix principal (de les x')
+        """
+        if not isinstance(centre,Punt):
+            return None
+        if not isinstance(eix,Vector):
+            return None
+        if centre.dimensio != 2:
+            return None
+        if eix.dimensio != 2:
+            return None
+        if eix.length() == 0:
+            return None
+        if a2 <= 0:
+            return None
+        if b2 <= 0:
+            return None
+        return super(Conica,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,a2,b2,centre,eix):
+        s = SubespaiVectorial([eix])
+        base = s.amplia_base(unitaria=True)
+        r = ReferenciaAfi(centre,base)
+        g = gcd(a2,b2)
+        t = a2 * b2 // g
+        a2 = a2 // g
+        b2 = b2 // g
+        m = Matriu.diagonal(Vector([b2,-a2,-t]))
+        Conica.__init__(self,m,r)
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls):
+        """
+        Retorna una hipèrbola aleatòria
+        """
+        eix = Vector.aleatori(l=2,maxim=3,nuls=False)
+        trobat = False
+        while not trobat:
+            centre = Punt.aleatori(l=2,maxim=4)
+            trobat = centre.length() > 0
+        c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
+        trobat = False
+        while not trobat:
+            a = random.randint(0,len(c) - 1)
+            a2 = c[a]
+            a = random.randint(0,len(c) - 1)
+            b2 = c[a]
+            trobat = a2 != b2
+        return cls(a2,b2,centre,eix)
+    #
+    #
+    #
+    def centre(self):
+        """
+        Retorna el centre de la el·lipse
+        """
+        return (self.ref.origen)
+    #
+    #
+    #
+    def semieix_real(self):
+        """
+        Retorna el semieix real
+        """
+        l1 = self.matriu[0,0]
+        f = - self.matriu[2,2]
+        return sqrt(Rational(f,l1))
+    #
+    #
+    #
+    def semieix_imaginari(self):
+        """
+        Retorna el semieix imaginari
+        """
+        l2 = - self.matriu[1,1]
+        f = - self.matriu[2,2]
+        return sqrt(Rational(f,l2))
+    #
+    #
+    #
+    def semidistancia_focal(self):
+        """
+        Retorna la simidistància focal
+        """
+        a2 = self.semieix_real()**2
+        b2 = self.semieix_imaginari()**2
+        return sqrt(a2 + b2)
+    #
+    #
+    #
+    def equacio_reduida(self):
+        a2 = self.semieix_real()**2
+        b2 = self.semieix_imaginari()**2
+        if a2 == 1:
+            return f"x'^2 - \\frac{{y'^2}}{{{b2}}} = 1"
+        if b2 == 1:
+            return f"\\frac{{x'^2}}{{{a2}}} - y'^2 = 1"
+        return f"\\frac{{x'^2}}{{{a2}}} - \\frac{{y'^2}}{{{b2}}} = 1"
+
+class Parabola(Conica):
+    """
+    Classe per treballar amb paràboles
+    """
+    #
+    #
+    #
+    def __new__(cls,vertex,focus):
+        """
+        Constructor.
+        Paràmetres:
+          p: paràmetre de la paràbola
+          vertex: vèrtex
+          eix: direcció de l'eix principal (de les x')
+        """
+        if not isinstance(vertex,Punt):
+            return None
+        if not isinstance(focus,Punt):
+            return None
+        if vertex.dimensio != 2:
+            return None
+        if focus.dimensio != 2:
+            return None
+        if vertex == focus:
+            return None
+        return super(Conica,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,vertex,focus):
+        eix = focus - vertex
+        p = 2 * eix.length()
+        m = Matriu(Matrix(3,3,[1,0,0,0,0,-p,0,-p,0]))
+        s = SubespaiVectorial([eix])
+        base = s.amplia_base(unitaria=True)
+        r = ReferenciaAfi(vertex,base)
+        Conica.__init__(self,m,r)
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls):
+        """
+        Retorna una paràbola aleatòria
+        """
+        trobat = False
+        while not trobat:
+            vertex = Punt.aleatori(l=2,maxim=5,nuls=False)
+            focus = Punt.aleatori(l=2,maxim=5)
+            trobat = vertex[0] != focus[0] and vertex[1] != focus[1]
+        return cls(vertex,focus)
+    #
+    #
+    #
+    def parametre(self):
+        """
+        Retorna el paràmetre de la paràbola
+        """
+        return - 2 * self.matriu[2,1]
+    #
+    #
+    #
+    def vertex(self):
+        return (self.ref.origen)
+    #
+    #
+    #
+    def equacio_reduida(self):
+        p = self.parametre()
+        if 2 * p == 1:
+            return f"y' = x'^2"
+        return f"y' = \\frac{{x'^2}}{{{2 * p}}}"
