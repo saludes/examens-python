@@ -239,6 +239,10 @@ def primer_no_nul(list):
 def vectors_latex(l):
     return ",".join([str(k) for k in l])
 
+def codict(expr, *x):
+    collected = Poly(expr, *x).as_expr()
+    return dict(i.as_independent(*x)[::-1] for i in Add.make_args(collected))
+
 class Vector(object):
     """
     Classe que ens permetrà representar vectors i punts
@@ -1533,10 +1537,16 @@ class EquacioLineal:
          eq = 2*x-3*y+4*z-3*t-4
          e = EquacioLineal(eq)
         """
+        x, y, z, t = symbols('x y z t')
+        x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
+        incognites = [x,y,z,t,x1,x2,x3,x4,x5,x6,x7,x8]
         self.equacio = eq
         self.amp = amp
         d = self.equacio.as_coefficients_dict()
-        self.unknowns = [k for k in d.keys() if k != 1]
+        self.unknowns = []
+        for k in incognites:
+            if diff(eq,k) != 0:
+                self.unknowns.append(k)
         self.prime = prime
     #
     #
@@ -1558,7 +1568,8 @@ class EquacioLineal:
         eq = 0
         for k in range(a.dimensio):
             eq += a[k] * unknowns[k]
-        return cls(eq - b,amp,prime)
+        eq = simplify((eq - b).expand())
+        return cls(eq,amp,prime)
     #
     #
     #
@@ -1578,6 +1589,7 @@ class EquacioLineal:
         Retorna l'expressió en latex de l'equació.
         Si els coeficients són enters o racionals, treu el denominador comú
         """
+        x, y, z, t = symbols('x y z t')
         other = False
         d = self.equacio.as_coefficients_dict()
         l = list(d.values())
@@ -1604,7 +1616,7 @@ class EquacioLineal:
         if t in self.unknowns:
             str = mylatex(eq)
         else:
-            str = latex(eq)
+            str = latex(simplify(eq.expand()))
         if self.amp:
             str = f"{str} &= {-d[1]}"
         else:
@@ -2242,6 +2254,9 @@ class ReferenciaAfi(object):
         else:
             unitaris = [(1 / v.length()) * v for v in self.base.vecs]
             c = Matriu.from_vectors_columna(unitaris)
+        print(self.origen)
+        print(c)
+        print(punt)
         p = self.origen + c * punt
         return Punt(p.components)
     #
@@ -2479,7 +2494,7 @@ class RectaAfi(object):
             q = self.p.coordenades_en_referencia(ref)
         l = a.nucli()
         if len(l) == 1:
-            return EquacioLineal.coeficients(l[0],v.dot(p),False,prime)
+            return EquacioLineal.coeficients(l[0],l[0].dot(q),False,prime)
         a = Matriu.from_vectors_fila(l)
         b = a * q
         if aleatori:
@@ -2615,9 +2630,22 @@ class SubespaiVectorial(object):
     def amplia_base(self,unitaria=False):
         """
         Retorna una base ortogonal amb orientació positiva de R^n
+        que comença amb una base del subespai
         """
         h = self.suplementari_ortogonal()
         b = Base(self.base_ortogonal() + h.base_ortogonal(),unitaria)
+        b.orientacio_positiva()
+        return b
+    #
+    #
+    #
+    def amplia_base_suplementari(self,unitaria=False):
+        """
+        Retorna una base ortogonal amb orientació positiva de R^n
+        que comença amb una base del suplementari ortogonal del subespai
+        """
+        h = self.suplementari_ortogonal()
+        b = Base(h.base_ortogonal() + self.base_ortogonal(),unitaria)
         b.orientacio_positiva()
         return b
 
@@ -3557,6 +3585,36 @@ class Hiperbola(Conica):
         if b2 == 1:
             return f"\\frac{{x'^2}}{{{a2}}} - y'^2 = 1"
         return f"\\frac{{x'^2}}{{{a2}}} - \\frac{{y'^2}}{{{b2}}} = 1"
+    #
+    #
+    #
+    def vectors_directors_asimptotes(self):
+        l = self.ref.base.vecs[0].length()
+        a = l * self.semieix_real()
+        b = l * self.semieix_imaginari()
+        v1 = self.ref.base.vector_de_components(Vector([a,b]))
+        v1 = Vector([-v1[1],v1[0]])
+        v2 = self.ref.base.vector_de_components(Vector([a,-b]))
+        v1 = Vector([-v2[1],v2[0]])
+        v1.simplificar()
+        v2.simplificar()
+        return (v1,v2)
+    #
+    #
+    #
+    def equacio_continua_asimptota(self,v):
+        x, y = symbols('x y')
+        centre = self.centre()
+        if v[0] == 1:
+            str = latex(x - centre[0])
+        else:
+            str = f"\\frac{{ {latex(x - centre[0])} }}{{ {v[0]} }}"
+        str += " = "
+        if v[1] == 1:
+            str += latex(y - centre[1])
+        else:
+            str += f"\\frac{{ {latex(y - centre[1])} }}{{ {v[1]} }}"
+        return str
 
 class Parabola(Conica):
     """
@@ -3590,9 +3648,10 @@ class Parabola(Conica):
     def __init__(self,vertex,focus):
         eix = focus - vertex
         p = 2 * eix.length()
+        print("Parametre:",p)
         m = Matriu(Matrix(3,3,[1,0,0,0,0,-p,0,-p,0]))
         s = SubespaiVectorial([eix])
-        base = s.amplia_base(unitaria=True)
+        base = s.amplia_base_suplementari(unitaria=True)
         r = ReferenciaAfi(vertex,base)
         Conica.__init__(self,m,r)
     #
@@ -3616,7 +3675,7 @@ class Parabola(Conica):
         """
         Retorna el paràmetre de la paràbola
         """
-        return - 2 * self.matriu[2,1]
+        return - self.matriu[2,1]
     #
     #
     #
@@ -3630,3 +3689,12 @@ class Parabola(Conica):
         if 2 * p == 1:
             return f"y' = x'^2"
         return f"y' = \\frac{{x'^2}}{{{2 * p}}}"
+    #
+    #
+    #
+    def focus(self):
+        """
+        Retorna el focus de la paràbola
+        """
+        p2 = self.parametre() / 2
+        return self.ref.punt_de_coordenades(Punt([0,p2]))

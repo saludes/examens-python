@@ -19,10 +19,10 @@ import sys
 from sympy import *
 from Algebra import *
 
-c = Conica.aleatoria()
+c = Hiperbola.aleatoria()
 print(c)
-print(c.equacio_reduida())
-
+v1, v2 = c.vectors_directors_asimptotes()
+print (c.equacio_continua_asimptota(v1))
 sys.exit(0)
 
 #
