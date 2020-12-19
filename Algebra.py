@@ -3798,3 +3798,199 @@ class Parabola(Conica):
         """
         p2 = self.parametre() / 2
         return self.ref.punt_de_coordenades(Punt([0,p2]))
+
+class Quadrica(object):
+    """
+    Classe per treballar amb quàdriques. L'objectiu no és classificar quàdriques,
+    sinó generar-les a partir dels elements característics o de manera
+    aleatòria.
+    Atributs:
+      ref: Referència afí
+      matriu: matriu projectiva de la quàdrica en la referència "ref"
+      canonica: matriu projectiva de la quàdrica en la referència canònica
+    """
+    #
+    #
+    #
+    def __new__(cls,matriu,ref=None):
+        if not isinstance(matriu,Matriu):
+            return None
+        if matriu.files != matriu.columnes:
+            return None
+        if matriu.files != 4:
+            return None
+        if not matriu.es_simetrica():
+            return None
+        if ref is not None:
+            if ref.dimensio != 3:
+                return None
+            if not ref.base.es_unitaria():
+                return None
+            if not ref.base.es_ortogonal():
+                return None
+        return super(Quadrica,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,matriu,ref=None):
+        self.ref = ref
+        self.matriu = matriu
+        if ref is None:
+            self.canonica = matriu
+        else:
+            a = ref.base.matriu()
+            a = a.inserta_columna(3,ref.origen)
+            a = a.inserta_fila(3,Vector([0,0,0,1]))
+            b = a.inversa()
+            self.canonica = b.transposada() * matriu * b
+            self.canonica.simplificar()
+    #
+    #
+    #
+    def __repr__(self):
+        """
+        Retorna l'equació en latex de l'equació de la quàdrica en la referència
+        canònica
+        """
+        x, y, z = symbols('x y z')
+        m = Matriu.matriu_columna(Vector([x,y,z,1]))
+        r = m.transposada() * self.canonica * m
+        return mylatex(r[0,0].expand())
+
+class Ellipsoide(Quadrica):
+    """
+    Classe per treballar amb el·lipsoides
+    """
+    #
+    #
+    #
+    def __new__(cls,a2,b2,c2,centre,eix1,eix2):
+        """
+        Constructor.
+        Paràmetres:
+           a2, b2, c2: semieixos al quadrat
+           eix1: direcció de l'eix principal (de les x')
+           eix2: en pricipi és la direcció de l'eix de les y', però si no és
+                 perpendicular a eix1, es calcula el perpendicular que està
+                 en el mateix pla vectorial que <eix1,eix2>
+        """
+        if not isinstance(centre,Punt):
+            return None
+        if not isinstance(eix1,Vector):
+            return None
+        if not isinstance(eix2,Vector):
+            return None
+        if centre.dimensio != 3:
+            return None
+        if eix1.dimensio != 3:
+            return None
+        if eix2.dimensio != 3:
+            return None
+        if eix1.length() == 0:
+            return None
+        if eix2.length() == 0:
+            return None
+        m = Matriu.from_vectors_columna([eix1,eix2])
+        if m.rank() != 2:
+            return None
+        if a2 <= 0:
+            return None
+        if b2 <= 0:
+            return None
+        if b2 <= 0:
+            return None
+        return super(Quadrica,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,a2,b2,c2,centre,eix1,eix2):
+        s = SubespaiVectorial([eix1,eix2])
+        base = s.amplia_base(unitaria=True)
+        r = ReferenciaAfi(centre,base)
+        g = mcd_llista([a2,b2,c2])
+        t = a2 * b2 * c2 / g
+        a2 = a2 / g
+        b2 = b2 / g
+        c2 = c2 / g
+        m = Matriu.diagonal(Vector([b2*c2,a2*c2,a2*b2,-t]))
+        Conica.__init__(self,m,r)
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls):
+        """
+        Retorna un el·lipsoide de manera aleatòria aleatòria
+        """
+        trobat = False
+        while not trobat:
+            eix1 = Vector.aleatori(l=3,maxim=3)
+            eix2 = Vector.aleatori(l=3,maxim=3)
+            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                continue
+            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
+        trobat = False
+        while not trobat:
+            centre = Punt.aleatori(l=3,maxim=4)
+            trobat = centre.length() > 0
+        c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
+        trobat = False
+        while not trobat:
+            a = random.randint(0,len(c) - 1)
+            a2 = c[a]
+            a = random.randint(0,len(c) - 1)
+            b2 = c[a]
+            a = random.randint(0,len(c) - 1)
+            c2 = c[a]
+            trobat = a2 != b2 or a2 != c2
+        return cls(a2,b2,c2,centre,eix1,eix2)
+    #
+    #
+    #
+    def centre(self):
+        """
+        Retorna el centre de l'el·lipsoide
+        """
+        return (self.ref.origen)
+    #
+    #
+    #
+    def semieixos(self):
+        """
+        Retorna els semieixos de l'el·lipsoide
+        """
+        a = self.matriu[0,0]
+        b = self.matriu[1,1]
+        c = self.matriu[2,2]
+        f = - self.matriu[3,3]
+        return (sqrt(Rational(f,a)),sqrt(Rational(f,b)),sqrt(Rational(f,c)))
+    #
+    #
+    #
+    def semieixos_quadrats(self):
+        """
+        Retorna els semieixos al quadrat de l'el·lipsoide
+        """
+        a = self.matriu[0,0]
+        b = self.matriu[1,1]
+        c = self.matriu[2,2]
+        f = - self.matriu[3,3]
+        return (Rational(f,a),Rational(f,b),Rational(f,c))
+    #
+    #
+    #
+    def equacio_reduida(self):
+        a2, b2, c2 = self.semieixos_quadrats()
+        if a2 == 1:
+            str = "x'^2"
+        else:
+            str = f"\\frac{{x'^2}}{{ {a2} }}"
+        if b2 == 1:
+            str += " = y'^2"
+        else:
+            str += f" = \\frac{{y'^2}}{{ {b2} }}"
+        if c2 == 1:
+            str += " = z'^2 = 1"
+        else:
+            str += f" = \\frac{{z'^2}}{{ {c2} }} = 1"
+        return str
