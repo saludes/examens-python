@@ -19,10 +19,21 @@ import sys
 from sympy import *
 from Algebra import *
 
+
+# v = Vector([sqrt(2) + 2 * sqrt(5),- 2 * sqrt(5) + sqrt(2)])
+# #v = Vector([-6 + 2 * sqrt(2),2 + 6 * sqrt(2)])
+# #v = Vector([-30 * sqrt(20) + 4 * sqrt(10),6 *sqrt(10) + 20 * sqrt(20)])
+# #v = Vector([-30 * sqrt(20),20 * sqrt(20)])
+# #v = Vector([15 - sqrt(15),-15 - sqrt(15)])
+# v.radsimplificar()
+# print(v)
+# sys.exit(0)
+
+
 c = Hiperbola.aleatoria()
-print(c)
 v1, v2 = c.vectors_directors_asimptotes()
-print (c.equacio_continua_asimptota(v1))
+print(v1)
+print(v2)
 sys.exit(0)
 
 #

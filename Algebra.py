@@ -239,9 +239,74 @@ def primer_no_nul(list):
 def vectors_latex(l):
     return ",".join([str(k) for k in l])
 
-def codict(expr, *x):
-    collected = Poly(expr, *x).as_expr()
-    return dict(i.as_independent(*x)[::-1] for i in Add.make_args(collected))
+class Radicals(object):
+    """
+    Classe per treure factor comú en expressions on hi apareixen arrels quadrades
+    """
+    def __init__(self):
+        self.quadrats = []
+        self.enters = []
+        self.fraccions = []
+    #
+    #
+    #
+    def busca_quadrats(self,el):
+        """
+        Afegeix els termes que apareixen dins d'arrels quadrades a la llista
+        self.quadrats
+        """
+        if isinstance(el,Pow) and el.args[1] == Rational(1,2):
+            if el.args[0] not in self.quadrats:
+                self.quadrats.append(el.args[0])
+        elif isinstance(el,int) or isinstance(el,Integer):
+            if el not in self.enters:
+                self.enters.append(el)
+        else:
+            for k in el.args:
+                self.busca_quadrats(k)
+    #
+    #
+    #
+    def busca_fraccions(self,el):
+        """
+        Afegeix els termes que apareixen als denominadors a la llista
+        self.fraccions
+        """
+        if isinstance(el,Pow):
+            return
+        if isinstance(el,int) or isinstance(el,Integer):
+            return
+        if isinstance(el,Rational):
+            if el.q not in self.fraccions:
+                self.fraccions.append(el.q)
+        for k in el.args:
+            self.busca_fraccions(k)
+    #
+    #
+    #
+    def mcd(self):
+        """
+        Retorna el màxim comú divisor dels elements de la llista self.quadrats
+        """
+        if len(self.quadrats) == 0:
+            a = 1
+        else:
+            a = mcd_llista(self.quadrats)
+        if len(self.enters) == 0:
+            b = 1
+        else:
+            b = mcd_llista(self.enters)
+        return (a,b)
+    #
+    #
+    #
+    def mcm(self):
+        """
+        Retorna el mínim comú múltiple dels elements de la llista self.faccions
+        """
+        if len(self.fraccions) == 0:
+            return 1
+        return mcm_llista(self.fraccions)
 
 class Vector(object):
     """
@@ -546,21 +611,58 @@ class Vector(object):
             return
         d = []
         for i in range(self.dimensio):
-            if isinstance(self.components[i],Rational):
-                d.append(self.components[i].q)
-            elif isinstance(self.components[i],int):
+            k = self.components[i]
+            if isinstance(k,Rational):
+                d.append(k.q)
+            elif isinstance(k,int):
                 pass
-            elif isinstance(self.components[i],Integer):
+            elif isinstance(k,Integer):
                 pass
             else:
                 return
         mcm = mcm_llista(d)
         v = [mcm * x for x in self.components]
         mcd = mcd_llista(v)
-        v = [k // mcd for k in v]
+        v = [simplify(k // mcd) for k in v]
         if v[0] < 0:
             v = [-k for k in v]
         self.components = list(v)
+    #
+    #
+    #
+    def te_fraccions(self):
+        for k in self.components:
+            if te_fraccions(k):
+                return True
+        return False
+    #
+    #
+    #
+    def radsimplificar(self):
+        r = Radicals()
+        for k in self.components:
+            r.busca_quadrats(k)
+        a, b = r.mcd()
+        if abs(b) != 1:
+            for k in range(self.dimensio):
+                self.components[k] /= b
+        if len(r.quadrats) <=  1:
+            for k in range(self.dimensio):
+                n = sqrt(a) * self.components[k]
+                self.components[k] = simplify(n.expand())
+            self.simplificar()
+            return
+        for k in range(self.dimensio):
+            n = sqrt(a) * self.components[k] / a
+            self.components[k] = simplify(n.expand())
+        r = Radicals()
+        for k in self.components:
+            r.busca_fraccions(k)
+        m = r.mcm()
+        if m != 1:
+            for k in range(self.dimensio):
+                self.components[k] *= m
+        self.simplificar()
     #
     #
     #
@@ -3593,11 +3695,9 @@ class Hiperbola(Conica):
         a = l * self.semieix_real()
         b = l * self.semieix_imaginari()
         v1 = self.ref.base.vector_de_components(Vector([a,b]))
-        v1 = Vector([-v1[1],v1[0]])
         v2 = self.ref.base.vector_de_components(Vector([a,-b]))
-        v1 = Vector([-v2[1],v2[0]])
-        v1.simplificar()
-        v2.simplificar()
+        v1.radsimplificar()
+        v2.radsimplificar()
         return (v1,v2)
     #
     #
