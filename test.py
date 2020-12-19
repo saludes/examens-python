@@ -20,16 +20,6 @@ from sympy import *
 from Algebra import *
 
 
-# v = Vector([sqrt(2) + 2 * sqrt(5),- 2 * sqrt(5) + sqrt(2)])
-# #v = Vector([-6 + 2 * sqrt(2),2 + 6 * sqrt(2)])
-# #v = Vector([-30 * sqrt(20) + 4 * sqrt(10),6 *sqrt(10) + 20 * sqrt(20)])
-# #v = Vector([-30 * sqrt(20),20 * sqrt(20)])
-# #v = Vector([15 - sqrt(15),-15 - sqrt(15)])
-# v.radsimplificar()
-# print(v)
-# sys.exit(0)
-
-
 c = Hiperbola.aleatoria()
 v1, v2 = c.vectors_directors_asimptotes()
 print(v1)
@@ -52,6 +42,22 @@ print(w.latex(unitari=True))
 w.simplificar()
 print(w)
 v = w.reordena_aleatoriament()
+print(v)
+
+v = Vector([sqrt(2) + 2 * sqrt(5),- 2 * sqrt(5) + sqrt(2)])
+v.radsimplificar()
+print(v)
+v = Vector([-6 + 2 * sqrt(2),2 + 6 * sqrt(2)])
+v.radsimplificar()
+print(v)
+v = Vector([-30 * sqrt(20) + 4 * sqrt(10),6 *sqrt(10) + 20 * sqrt(20)])
+v.radsimplificar()
+print(v)
+v = Vector([-30 * sqrt(20),20 * sqrt(20)])
+v.radsimplificar()
+print(v)
+v = Vector([15 - sqrt(15),-15 - sqrt(15)])
+v.radsimplificar()
 print(v)
 print()
 
