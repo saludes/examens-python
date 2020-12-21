@@ -19,11 +19,13 @@ import sys
 from sympy import *
 from Algebra import *
 
+for i in range(30):
+    q = Quadrica.aleatoria(maxim=100,diagonal=80)
+    print(q.tipus())
+    print(q)
+    print(q.equacio_reduida())
+    print()
 
-c = Hiperbola.aleatoria()
-v1, v2 = c.vectors_directors_asimptotes()
-print(v1)
-print(v2)
 sys.exit(0)
 
 #

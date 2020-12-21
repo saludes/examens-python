@@ -32,6 +32,7 @@ from sympy.printing.printer import Printer
 from sympy.printing.latex import print_latex
 from sympy.core.basic import Basic
 from itertools import permutations
+import re
 
 var('a b c d')
 ddict = collections.OrderedDict([(a**2,1),(b**2,2),(c**2,3),(d**2,4),
@@ -225,9 +226,27 @@ def matriu_latex(m,format=None,ampliada=False):
         lines.append(" & ".join(map(str,line)))
     return (text.replace('LINES',"\\\\ ".join(lines)))
 
+def matriu_mathematica(m):
+    """
+    Retorna l'expressió en Mathematica d'una matriu del tipus Matrix del sympy
+    """
+    r = re.compile('sqrt\((\d+)\)')
+    f, c = m.shape
+    lines = []
+    slines = "{LINES}"
+    for i in range(f):
+        line = []
+        sline = "{LINE}"
+        for j in range(c):
+            line.append(m[i,j])
+        sline = sline.replace('LINE',",".join(map(str,line)))
+        sline = r.sub('Sqrt[\g<1>]',sline)
+        lines.append(sline)
+    return (slines.replace('LINES',",".join(lines)))
+
 def primer_no_nul(list):
     """
-    Retorna l'índel del primer coeficient no nul d'una llista
+    Retorna l'índex del primer coeficient no nul d'una llista
     """
     if list is None or len(list) == 0:
         return None
@@ -893,7 +912,7 @@ class Base(object):
         if not self.unitaria:
             base = ",".join(map(str,self.vecs))
         else:
-            base = ",".join([v.latex(True) for v in self.vecs])
+            base = ",".join([v.latex(unitari=True) for v in self.vecs])
         return f"{base}"
     #
     #
@@ -942,6 +961,16 @@ class Base(object):
                     m = a
             trobat = m <= maxim
         return cls(base,unitaria)
+    #
+    #
+    #
+    def quadrats_longituds(self):
+        """
+        Retorna els quadrats de les lo0ngituds dels vectors de la base sense tenir
+        en compte si la base és unitària
+        """
+        return [v.length()**2 for v in self.vecs]
+
 
 class Matriu:
     """
@@ -1029,6 +1058,19 @@ class Matriu:
         Retorna el nombre de zeros de la matriu
         """
         return nzeros(self.matriu)
+    #
+    #
+    #
+    def max_diagonal(self):
+        if self.files == 0 or self.columnes == 0:
+            return 0
+        max = 0
+        m = min(self.files,self.columnes)
+        for i in range(m):
+            k = abs(self.matriu[i,i])
+            if k > max:
+                max = k
+        return max
     #
     #
     #
@@ -1593,7 +1635,7 @@ class Matriu:
         for i in range(self.columnes):
             for j in range(self.files):
                 if isinstance(self.matriu[i,j],Rational):
-                    d.append(self.matriu[i,i].q)
+                    d.append(self.matriu[i,j].q)
                 elif isinstance(self.matriu[i,j],int):
                     pass
                 elif isinstance(self.matriu[i,j],Integer):
@@ -2356,9 +2398,6 @@ class ReferenciaAfi(object):
         else:
             unitaris = [(1 / v.length()) * v for v in self.base.vecs]
             c = Matriu.from_vectors_columna(unitaris)
-        print(self.origen)
-        print(c)
-        print(punt)
         p = self.origen + c * punt
         return Punt(p.components)
     #
@@ -3565,6 +3604,9 @@ class Ellipse(Conica):
     #
     #
     def equacio_reduida(self):
+        """
+        Retorna l'equacio reduïda de l'el·lipse
+        """
         a2 = self.semieix_major()**2
         b2 = self.semieix_menor()**2
         if a2 == 1:
@@ -3680,6 +3722,9 @@ class Hiperbola(Conica):
     #
     #
     def equacio_reduida(self):
+        """
+        Retorna l'equacio reduïda de la hipèrbola
+        """
         a2 = self.semieix_real()**2
         b2 = self.semieix_imaginari()**2
         if a2 == 1:
@@ -3748,7 +3793,6 @@ class Parabola(Conica):
     def __init__(self,vertex,focus):
         eix = focus - vertex
         p = 2 * eix.length()
-        print("Parametre:",p)
         m = Matriu(Matrix(3,3,[1,0,0,0,0,-p,0,-p,0]))
         s = SubespaiVectorial([eix])
         base = s.amplia_base_suplementari(unitaria=True)
@@ -3785,6 +3829,9 @@ class Parabola(Conica):
     #
     #
     def equacio_reduida(self):
+        """
+        Retorna l'equacio reduïda de la paràbola
+        """
         p = self.parametre()
         if 2 * p == 1:
             return f"y' = x'^2"
@@ -3842,8 +3889,8 @@ class Quadrica(object):
             a = a.inserta_columna(3,ref.origen)
             a = a.inserta_fila(3,Vector([0,0,0,1]))
             b = a.inversa()
-            self.canonica = b.transposada() * matriu * b
-            self.canonica.simplificar()
+            self.canonica = b.transposada() * self.matriu * b
+        self.canonica.simplificar()
     #
     #
     #
@@ -3856,6 +3903,145 @@ class Quadrica(object):
         m = Matriu.matriu_columna(Vector([x,y,z,1]))
         r = m.transposada() * self.canonica * m
         return mylatex(r[0,0].expand())
+    #
+    #
+    #
+    @classmethod
+    def ellipsoide(cls,maxim=30,diagonal=15):
+        trobat = False
+        while not trobat:
+            e = Ellipsoide.aleatoria()
+            trobat = e.canonica.norma_maxim() <= maxim and e.canonica.nzeros() < 4 and e.canonica.max_diagonal() < diagonal
+        return e
+    #
+    #
+    #
+    @classmethod
+    def hiperboloideunafulla(cls,maxim=30,diagonal=15):
+        trobat = False
+        while not trobat:
+            h = HiperboloideUnaFulla.aleatoria()
+            trobat = h.canonica.norma_maxim() <= maxim and h.canonica.nzeros() < 4 and h.canonica.max_diagonal() < diagonal
+        return h
+    #
+    #
+    #
+    @classmethod
+    def hiperboloideduesfulla(cls,maxim=30,diagonal=15):
+        trobat = False
+        while not trobat:
+            h = HiperboloideDuesFulles.aleatoria()
+            trobat = h.canonica.norma_maxim() <= maxim and h.canonica.nzeros() < 4 and h.canonica.max_diagonal() < diagonal
+        return h
+    #
+    #
+    #
+    @classmethod
+    def con(cls,maxim=30,diagonal=15):
+        trobat = False
+        while not trobat:
+            c = Con.aleatoria()
+            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 4 and c.canonica.max_diagonal() < diagonal
+        return c
+    #
+    #
+    #
+    @classmethod
+    def cilindreelliptic(cls,maxim=30,diagonal=15):
+        trobat = False
+        while not trobat:
+            c = CilindreElliptic.aleatoria()
+            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 4 and c.canonica.max_diagonal() < diagonal
+        return c
+    #
+    #
+    #
+    @classmethod
+    def cilindrehiperbolic(cls,maxim=30,diagonal=15):
+        trobat = False
+        while not trobat:
+            c = CilindreHiperbolic.aleatoria()
+            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 4 and c.canonica.max_diagonal() < diagonal
+        return c
+    #
+    #
+    #
+    @classmethod
+    def paraboloideelliptic(cls,maxim=30,diagonal=15):
+        trobat = False
+        while not trobat:
+            p = ParaboloideElliptic.aleatoria()
+            trobat = p.canonica.norma_maxim() <= maxim and p.canonica.nzeros() < 4 and p.canonica.max_diagonal() < diagonal
+        return p
+    #
+    #
+    #
+    @classmethod
+    def paraboloidehiperbolic(cls,maxim=30,diagonal=15):
+        trobat = False
+        while not trobat:
+            p = ParaboloideHiperbolic.aleatoria()
+            trobat = p.canonica.norma_maxim() <= maxim and p.canonica.nzeros() < 4 and p.canonica.max_diagonal() < diagonal
+        return p
+    #
+    #
+    #
+    @classmethod
+    def cilindreparabolic(cls,maxim=30,diagonal=15):
+        trobat = False
+        while not trobat:
+            c = CilindreParabolic.aleatoria()
+            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 4 and c.canonica.max_diagonal() < diagonal
+        return c
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls,maxim=30,diagonal=15):
+        """
+        Retorna una quàdrica de forma aleatòria
+        """
+        r = random.randint(0,9)
+        if r == 0:
+            return Quadrica.ellipsoide(maxim,diagonal)
+        if r == 1:
+            return Quadrica.hiperboloideunafulla(maxim,diagonal)
+        if r == 2:
+            return Quadrica.hiperboloideduesfulla(maxim,diagonal)
+        if r == 3:
+            return Quadrica.con(maxim,diagonal)
+        if r == 4:
+            return Quadrica.cilindreelliptic(maxim,diagonal)
+        if r == 5:
+            return Quadrica.cilindrehiperbolic(maxim,diagonal)
+        if r == 6:
+            return Quadrica.paraboloideelliptic(maxim,diagonal)
+        if r == 7:
+            return Quadrica.paraboloidehiperbolic(maxim,diagonal)
+        return Quadrica.cilindreparabolic(maxim,diagonal)
+    #
+    #
+    #
+    def tipus(self):
+        if isinstance(self,Ellipsoide):
+            return "Ellipsoide"
+        if isinstance(self,HiperboloideUnaFulla):
+            return "HiperboloideUnaFulla"
+        if isinstance(self,HiperboloideDuesFulles):
+            return "HiperboloideDuesFulles"
+        if isinstance(self,Con):
+            return "Con"
+        if isinstance(self,CilindreElliptic):
+            return "CilindreElliptic"
+        if isinstance(self,CilindreHiperbolic):
+            return "CilindreHiperbolic"
+        if isinstance(self,ParaboloideElliptic):
+            return "ParaboloideElliptic"
+        if isinstance(self,ParaboloideHiperbolic):
+            return "ParaboloideHiperbolic"
+        if isinstance(self,CilindreParabolic):
+            return "CilindreParabolic"
+        return ""
 
 class Ellipsoide(Quadrica):
     """
@@ -3897,7 +4083,7 @@ class Ellipsoide(Quadrica):
             return None
         if b2 <= 0:
             return None
-        if b2 <= 0:
+        if c2 <= 0:
             return None
         return super(Quadrica,cls).__new__(cls)
     #
@@ -3908,12 +4094,12 @@ class Ellipsoide(Quadrica):
         base = s.amplia_base(unitaria=True)
         r = ReferenciaAfi(centre,base)
         g = mcd_llista([a2,b2,c2])
-        t = a2 * b2 * c2 / g
-        a2 = a2 / g
-        b2 = b2 / g
-        c2 = c2 / g
+        t = a2 * b2 * c2 // g
+        a2 = a2 // g
+        b2 = b2 // g
+        c2 = c2 // g
         m = Matriu.diagonal(Vector([b2*c2,a2*c2,a2*b2,-t]))
-        Conica.__init__(self,m,r)
+        Quadrica.__init__(self,m,r)
     #
     #
     #
@@ -3933,7 +4119,7 @@ class Ellipsoide(Quadrica):
         while not trobat:
             centre = Punt.aleatori(l=3,maxim=4)
             trobat = centre.length() > 0
-        c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
+        c = [1,2,3,4,5,8,10,12,16,18,20,25,36]
         trobat = False
         while not trobat:
             a = random.randint(0,len(c) - 1)
@@ -3980,17 +4166,1070 @@ class Ellipsoide(Quadrica):
     #
     #
     def equacio_reduida(self):
+        """
+        Retorna l'equacio reduïda de l'el·lipsoide
+        """
         a2, b2, c2 = self.semieixos_quadrats()
         if a2 == 1:
             str = "x'^2"
         else:
-            str = f"\\frac{{x'^2}}{{ {a2} }}"
+            str = f"\\frac{{x'^2}}{{ {latex(a2)} }}"
         if b2 == 1:
-            str += " = y'^2"
+            str += " + y'^2"
         else:
-            str += f" = \\frac{{y'^2}}{{ {b2} }}"
+            str += f" + \\frac{{y'^2}}{{ {latex(b2)} }}"
         if c2 == 1:
-            str += " = z'^2 = 1"
+            str += " + z'^2 = 1"
         else:
-            str += f" = \\frac{{z'^2}}{{ {c2} }} = 1"
+            str += f" + \\frac{{z'^2}}{{ {latex(c2)} }} = 1"
         return str
+
+class HiperboloideUnaFulla(Quadrica):
+    """
+    Classe per treballar amb hiperboloides d'una fulla
+    """
+    #
+    #
+    #
+    def __new__(cls,a2,b2,c2,centre,eix1,eix2):
+        """
+        Constructor.
+        Paràmetres:
+           a2, b2, c2: semieixos al quadrat
+           eix1: direcció de l'eix principal (de les x')
+           eix2: en pricipi és la direcció de l'eix de les y', però si no és
+                 perpendicular a eix1, es calcula el perpendicular que està
+                 en el mateix pla vectorial que <eix1,eix2>
+        """
+        if not isinstance(centre,Punt):
+            return None
+        if not isinstance(eix1,Vector):
+            return None
+        if not isinstance(eix2,Vector):
+            return None
+        if centre.dimensio != 3:
+            return None
+        if eix1.dimensio != 3:
+            return None
+        if eix2.dimensio != 3:
+            return None
+        if eix1.length() == 0:
+            return None
+        if eix2.length() == 0:
+            return None
+        m = Matriu.from_vectors_columna([eix1,eix2])
+        if m.rank() != 2:
+            return None
+        if a2 <= 0:
+            return None
+        if b2 <= 0:
+            return None
+        if c2 <= 0:
+            return None
+        return super(Quadrica,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,a2,b2,c2,centre,eix1,eix2):
+        s = SubespaiVectorial([eix1,eix2])
+        base = s.amplia_base(unitaria=True)
+        r = ReferenciaAfi(centre,base)
+        g = mcd_llista([a2,b2,c2])
+        t = a2 * b2 * c2 // g
+        a2 = a2 // g
+        b2 = b2 // g
+        c2 = c2 // g
+        m = Matriu.diagonal(Vector([b2*c2,a2*c2,-a2*b2,-t]))
+        Quadrica.__init__(self,m,r)
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls):
+        """
+        Retorna un hiperboloide d'una fulla de manera aleatòria aleatòria
+        """
+        trobat = False
+        while not trobat:
+            eix1 = Vector.aleatori(l=3,maxim=3)
+            eix2 = Vector.aleatori(l=3,maxim=3)
+            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                continue
+            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
+        trobat = False
+        while not trobat:
+            centre = Punt.aleatori(l=3,maxim=4)
+            trobat = centre.length() > 0
+        c = [1,2,3,4,5,8,10,12,16,18,20,25,36]
+        trobat = False
+        while not trobat:
+            a = random.randint(0,len(c) - 1)
+            a2 = c[a]
+            a = random.randint(0,len(c) - 1)
+            b2 = c[a]
+            a = random.randint(0,len(c) - 1)
+            c2 = c[a]
+            trobat = a2 != b2 or a2 != c2
+        return cls(a2,b2,c2,centre,eix1,eix2)
+    #
+    #
+    #
+    def centre(self):
+        """
+        Retorna el centre de l'el·lipsoide
+        """
+        return (self.ref.origen)
+    #
+    #
+    #
+    def semieixos(self):
+        """
+        Retorna els semieixos de l'el·lipsoide
+        """
+        a = self.matriu[0,0]
+        b = self.matriu[1,1]
+        c = - self.matriu[2,2]
+        f = - self.matriu[3,3]
+        return (sqrt(Rational(f,a)),sqrt(Rational(f,b)),sqrt(Rational(f,c)))
+    #
+    #
+    #
+    def semieixos_quadrats(self):
+        """
+        Retorna els semieixos al quadrat de l'el·lipsoide
+        """
+        a = self.matriu[0,0]
+        b = self.matriu[1,1]
+        c = - self.matriu[2,2]
+        f = - self.matriu[3,3]
+        return (Rational(f,a),Rational(f,b),Rational(f,c))
+    #
+    #
+    #
+    def equacio_reduida(self):
+        """
+        Retorna l'equacio reduïda de l'hiperboloide d'una fulla
+        """
+        a2, b2, c2 = self.semieixos_quadrats()
+        if a2 == 1:
+            str = "x'^2"
+        else:
+            str = f"\\frac{{x'^2}}{{ {latex(a2)} }}"
+        if b2 == 1:
+            str += " + y'^2"
+        else:
+            str += f" + \\frac{{y'^2}}{{ {latex(b2)} }}"
+        if c2 == 1:
+            str += " - z'^2 = 1"
+        else:
+            str += f" - \\frac{{z'^2}}{{ {latex(c2)} }} = 1"
+        return str
+
+class HiperboloideDuesFulles(Quadrica):
+    """
+    Classe per treballar amb hiperboloides de dues fulles
+    """
+    #
+    #
+    #
+    def __new__(cls,a2,b2,c2,centre,eix1,eix2):
+        """
+        Constructor.
+        Paràmetres:
+           a2, b2, c2: semieixos al quadrat
+           eix1: direcció de l'eix principal (de les x')
+           eix2: en pricipi és la direcció de l'eix de les y', però si no és
+                 perpendicular a eix1, es calcula el perpendicular que està
+                 en el mateix pla vectorial que <eix1,eix2>
+        """
+        if not isinstance(centre,Punt):
+            return None
+        if not isinstance(eix1,Vector):
+            return None
+        if not isinstance(eix2,Vector):
+            return None
+        if centre.dimensio != 3:
+            return None
+        if eix1.dimensio != 3:
+            return None
+        if eix2.dimensio != 3:
+            return None
+        if eix1.length() == 0:
+            return None
+        if eix2.length() == 0:
+            return None
+        m = Matriu.from_vectors_columna([eix1,eix2])
+        if m.rank() != 2:
+            return None
+        if a2 <= 0:
+            return None
+        if b2 <= 0:
+            return None
+        if c2 <= 0:
+            return None
+        return super(Quadrica,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,a2,b2,c2,centre,eix1,eix2):
+        s = SubespaiVectorial([eix1,eix2])
+        base = s.amplia_base(unitaria=True)
+        r = ReferenciaAfi(centre,base)
+        g = mcd_llista([a2,b2,c2])
+        t = a2 * b2 * c2 // g
+        a2 = a2 // g
+        b2 = b2 // g
+        c2 = c2 // g
+        m = Matriu.diagonal(Vector([b2*c2,a2*c2,-a2*b2,t]))
+        Quadrica.__init__(self,m,r)
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls):
+        """
+        Retorna un hiperboloide de dues fulles de manera aleatòria aleatòria
+        """
+        trobat = False
+        while not trobat:
+            eix1 = Vector.aleatori(l=3,maxim=3)
+            eix2 = Vector.aleatori(l=3,maxim=3)
+            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                continue
+            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
+        trobat = False
+        while not trobat:
+            centre = Punt.aleatori(l=3,maxim=4)
+            trobat = centre.length() > 0
+        c = [1,2,3,4,5,8,10,12,16,18,20,25,36]
+        trobat = False
+        while not trobat:
+            a = random.randint(0,len(c) - 1)
+            a2 = c[a]
+            a = random.randint(0,len(c) - 1)
+            b2 = c[a]
+            a = random.randint(0,len(c) - 1)
+            c2 = c[a]
+            trobat = a2 != b2 or a2 != c2
+        return cls(a2,b2,c2,centre,eix1,eix2)
+    #
+    #
+    #
+    def centre(self):
+        """
+        Retorna el centre de l'hiperboloide de dues fulles
+        """
+        return (self.ref.origen)
+    #
+    #
+    #
+    def semieixos(self):
+        """
+        Retorna els semieixos de l'hiperboloide de dues fulles
+        """
+        a = self.matriu[0,0]
+        b = self.matriu[1,1]
+        c = - self.matriu[2,2]
+        f = self.matriu[3,3]
+        return (sqrt(Rational(f,a)),sqrt(Rational(f,b)),sqrt(Rational(f,c)))
+    #
+    #
+    #
+    def semieixos_quadrats(self):
+        """
+        Retorna els semieixos al quadrat de l'hiperboloide de dues fulles
+        """
+        a = self.matriu[0,0]
+        b = self.matriu[1,1]
+        c = - self.matriu[2,2]
+        f = self.matriu[3,3]
+        return (Rational(f,a),Rational(f,b),Rational(f,c))
+    #
+    #
+    #
+    def equacio_reduida(self):
+        """
+        Retorna l'equacio reduïda de l'hiperboloide de dues fulles
+        """
+
+        a2, b2, c2 = self.semieixos_quadrats()
+        if a2 == 1:
+            str = "x'^2"
+        else:
+            str = f"\\frac{{x'^2}}{{ {latex(a2)} }}"
+        if b2 == 1:
+            str += " + y'^2"
+        else:
+            str += f" + \\frac{{y'^2}}{{ {latex(b2)} }}"
+        if c2 == 1:
+            str += " - z'^2 = -1"
+        else:
+            str += f" - \\frac{{z'^2}}{{ {latex(c2)} }} = -1"
+        return str
+
+class Con(Quadrica):
+    """
+    Classe per treballar amb cons
+    """
+    #
+    #
+    #
+    def __new__(cls,a2,b2,c2,centre,eix1,eix2):
+        """
+        Constructor.
+        Paràmetres:
+           a2, b2, c2: semieixos al quadrat
+           eix1: direcció de l'eix principal (de les x')
+           eix2: en pricipi és la direcció de l'eix de les y', però si no és
+                 perpendicular a eix1, es calcula el perpendicular que està
+                 en el mateix pla vectorial que <eix1,eix2>
+        """
+        if not isinstance(centre,Punt):
+            return None
+        if not isinstance(eix1,Vector):
+            return None
+        if not isinstance(eix2,Vector):
+            return None
+        if centre.dimensio != 3:
+            return None
+        if eix1.dimensio != 3:
+            return None
+        if eix2.dimensio != 3:
+            return None
+        if eix1.length() == 0:
+            return None
+        if eix2.length() == 0:
+            return None
+        m = Matriu.from_vectors_columna([eix1,eix2])
+        if m.rank() != 2:
+            return None
+        if a2 <= 0:
+            return None
+        if b2 <= 0:
+            return None
+        if c2 <= 0:
+            return None
+        return super(Quadrica,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,a2,b2,c2,centre,eix1,eix2):
+        s = SubespaiVectorial([eix1,eix2])
+        base = s.amplia_base(unitaria=True)
+        r = ReferenciaAfi(centre,base)
+        g = mcd_llista([a2,b2,c2])
+        t = a2 * b2 * c2 // g
+        a2 = a2 // g
+        b2 = b2 // g
+        c2 = c2 // g
+        m = Matriu.diagonal(Vector([b2*c2,a2*c2,-a2*b2,0]))
+        Quadrica.__init__(self,m,r)
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls):
+        """
+        Retorna un hiperboloide de dues fulles de manera aleatòria aleatòria
+        """
+        trobat = False
+        while not trobat:
+            eix1 = Vector.aleatori(l=3,maxim=3)
+            eix2 = Vector.aleatori(l=3,maxim=3)
+            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                continue
+            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
+        trobat = False
+        while not trobat:
+            centre = Punt.aleatori(l=3,maxim=4)
+            trobat = centre.length() > 0
+        c = [1,2,3,4,5,8,10,12,16,18,20,25,36]
+        trobat = False
+        while not trobat:
+            a = random.randint(0,len(c) - 1)
+            a2 = c[a]
+            a = random.randint(0,len(c) - 1)
+            b2 = c[a]
+            a = random.randint(0,len(c) - 1)
+            c2 = c[a]
+            trobat = a2 != b2 or a2 != c2
+        return cls(a2,b2,c2,centre,eix1,eix2)
+    #
+    #
+    #
+    def centre(self):
+        """
+        Retorna el centre o vèrtex del con
+        """
+        return (self.ref.origen)
+    #
+    #
+    #
+    def semieixos(self):
+        """
+        Retorna els semieixos del con
+        """
+        a = self.matriu[0,0]
+        b = self.matriu[1,1]
+        c = - self.matriu[2,2]
+        m = mcm_llista([a,b,c])
+        return (sqrt(Rational(m,a)),sqrt(Rational(m,b)),sqrt(Rational(m,c)))
+    #
+    #
+    #
+    def semieixos_quadrats(self):
+        """
+        Retorna els semieixos al quadrat del con
+        """
+        a = self.matriu[0,0]
+        b = self.matriu[1,1]
+        c = - self.matriu[2,2]
+        m = mcm_llista([a,b,c])
+        return (Rational(m,a),Rational(m,b),Rational(m,c))
+    #
+    #
+    #
+    def equacio_reduida(self):
+        """
+        Retorna l'equacio reduïda del con
+        """
+        a2, b2, c2 = self.semieixos_quadrats()
+        if a2 == 1:
+            str = "x'^2"
+        else:
+            str = f"\\frac{{x'^2}}{{ {latex(a2)} }}"
+        if b2 == 1:
+            str += " + y'^2"
+        else:
+            str += f" + \\frac{{y'^2}}{{ {latex(b2)} }}"
+        if c2 == 1:
+            str += " - z'^2 = 1"
+        else:
+            str += f" - \\frac{{z'^2}}{{ {latex(c2)} }} = 1"
+        return str
+
+class CilindreElliptic(Quadrica):
+    """
+    Classe per treballar amb cilindres el·líptics
+    """
+    #
+    #
+    #
+    def __new__(cls,a2,b2,centre,eix1,eix2):
+        """
+        Constructor.
+        Paràmetres:
+           a2, b2: semieixos al quadrat
+           eix1: direcció de l'eix principal (de les x')
+           eix2: en pricipi és la direcció de l'eix de les y', però si no és
+                 perpendicular a eix1, es calcula el perpendicular que està
+                 en el mateix pla vectorial que <eix1,eix2>
+        """
+        if not isinstance(centre,Punt):
+            return None
+        if not isinstance(eix1,Vector):
+            return None
+        if not isinstance(eix2,Vector):
+            return None
+        if centre.dimensio != 3:
+            return None
+        if eix1.dimensio != 3:
+            return None
+        if eix2.dimensio != 3:
+            return None
+        if eix1.length() == 0:
+            return None
+        if eix2.length() == 0:
+            return None
+        m = Matriu.from_vectors_columna([eix1,eix2])
+        if m.rank() != 2:
+            return None
+        if a2 <= 0:
+            return None
+        if b2 <= 0:
+            return None
+        return super(Quadrica,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,a2,b2,centre,eix1,eix2):
+        s = SubespaiVectorial([eix1,eix2])
+        base = s.amplia_base(unitaria=True)
+        r = ReferenciaAfi(centre,base)
+        g = mcd_llista([a2,b2])
+        t = a2 * b2 // g
+        a2 = a2 // g
+        b2 = b2 // g
+        m = Matriu.diagonal(Vector([b2,a2,0,-t]))
+        Quadrica.__init__(self,m,r)
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls):
+        """
+        Retorna un cilindre el·líptic de manera aleatòria
+        """
+        trobat = False
+        while not trobat:
+            eix1 = Vector.aleatori(l=3,maxim=3)
+            eix2 = Vector.aleatori(l=3,maxim=3)
+            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                continue
+            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
+        trobat = False
+        while not trobat:
+            centre = Punt.aleatori(l=3,maxim=4)
+            trobat = centre.length() > 0
+        c = [1,2,3,4,5,8,10,12,16,18,20,25,36]
+        trobat = False
+        while not trobat:
+            a = random.randint(0,len(c) - 1)
+            a2 = c[a]
+            a = random.randint(0,len(c) - 1)
+            b2 = c[a]
+            trobat = a2 != b2
+        return cls(a2,b2,centre,eix1,eix2)
+    #
+    #
+    #
+    def centre(self):
+        """
+        Retorna un centre del cilindre el·líptic
+        """
+        return (self.ref.origen)
+    #
+    #
+    #
+    def centres(self):
+        """
+        Retorna la recta de centres
+        """
+        return RectaAfi(self.ref.origen,self.ref.base[2])
+    #
+    #
+    #
+    def semieixos(self):
+        """
+        Retorna els semieixos del cilindre el·líptic
+        """
+        a = self.matriu[0,0]
+        b = self.matriu[1,1]
+        f = - self.matriu[3,3]
+        return (sqrt(Rational(f,a)),sqrt(Rational(f,b)))
+    #
+    #
+    #
+    def semieixos_quadrats(self):
+        """
+        Retorna els semieixos al quadrat del cilindre el·líptic
+        """
+        a = self.matriu[0,0]
+        b = self.matriu[1,1]
+        f = - self.matriu[3,3]
+        return (Rational(f,a),Rational(f,b))
+    #
+    #
+    #
+    def equacio_reduida(self):
+        """
+        Retorna l'equacio reduïda del cilindre el·líptic
+        """
+        a2, b2 = self.semieixos_quadrats()
+        if a2 == 1:
+            str = "x'^2"
+        else:
+            str = f"\\frac{{x'^2}}{{ {latex(a2)} }}"
+        if b2 == 1:
+            str += " + y'^2 = 1"
+        else:
+            str += f" + \\frac{{y'^2}}{{ {latex(b2)} }} = 1"
+        return str
+
+class CilindreHiperbolic(Quadrica):
+    """
+    Classe per treballar amb cilindres hiperbòlic
+    """
+    #
+    #
+    #
+    def __new__(cls,a2,b2,centre,eix1,eix2):
+        """
+        Constructor.
+        Paràmetres:
+           a2, b2: semieixos al quadrat
+           eix1: direcció de l'eix principal (de les x')
+           eix2: en pricipi és la direcció de l'eix de les y', però si no és
+                 perpendicular a eix1, es calcula el perpendicular que està
+                 en el mateix pla vectorial que <eix1,eix2>
+        """
+        if not isinstance(centre,Punt):
+            return None
+        if not isinstance(eix1,Vector):
+            return None
+        if not isinstance(eix2,Vector):
+            return None
+        if centre.dimensio != 3:
+            return None
+        if eix1.dimensio != 3:
+            return None
+        if eix2.dimensio != 3:
+            return None
+        if eix1.length() == 0:
+            return None
+        if eix2.length() == 0:
+            return None
+        m = Matriu.from_vectors_columna([eix1,eix2])
+        if m.rank() != 2:
+            return None
+        if a2 <= 0:
+            return None
+        if b2 <= 0:
+            return None
+        return super(Quadrica,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,a2,b2,centre,eix1,eix2):
+        s = SubespaiVectorial([eix1,eix2])
+        base = s.amplia_base(unitaria=True)
+        r = ReferenciaAfi(centre,base)
+        g = mcd_llista([a2,b2])
+        t = a2 * b2 // g
+        a2 = a2 // g
+        b2 = b2 // g
+        m = Matriu.diagonal(Vector([b2,-a2,0,-t]))
+        Quadrica.__init__(self,m,r)
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls):
+        """
+        Retorna un cilindre hiperbòlic de manera aleatòria
+        """
+        trobat = False
+        while not trobat:
+            eix1 = Vector.aleatori(l=3,maxim=3)
+            eix2 = Vector.aleatori(l=3,maxim=3)
+            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                continue
+            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
+        trobat = False
+        while not trobat:
+            centre = Punt.aleatori(l=3,maxim=4)
+            trobat = centre.length() > 0
+        c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60]
+        trobat = False
+        while not trobat:
+            a = random.randint(0,len(c) - 1)
+            a2 = c[a]
+            a = random.randint(0,len(c) - 1)
+            b2 = c[a]
+            trobat = a2 != b2
+        return cls(a2,b2,centre,eix1,eix2)
+    #
+    #
+    #
+    def centre(self):
+        """
+        Retorna un centre del cilindre hiperbòlic
+        """
+        return (self.ref.origen)
+    #
+    #
+    #
+    def centres(self):
+        """
+        Retorna la recta de centres
+        """
+        return RectaAfi(self.ref.origen,self.ref.base[2])
+    #
+    #
+    #
+    def semieixos(self):
+        """
+        Retorna els semieixos del cilindre hiperbòlic
+        """
+        a = self.matriu[0,0]
+        b = - self.matriu[1,1]
+        f = - self.matriu[3,3]
+        return (sqrt(Rational(f,a)),sqrt(Rational(f,b)))
+    #
+    #
+    #
+    def semieixos_quadrats(self):
+        """
+        Retorna els semieixos al quadrat del cilindre hiperbòlic
+        """
+        a = self.matriu[0,0]
+        b = - self.matriu[1,1]
+        f = - self.matriu[3,3]
+        return (Rational(f,a),Rational(f,b))
+    #
+    #
+    #
+    def equacio_reduida(self):
+        """
+        Retorna l'equacio reduïda del cilindre hiperbòlic
+        """
+        a2, b2 = self.semieixos_quadrats()
+        if a2 == 1:
+            str = "x'^2"
+        else:
+            str = f"\\frac{{x'^2}}{{ {latex(a2)} }}"
+        if b2 == 1:
+            str += " - y'^2 = 1"
+        else:
+            str += f" - \\frac{{y'^2}}{{ {latex(b2)} }} = 1"
+        return str
+
+class ParaboloideElliptic(Quadrica):
+    """
+    Classe per treballar amb paraboloides el·líptics
+    """
+    #
+    #
+    #
+    def __new__(cls,a2,b2,vertex,eix1,eix2):
+        """
+        Constructor.
+        Paràmetres:
+           a2, b2: semieixos al quadrat
+           eix1: direcció de l'eix principal (de les x')
+           eix2: en pricipi és la direcció de l'eix de les y', però si no és
+                 perpendicular a eix1, es calcula el perpendicular que està
+                 en el mateix pla vectorial que <eix1,eix2>
+        """
+        if not isinstance(vertex,Punt):
+            return None
+        if not isinstance(eix1,Vector):
+            return None
+        if not isinstance(eix2,Vector):
+            return None
+        if vertex.dimensio != 3:
+            return None
+        if eix1.dimensio != 3:
+            return None
+        if eix2.dimensio != 3:
+            return None
+        if eix1.length() == 0:
+            return None
+        if eix2.length() == 0:
+            return None
+        m = Matriu.from_vectors_columna([eix1,eix2])
+        if m.rank() != 2:
+            return None
+        if a2 <= 0:
+            return None
+        if b2 <= 0:
+            return None
+        return super(Quadrica,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,a2,b2,vertex,eix1,eix2):
+        s = SubespaiVectorial([eix1,eix2])
+        base = s.amplia_base(unitaria=True)
+        r = ReferenciaAfi(vertex,base)
+        g = mcd_llista([a2,b2])
+        t = a2 * b2 // g
+        a2 = a2 // g
+        b2 = b2 // g
+        q = base.quadrats_longituds()
+        t *= sqrt(q[2])
+        m = Matriu(Matrix([[b2,0,0,0],[0,a2,0,0],[0,0,0,-t/2],[0,0,-t/2,0]]))
+        Quadrica.__init__(self,m,r)
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls):
+        """
+        Retorna un paraboloide el·líptic de manera aleatòria
+        """
+        trobat = False
+        while not trobat:
+            eix1 = Vector.aleatori(l=3,maxim=3)
+            eix2 = Vector.aleatori(l=3,maxim=3)
+            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                continue
+            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
+        trobat = False
+        while not trobat:
+            vertex = Punt.aleatori(l=3,maxim=4)
+            trobat = vertex.length() > 0
+        c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60]
+        trobat = False
+        while not trobat:
+            a = random.randint(0,len(c) - 1)
+            a2 = c[a]
+            a = random.randint(0,len(c) - 1)
+            b2 = c[a]
+            trobat = a2 != b2
+        return cls(a2,b2,vertex,eix1,eix2)
+    #
+    #
+    #
+    def vertex(self):
+        """
+        Retorna el vèrtex del paraboloide el·líptic
+        """
+        return (self.ref.origen)
+    #
+    #
+    #
+    def semieixos(self):
+        """
+        Retorna els semieixos del paraboloide el·líptic
+        """
+        a = self.matriu[0,0]
+        b = self.matriu[1,1]
+        t = - 2 * self.matriu[2,3]
+        return (sqrt(t/a),sqrt(t/b))
+    #
+    #
+    #
+    def semieixos_quadrats(self):
+        """
+        Retorna els semieixos al quadrat del paraboloide el·líptic
+        """
+        a = self.matriu[0,0]
+        b = self.matriu[1,1]
+        t = - 2 * self.matriu[2,3]
+        return (t/a,t/b)
+    #
+    #
+    #
+    def equacio_reduida(self):
+        """
+        Retorna l'equacio reduïda del paraboloide el·líptic
+        """
+        a2, b2 = self.semieixos_quadrats()
+        if a2 == 1:
+            str = "z' = x'^2"
+        else:
+            str = f"z' = \\frac{{x'^2}}{{ {latex(a2)} }}"
+        if b2 == 1:
+            str += " + y'^2"
+        else:
+            str += f" + \\frac{{y'^2}}{{ {latex(b2)} }}"
+        return str
+
+class ParaboloideHiperbolic(Quadrica):
+    """
+    Classe per treballar amb paraboloides hiperbòlics
+    """
+    #
+    #
+    #
+    def __new__(cls,a2,b2,vertex,eix1,eix2):
+        """
+        Constructor.
+        Paràmetres:
+           a2, b2: semieixos al quadrat
+           eix1: direcció de l'eix principal (de les x')
+           eix2: en pricipi és la direcció de l'eix de les y', però si no és
+                 perpendicular a eix1, es calcula el perpendicular que està
+                 en el mateix pla vectorial que <eix1,eix2>
+        """
+        if not isinstance(vertex,Punt):
+            return None
+        if not isinstance(eix1,Vector):
+            return None
+        if not isinstance(eix2,Vector):
+            return None
+        if vertex.dimensio != 3:
+            return None
+        if eix1.dimensio != 3:
+            return None
+        if eix2.dimensio != 3:
+            return None
+        if eix1.length() == 0:
+            return None
+        if eix2.length() == 0:
+            return None
+        m = Matriu.from_vectors_columna([eix1,eix2])
+        if m.rank() != 2:
+            return None
+        if a2 <= 0:
+            return None
+        if b2 <= 0:
+            return None
+        return super(Quadrica,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,a2,b2,vertex,eix1,eix2):
+        s = SubespaiVectorial([eix1,eix2])
+        base = s.amplia_base(unitaria=True)
+        r = ReferenciaAfi(vertex,base)
+        g = mcd_llista([a2,b2])
+        t = a2 * b2 // g
+        a2 = a2 // g
+        b2 = b2 // g
+        q = base.quadrats_longituds()
+        t *= sqrt(q[2])
+        m = Matriu(Matrix([[b2,0,0,0],[0,-a2,0,0],[0,0,0,-t/2],[0,0,-t/2,0]]))
+        Quadrica.__init__(self,m,r)
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls):
+        """
+        Retorna un paraboloide hiperbòlic de manera aleatòria
+        """
+        trobat = False
+        while not trobat:
+            eix1 = Vector.aleatori(l=3,maxim=3)
+            eix2 = Vector.aleatori(l=3,maxim=3)
+            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                continue
+            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
+        trobat = False
+        while not trobat:
+            vertex = Punt.aleatori(l=3,maxim=4)
+            trobat = vertex.length() > 0
+        c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60]
+        trobat = False
+        while not trobat:
+            a = random.randint(0,len(c) - 1)
+            a2 = c[a]
+            a = random.randint(0,len(c) - 1)
+            b2 = c[a]
+            trobat = a2 != b2
+        return cls(a2,b2,vertex,eix1,eix2)
+    #
+    #
+    #
+    def vertex(self):
+        """
+        Retorna el vèrtex del paraboloide hiperbòlic
+        """
+        return (self.ref.origen)
+    #
+    #
+    #
+    def semieixos(self):
+        """
+        Retorna els semieixos del paraboloide hiperbòlic
+        """
+        a = self.matriu[0,0]
+        b = - self.matriu[1,1]
+        t = - 2 * self.matriu[2,3]
+        return (sqrt(t,a),sqrt(t,b))
+    #
+    #
+    #
+    def semieixos_quadrats(self):
+        """
+        Retorna els semieixos al quadrat del paraboloide hiperbòlic
+        """
+        a = self.matriu[0,0]
+        b = - self.matriu[1,1]
+        t = - 2 * self.matriu[2,3]
+        return (t/a,t/b)
+    #
+    #
+    #
+    def equacio_reduida(self):
+        """
+        Retorna l'equacio reduïda del paraboloide hiperbòlic
+        """
+        a2, b2 = self.semieixos_quadrats()
+        if a2 == 1:
+            str = "z' = x'^2"
+        else:
+            str = f"z' = \\frac{{x'^2}}{{ {latex(a2)} }}"
+        if b2 == 1:
+            str += " - y'^2"
+        else:
+            str += f" - \\frac{{y'^2}}{{ {latex(b2)} }}"
+        return str
+
+class CilindreParabolic(Quadrica):
+    """
+    Classe per treballar amb cilindres parabòlics
+    """
+    #
+    #
+    #
+    def __new__(cls,p,vertex,eix):
+        """
+        Constructor.
+        Paràmetres:
+           p: paràmetre de l'equació reduïda z' = \\frac{x'^2}{2 * p}
+           vertex: un vèrtex del cilindre parabòlic
+           eix: direcció de l'eix de les x'
+        """
+        if not isinstance(vertex,Punt):
+            return None
+        if not isinstance(eix,Vector):
+            return None
+        if vertex.dimensio != 3:
+            return None
+        if eix.dimensio != 3:
+            return None
+        if eix.nzeros() >= 2:
+            return None
+        if p == 0:
+            return None
+        return super(Quadrica,cls).__new__(cls)
+    #
+    #
+    #
+    def __init__(self,p,vertex,eix):
+        s = SubespaiVectorial([eix])
+        base = s.amplia_base(unitaria=True)
+        r = ReferenciaAfi(vertex,base)
+        m = Matriu(Matrix([[1,0,0,0],[0,0,0,0],[0,0,0,-p],[0,0,-p,0]]))
+        Quadrica.__init__(self,m,r)
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls):
+        """
+        Retorna un cilindre parabòlic de manera aleatòria
+        """
+        vertex = Punt.aleatori(l=3,maxim=4,nuls=False)
+        trobat = False
+        while not trobat:
+            eix = Vector.aleatori(l=3,maxim=3)
+            trobat = eix.nzeros() < 2 and eix.length() < 12
+        s = SubespaiVectorial([eix])
+        base = s.amplia_base(unitaria=True)
+        q = base.quadrats_longituds()
+        c = [k for k in range(1,6)] + [-k for k in range(1,6)]
+        a = random.randint(0,len(c) - 1)
+        p = 2 * c[a] * sqrt(q[2])
+        return cls(p,vertex,eix)
+    #
+    #
+    #
+    def parametre(self):
+        """
+        Retorna el paràmetre de la paràbola
+        """
+        return - self.matriu[2,3]
+    #
+    #
+    #
+    def vertex(self):
+        return (self.ref.origen)
+    #
+    #
+    #
+    def equacio_reduida(self):
+        """
+        Retorna l'equacio reduïda de la paràbola
+        """
+        p = self.parametre()
+        if 2 * p == 1:
+            return f"z' = x'^2"
+        if 2 * p == -1:
+            return f"z' = - x'^2"
+        if p > 0:
+            return f"z' = \\frac{{x'^2}}{{ {latex(2 * p)} }}"
+        return f"z' = -\\frac{{x'^2}}{{ {latex(-2 * p)} }}"
