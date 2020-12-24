@@ -337,19 +337,31 @@ class Vector(object):
     #
     #
     #
-    def __new__(cls,c):
-        if isinstance(c,list) or isinstance(c,tuple):
+    def __new__(cls,*args):
+        if len(args) == 0:
+            return None
+        if len(args) == 1:
+            if isinstance(args[0],list) or isinstance(args[0],tuple):
+                return super(Vector,cls).__new__(cls)
+        else:
+            for k in args:
+                if isinstance(k,list) or isinstance(k,tuple):
+                    return None
             return super(Vector,cls).__new__(cls)
         return None
     #
     #
     #
-    def __init__(self,c):
+    def __init__(self,*args):
         """
         Constructor.
         Paràmetres:
            c: Llista de nombres
         """
+        if len(args) == 1:
+            c = args[0]
+        else:
+            c = list(args)
         self.dimensio = len(c)
         self.components = list(c)
     #
@@ -765,20 +777,28 @@ class Punt(Vector):
     Classe per treballar amb punts.
     Internament un punt és el mateix que un vector
     """
-    def __new__(cls,c):
+    def __new__(cls,*args):
         """
         Constructor.
         Paràmetres:
            c: Llista de nombres
         """
-        if isinstance(c,list) or isinstance(c,tuple):
+        if len(args) == 0:
+            return None
+        if len(args) == 1:
+            if isinstance(args[0],list) or isinstance(args[0],tuple):
+                return super(Vector,cls).__new__(cls)
+        else:
+            for k in args:
+                if isinstance(k,list) or isinstance(k,tuple):
+                    return None
             return super(Vector,cls).__new__(cls)
         return None
     #
     #
     #
-    def __init__(self,c):
-        Vector.__init__(self,c)
+    def __init__(self,*args):
+        Vector.__init__(self,*args)
     #
     #
     #
