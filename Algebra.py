@@ -861,11 +861,17 @@ class Base(object):
     #
     #
     def es_unitaria(self):
+        """
+        Retorna si la matriu és unitària
+        """
         return self.unitaria
     #
     #
     #
     def es_ortogonal(self):
+        """
+        Retorna si la matriu és ortogonal
+        """
         for i in range(self.dimensio):
             for j in range(i+1,self.dimensio):
                 if self.vecs[i].dot(self.vecs[j]) != 0:
@@ -874,13 +880,29 @@ class Base(object):
     #
     #
     #
+    def set_unitaria(self):
+        """
+        Si la matriu és ortogonal, la passa a unitària
+        """
+        if not self.es_ortogonal():
+            return
+        self.unitaria = True
+    #
+    #
+    #
     def te_orientacio_positiva(self):
+        """
+        Retorna si té orientació positiva
+        """
         m = Matriu.from_vectors_columna(self.vecs)
         return m.determinant() > 0
     #
     #
     #
     def orientacio_positiva(self):
+        """
+        Fa que tingui orientació positiva
+        """
         if not self.te_orientacio_positiva():
             self.vecs[-1] = - self.vecs[-1]
     #
@@ -3033,7 +3055,7 @@ class TransformacioLineal(object):
     #
     #
     #
-    def matriu_en_base(base):
+    def matriu_en_base(self,base):
         if base is None:
             return self.canonica
         c = base.matriu()
@@ -3247,13 +3269,14 @@ class TransformacioAfi:
         o = " \\\\ ".join([latex(x)+p for x in o])
         d = " \\\\ ".join([latex(x)+p for x in d])
         z = Punt.nul(self.dimensio)
-        tz = Matriu.matriu_columna(self.transforma(z,ref))
+        tz = self.transforma(z,ref)
         if ref is None:
             m = self.transformacio.canonica
         else:
             m = self.transformacio.matriu_en_base(ref.base)
         s = "\\begin{pmatrix}{c} " + d + "\\end{pmatrix} = \n"
-        s += f"{tz} + \n"
+        if tz.length() > 0:
+            s += f"{Matriu.matriu_columna(tz)} + \n"
         s += f"{m}\n"
         s += "\\begin{pmatrix}{c} " + o + "\\end{pmatrix}"
         return s
@@ -3272,21 +3295,23 @@ class TransformacioAfi:
             return None
         if ref is None:
             return self.translacio + self.transformacio.transforma(p)
-        q = ref.base.punt_de_coordenades(p)
-        return q + self.transformacio.transforma(p,base=ref.base)
+        q = ref.punt_de_coordenades(p)
+        p = Punt(self.transforma(q).components)
+        return p.coordenades_en_referencia(ref)
 
 class FormaQuadratica(object):
     """
     Classe per treballar amb formes quadrètiques
     Atributs:
-       matriu: Transformació lineal
+       matriu: matriu de la forma quadrètica en la base canònica
        dimensio: n
        vaps: valors propis
+       veps: vectors propis
     """
     #
     #
     #
-    def __new__(cls,matriu,vaps=None):
+    def __new__(cls,matriu,vaps=None,base=None):
         """
         Contructor:
         Paràmetres:
@@ -3305,15 +3330,22 @@ class FormaQuadratica(object):
                 return None
             if vaps.dimensio != matriu.columnes:
                 return None
+        if base is not None:
+            if not isinstance(base,Base):
+                return None
+            if not base.es_ortogonal():
+                return None
+            if not base.es_unitaria():
+                return None
         return super(FormaQuadratica,cls).__new__(cls)
     #
     #
     #
-    def __init__(self,matriu,vaps=None):
+    def __init__(self,matriu,vaps=None,base=None):
         self.matriu = matriu
         self.dimensio = self.matriu.columnes
         if vaps is None:
-            matriu.eigenvals()
+            l = matriu.matriu.eigenvals()
             vaps = []
             for k,v in l.items():
                 for p in range(v):
@@ -3321,6 +3353,21 @@ class FormaQuadratica(object):
             self.vaps = Vector(vaps)
         else:
             self.vaps = vaps
+        if base is None:
+            self.vaps = []
+            veps = []
+            e = self.matriu.matriu.eigenvects()
+            for v, m, us in e:
+                for k in range(m):
+                    self.vaps.append(v)
+                    m = Matriu(us[k])
+                    vep = m.vectors_columna()[0]
+                    vep.simplificar()
+                    veps.append(vep)
+            s = SubespaiVectorial(veps)
+            self.base = Base(s.base_ortogonal(),unitaria=True)
+        else:
+            self.base = base
     #
     #
     #
@@ -3360,13 +3407,14 @@ class FormaQuadratica(object):
             c = b.matriu()
             m = c * d * c.transposada()
             trobat = m.norma_maxim() <= maxim
+        b.set_unitaria()
         l = m.matriu.eigenvals()
         vaps = []
         for k,v in l.items():
             for p in range(v):
                 vaps.append(k)
         vaps = Vector(vaps)
-        return cls(m,vaps)
+        return cls(m,vaps,b)
     #
     #
     #
