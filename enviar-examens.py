@@ -4,9 +4,12 @@
 Filename:   enviar-examens.py
 Author:     Rafel Amer (rafel.amer AT upc.edu)
 Copyright:  Rafel Amer 2018
-Disclaimer: This code is presented "as is" and it has been written to
-            generate random models of exams for the subject of Linear
-            Algebra at ESEIAAT, Technic University of Catalonia
+Disclaimer: This program is provided "as is", without warranty of any kind,
+            either expressed or implied, including, but not linmited to, the
+            implied warranties of merchantability and fitness for a particular
+            purpose.
+            It has been written to generate random models of exams for the
+            subject of Linear Algebra at ESEIAAT, Technic University of Catalonia
 License:    This program is free software: you can redistribute it and/or modify
             it under the terms of the GNU General Public License as published by
             the Free Software Foundation, either version 3 of the License, or

@@ -4,9 +4,12 @@
 Filename:   examen.py
 Author:     Rafel Amer (rafel.amer AT upc.edu)
 Copyright:  Rafel Amer 2020
-Disclaimer: This code is presented "as is" and it has been written to
-            generate random models of exams for the subject of Linear
-            Algebra at ESEIAAT, Technic University of Catalonia
+Disclaimer: This program is provided "as is", without warranty of any kind,
+            either expressed or implied, including, but not linmited to, the
+            implied warranties of merchantability and fitness for a particular
+            purpose.
+            It has been written to generate random models of exams for the
+            subject of Linear Algebra at ESEIAAT, Technic University of Catalonia
 License:    This program is free software: you can redistribute it and/or modify
             it under the terms of the GNU General Public License as published by
             the Free Software Foundation, either version 3 of the License, or
@@ -30,6 +33,7 @@ class Examen:
         self.parser.add_option("--examen",dest="examen",default=None)
         self.parser.add_option("--estudiants",dest="estudiants",default=None)
         self.parser.add_option("--problemes",dest="problemes",default=None)
+        self.parser.add_option("--possibles-problemes",dest="possibles",default=None)
         self.parser.add_option("--tex-engine",dest="engine",default=None)
         self.parser.add_option("--no-solucions",action="store_false",dest="solucions",default=True)
         self.parser.add_option("--aleatori",action="store_true",dest="aleatori",default=False)
@@ -47,13 +51,15 @@ class Examen:
     def ajuda(self):
         print("Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<enter> [--no-solucions] [--tex-engine=pdflatex]\n")
         print("Opcions:")
-        print("   --examen=<fitxer>        : Fitxer LaTeX amb el model d'examen")
-        print("   --estudiants=<fitxer>    : Fitxer amb nom:cognoms dels estudiants")
-        print("   --problemes=<nombre>     : Nombre de problemes")
-        print("   --tex-engine=<programa>  : Nom del programa de LaTeX utilitzat")
-        print("                            : Si no s'especifica, no es generen els PDF")
-        print("   --aleatori               : L'ordre dels problemes serà aleatori")
-        print("   --no-solucions           : No es generen els fitxers amb les solucions")
+        print("   --examen=<fitxer>              : Fitxer LaTeX amb el model d'examen")
+        print("   --estudiants=<fitxer>          : Fitxer amb nom:cognoms dels estudiants")
+        print("   --problemes=<nombre|llista>    : Nombre de problemes o llista de problemes")
+        print("   --possibles-problemes=<nombre> : Nombre de possibles problemes")
+        print("                                  : S'escullen aleatòriament \"nombre\" problemes")
+        print("   --tex-engine=<programa>        : Nom del programa de LaTeX utilitzat")
+        print("                                  : Si no s'especifica, no es generen els PDF")
+        print("   --aleatori                     : L'ordre dels problemes serà aleatori")
+        print("   --no-solucions                 : No es generen els fitxers amb les solucions")
         sys.exit(0)
     #
     #
@@ -62,12 +68,24 @@ class Examen:
         ex = self.options.examen
         est = self.options.estudiants
         prob = self.options.problemes
+        possibles = self.options.possibles
         try:
             prob = int(prob)
-            prob = list(range(prob + 1))
         except:
-            l = prob.split(",")
-            prob = list(map(int,l))
+            prob = None
+        try:
+            possibles = int(possibles)
+        except:
+            possibles = None
+        if prob is None:
+            prob = self.options.problemes
+            try:
+                l = prob.split(",")
+                prob = list(map(int,l))
+            except:
+                prob = None
+        if possibles is None and isinstance(prob,int):
+            prob = list(range(prob + 1))
         regex = re.compile('^\s*#.$',re.IGNORECASE)
         if ex is None or est is None or prob is None:
             self.ajuda()
@@ -102,17 +120,16 @@ class Examen:
             print("Error de lectura de l'exàmen")
             sys.exit(0)
         #
-        # Nombre de problemes
-        #
-        try:
-            self.problemes = prob
-        except:
-            print("Error en el nombre de problemes")
-            sys.exit(0)
-        #
         # Enunciats dels problemes
         #
-        self.maxproblema = max(self.problemes)
+        self.problemes = prob
+        if isinstance(self.problemes,int):
+            self.maxproblema = self.problemes
+        else:
+            self.maxproblema = max(self.problemes)
+        self.possibles = possibles
+        if self.possibles is not None and self.possibles > self.maxproblema:
+            self.maxproblema = self.possibles
         for i in range(1,self.maxproblema + 1):
             try:
                 with open(f"p{i}.tex") as f:
@@ -136,11 +153,18 @@ class Examen:
                 print("Error en crear la carpeta tex")
                 sys.exit(0)
         os.chdir('tex')
+
         for e in self.estudiants:
             examen = []
             problemes = probs.problemes()
+            if isinstance(self.problemes,list):
+                llista = list(self.problemes)
+            else:
+                llista = random.sample(range(self.possibles),self.problemes)
+                llista.sort()
+                llista = [x+1 for x in llista]
             for i in range(self.maxproblema):
-                if i + 1 not in self.problemes:
+                if i + 1 not in llista:
                     continue
                 relacio = problemes[i]()
                 p = self.enunciats[i]
