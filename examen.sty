@@ -392,7 +392,7 @@
   \allowhyphens\discretionary{-}{}%
   {\hbox{}\kern\leftllkern\raise\raiselldim\hbox{.}%
    \kern\rightllkern\hbox{}}\allowhyphens}
-%%% \catcode`\"=13
+\ifcsname directlua\endcsname\catcode`\·\active\fi
 \def·#1{%
  \def\ela{l}%
  \def\ELA{L}%

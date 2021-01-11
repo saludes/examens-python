@@ -37,13 +37,13 @@ from sympy.core.basic import Basic
 from itertools import permutations
 import re
 
-var('a b c d')
-ddict = collections.OrderedDict([(a**2,1),(b**2,2),(c**2,3),(d**2,4),
-                                ((a,b),5),((a,c),6),((a,d),7),
-                                ((b,c),8),((b,d),9),((c,d),10),
-                                ((b,a),5),((c,a),6),((d,a),7),
-                                ((c,b),8),((d,b),9),((d,c),10),
-                                (a,11),(b,12), (c,13), (d,14)])
+var('p q r s')
+ddict = collections.OrderedDict([(p**2,1),(q**2,2),(r**2,3),(s**2,4),
+                                ((p,q),5),((p,r),6),((p,s),7),
+                                ((q,r),8),((q,s),9),((r,s),10),
+                                ((q,p),5),((r,p),6),((s,p),7),
+                                ((r,q),8),((s,q),9),((s,r),10),
+                                (p,11),(q,12), (r,13), (s,14)])
 
 class Impresora(Printer):
     """
@@ -66,6 +66,7 @@ class Impresora(Printer):
                 return len(ddict)+1
 
         def get_place(el):
+            p, q, r, s = symbols('p q r s')
             if isinstance(el,Pow):
                 return new_place(el)
             if el.is_integer:
@@ -74,6 +75,13 @@ class Impresora(Printer):
                 return new_place(el)
             if len(el.args) == 2:
                 if el.args[0].is_symbol and el.args[1].is_symbol:
+                    k = -1
+                    for i in range(0,2):
+                        if el.args[i] not in [p,q,r,s]:
+                            k = i
+                    if k >= 0:
+                        k = (k+1) % 2
+                        return new_place(el.args[k])
                     return new_place(el.args)
                 q = el.args[len(el.args)-1]
                 if q.is_symbol or q.is_integer or q.is_rational:
@@ -83,6 +91,13 @@ class Impresora(Printer):
                 else:
                     return 0
             elif len(el.args) == 3:
+                k = -1
+                for i in range(0,2):
+                    if el.args[i+1] not in [p,q,r,s]:
+                        k = i
+                if k >= 0:
+                    k = (k+1) % 2
+                    return new_place(el.args[k+1])
                 return new_place(el.args[1:])
             else:
                 return 0
@@ -107,7 +122,6 @@ class Impresora(Printer):
                         else:
                             return " %s" % latex(el)
                     else:
-
                         return " %s" % latex(el)
                 else:
                     if el.args[0].is_rational or el.args[0].is_integer:
@@ -123,18 +137,18 @@ class Impresora(Printer):
         return "".join(a for a in to_print)
 
 def mylatex(e):
-    a, b, c, d = symbols('a b c d')
+    p, q, r, s = symbols('p q r s')
     e = str(e)
-    e = e.replace('x','a')
-    e = e.replace('y','b')
-    e = e.replace('z','c')
-    e = e.replace('t','d')
+    e = e.replace('x','p')
+    e = e.replace('y','q')
+    e = e.replace('z','r')
+    e = e.replace('t','s')
     e = sympify(e)
     e = Impresora().doprint(e)
-    e = e.replace('a','x')
-    e = e.replace('b','y')
-    e = e.replace('c','z')
-    e = e.replace('d','t')
+    e = e.replace('p','x')
+    e = e.replace('q','y')
+    e = e.replace('r','z')
+    e = e.replace('s','t')
     return e
 
 def mcd_llista(list):
@@ -1356,6 +1370,14 @@ class Matriu:
     #
     #
     #
+    def adjunta(self):
+        """
+        Retorna una nova matriu que és l'adjunta de l'actual
+        """
+        return Matriu(self.matriu.adjugate())
+    #
+    #
+    #
     @classmethod
     def invertible(cls,ordre=3,maxim=5,mzeros=-1,unitaria=False):
         """
@@ -1415,6 +1437,7 @@ class Matriu:
                 continue
             if len(set(vaps)) == 1:
                 continue
+            vaps.sort()
             d = diag(*vaps)
             a = c.matriu * d * c.matriu**(-1)
             if norma_maxim(a) > maxim:
@@ -1796,20 +1819,24 @@ class EquacioLineal:
             mcd = mcd_llista(v)
             factor = Rational(mcm,mcd)
             eq = 0
+            terme = 0
             for k in d.keys():
-                d[k] = factor * d[k]
-                eq += d[k] * k
+                if k.is_symbol and k not in self.unknowns:
+                    terme += factor * d[k] * k
+                else:
+                    d[k] = factor * d[k]
+                    eq += d[k] * k
         else:
             eq = self.equacio
         eq -= d[1]
         if t in self.unknowns:
             str = mylatex(eq)
         else:
-            str = latex(simplify(eq.expand()))
+            str = mylatex(simplify(eq.expand()))
         if self.amp:
-            str = f"{str} &= {-d[1]}"
+            str = f"{str} &= {latex(-d[1] - terme)}"
         else:
-            str = f"{str} = {-d[1]}"
+            str = f"{str} = {latex(-d[1] - terme)}"
         if self.prime > 0:
             s = self.prime * "'"
             for i in self.unknowns:
@@ -1898,7 +1925,7 @@ class SistemaEquacions:
         eq = []
         files = a.vectors_fila()
         for k in range(self.A.files):
-            eq.append(EquacioLineal.coeficients(files[k],b[k],prime))
+            eq.append(EquacioLineal.coeficients(files[k],b[k],amp=True,prime=prime))
         self.equacions = eq
         self.nombre = len(eq)
         if self.A.columnes <= 4:
@@ -2684,10 +2711,21 @@ class RectaAfi(object):
         a = Matriu.from_vectors_fila(l)
         b = a * q
         if aleatori:
-            m = Matriu.amb_rang(f=2,c=2,r=2,maxim=3,nuls=False)
+            trobat = False
+            while not trobat:
+                m = Matriu.amb_rang(f=2,c=2,r=2,maxim=3,nuls=False)
+                aux = m * a
+                trobat = aux.nzeros() == 0
             a = m * a
             b = m * b
         return SistemaEquacions(a,b,prime=prime)
+    #
+    #
+    #
+    def distancia(self,other):
+        w = self.u.cross(other.u,simplificar=True)
+        u = self.p - other.p
+        return abs(u.dot(w) / w.length())
 
 class SubespaiVectorial(object):
     """
@@ -2971,11 +3009,17 @@ class TransformacioLineal(object):
     #
     #
     def determinant(self):
+        """
+        Retorna el deterinant de la transformació lineal
+        """
         return self.canonica.determinant()
     #
     #
     #
     def es_rotacio(self):
+        """
+        Ens diu si és una rotació tridimensional o no
+        """
         if self.dimensio != 3:
             return False
         d = self.determinant()
@@ -2994,6 +3038,9 @@ class TransformacioLineal(object):
     #
     #
     def eix_angle_rotacio(self,radians=False):
+        """
+        Retorna l'eix i l'angle de rotació
+        """
         if not self.es_rotacio():
             return None
         m = self.canonica - Matriu()
@@ -3014,12 +3061,34 @@ class TransformacioLineal(object):
     #
     #
     #
+    def angles_euler(self,radians=False):
+        """
+        Retorna els angles d'Euler d'una rotació
+        """
+        if not self.es_rotacio():
+            return None
+        m = self.canonica
+        if abs(m[2,2]) != 1:
+            theta = acos(m[2,2])
+            psi = atan2(m[2,0],m[2,1])
+            phi = atan2(m[0,2],-m[1,2])
+        else:
+            pass
+        if not radians:
+            theta *= 180 / pi
+            psi *= 180 / pi
+            phi *= 180 / pi
+        return (psi,theta,phi)
+    #
+    #
+    #
     @classmethod
     def rotacio(cls,eix,angle,radians=False):
         if not radians:
             angle *= pi / 180
-        eix.normalitzar()
-        q = Quaternion.from_axis_angle(eix.components,angle)
+        v = Vector(eix.components)
+        v.normalitzar()
+        q = Quaternion.from_axis_angle(v.components,angle)
         m = Matriu(q.to_rotation_matrix())
         for i in range(m.files):
             for j in range(m.columnes):
@@ -3507,7 +3576,7 @@ class Conica(object):
         x, y = symbols('x y')
         m = Matriu.matriu_columna(Vector([x,y,1]))
         r = m.transposada() * self.canonica * m
-        return mylatex(r[0,0].expand())
+        return mylatex(r[0,0].expand()) + " = 0"
     #
     #
     #
@@ -3557,11 +3626,11 @@ class Conica(object):
     #
     def tipus(self):
         if isinstance(self,Ellipse):
-            return "Ellipse"
+            return "El·lipse"
         if isinstance(self,Hiperbola):
-            return "Hiperbola"
+            return "Hipèrbola"
         if isinstance(self,Parabola):
-            return "Parabola"
+            return "Paràbola"
         return ""
 
 class Ellipse(Conica):
@@ -3618,10 +3687,7 @@ class Ellipse(Conica):
         Retorna una el·lipse aleatòria
         """
         eix = Vector.aleatori(l=2,maxim=3,nuls=False)
-        trobat = False
-        while not trobat:
-            centre = Punt.aleatori(l=2,maxim=4)
-            trobat = centre.length() > 0
+        centre = Punt.aleatori(l=2,maxim=3,nuls=False)
         c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
         trobat = False
         while not trobat:
@@ -3685,6 +3751,11 @@ class Ellipse(Conica):
         if b2 == 1:
             return f"\\frac{{x'^2}}{{{a2}}} + y'^2 = 1"
         return f"\\frac{{x'^2}}{{{a2}}} + \\frac{{y'^2}}{{{b2}}} = 1"
+    #
+    #
+    #
+    def to_asy(self):
+        return f"Ellipse({self.centre()},{self.ref.base.vecs[0]},{self.semieix_major()**2},{self.semieix_menor()**2},x=13,y=10)"
 
 class Hiperbola(Conica):
     """
@@ -3738,10 +3809,7 @@ class Hiperbola(Conica):
         Retorna una hipèrbola aleatòria
         """
         eix = Vector.aleatori(l=2,maxim=3,nuls=False)
-        trobat = False
-        while not trobat:
-            centre = Punt.aleatori(l=2,maxim=4)
-            trobat = centre.length() > 0
+        centre = Punt.aleatori(l=2,maxim=3,nuls=False)
         c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
         trobat = False
         while not trobat:
@@ -3831,6 +3899,11 @@ class Hiperbola(Conica):
         else:
             str += f"\\frac{{ {latex(y - centre[1])} }}{{ {v[1]} }}"
         return str
+    #
+    #
+    #
+    def to_asy(self):
+        return f"Hiperbola({self.centre()},{self.ref.base.vecs[0]},{self.semieix_real()**2},{self.semieix_imaginari()**2},x=10,y=10)"
 
 class Parabola(Conica):
     """
@@ -3906,7 +3979,7 @@ class Parabola(Conica):
         p = self.parametre()
         if 2 * p == 1:
             return f"y' = x'^2"
-        return f"y' = \\frac{{x'^2}}{{{2 * p}}}"
+        return f"y' = \\frac{{x'^2}}{{{ latex(2 * p) }}}"
     #
     #
     #
@@ -3916,6 +3989,11 @@ class Parabola(Conica):
         """
         p2 = self.parametre() / 2
         return self.ref.punt_de_coordenades(Punt([0,p2]))
+    #
+    #
+    #
+    def to_asy(self):
+        return f"Parabola({self.vertex()},{self.focus()},x=10,y=10)"
 
 class Quadrica(object):
     """
