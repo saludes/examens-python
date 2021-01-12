@@ -1154,7 +1154,7 @@ class Matriu:
         Retorna el polinomi característic de la matriu
         """
         lamda = symbols('lamda')
-        p = self.matriu.charpoly(lamda)
+        p = (-1)**(self.files) * self.matriu.charpoly(lamda)
         return latex(p.as_expr())
     #
     #
