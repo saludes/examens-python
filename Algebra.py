@@ -37,13 +37,13 @@ from sympy.core.basic import Basic
 from itertools import permutations
 import re
 
-var('p q r s')
-ddict = collections.OrderedDict([(p**2,1),(q**2,2),(r**2,3),(s**2,4),
-                                ((p,q),5),((p,r),6),((p,s),7),
-                                ((q,r),8),((q,s),9),((r,s),10),
-                                ((q,p),5),((r,p),6),((s,p),7),
-                                ((r,q),8),((s,q),9),((s,r),10),
-                                (p,11),(q,12), (r,13), (s,14)])
+var('p q u v')
+ddict = collections.OrderedDict([(p**2,1),(q**2,2),(u**2,3),(v**2,4),
+                                ((p,q),5),((p,u),6),((p,v),7),
+                                ((q,u),8),((q,v),9),((u,v),10),
+                                ((q,p),5),((u,p),6),((v,p),7),
+                                ((u,q),8),((v,q),9),((v,u),10),
+                                (p,11),(q,12), (u,13), (v,14)])
 
 class Impresora(Printer):
     """
@@ -66,7 +66,7 @@ class Impresora(Printer):
                 return len(ddict)+1
 
         def get_place(el):
-            p, q, r, s = symbols('p q r s')
+            p, q, r, s = symbols('p q u v')
             if isinstance(el,Pow):
                 return new_place(el)
             if el.is_integer:
@@ -137,18 +137,21 @@ class Impresora(Printer):
         return "".join(a for a in to_print)
 
 def mylatex(e):
-    p, q, r, s = symbols('p q r s')
+    p, q, r, s = symbols('p q u v')
     e = str(e)
     e = e.replace('x','p')
     e = e.replace('y','q')
-    e = e.replace('z','r')
-    e = e.replace('t','s')
+    e = e.replace('z','u')
+    e = e.replace('t','v')
     e = sympify(e)
-    e = Impresora().doprint(e)
+    if not isinstance(e,Add):
+        e = latex(e)
+    else:
+        e = Impresora().doprint(e)
     e = e.replace('p','x')
     e = e.replace('q','y')
-    e = e.replace('r','z')
-    e = e.replace('s','t')
+    e = e.replace('u','z')
+    e = e.replace('v','t')
     return e
 
 def mcd_llista(list):
@@ -275,6 +278,20 @@ def primer_no_nul(list):
 def vectors_latex(l):
     return ",".join([str(k) for k in l])
 
+def vaps_veps_amb_signe(result,signe=1):
+    vaps = []
+    veps = []
+    for l, m, us in result:
+        if l * signe <= 0:
+            continue
+        for k in range(m):
+            vaps.append(l)
+            n1 = Matriu(us[k])
+            vep = n1.vectors_columna()[0]
+            vep.simplificar()
+            veps.append(vep)
+    return (vaps,veps)
+
 class Radicals(object):
     """
     Classe per treure factor comú en expressions on hi apareixen arrels quadrades
@@ -361,9 +378,8 @@ class Vector(object):
             if isinstance(args[0],list) or isinstance(args[0],tuple):
                 return super(Vector,cls).__new__(cls)
         else:
-            for k in args:
-                if isinstance(k,list) or isinstance(k,tuple):
-                    return None
+            if isinstance(args[0],list) or isinstance(args[0],tuple):
+                return None
             return super(Vector,cls).__new__(cls)
         return None
     #
@@ -1267,6 +1283,9 @@ class Matriu:
     #
     #
     def transposada(self):
+        """
+        Retorna la transposada de la matriu
+        """
         return Matriu(self.matriu.T)
     #
     #
@@ -1414,7 +1433,7 @@ class Matriu:
     #
     #
     @classmethod
-    def diagonalitzable(cls,ordre=3,maxim=5,mzeros=-1,mvaps=3,vapsnuls=False):
+    def diagonalitzable(cls,ordre=3,maxim=5,mzeros=-1,mvaps=3,vapsnuls=False,vapsrepetits=True):
         """
         Retorna una matriu quadrada aleatoria diagonalitzable.
         Paràmetres:
@@ -1436,6 +1455,8 @@ class Matriu:
             if not vapsnuls and 0 in vaps:
                 continue
             if len(set(vaps)) == 1:
+                continue
+            if not vapsrepetits and len(set(vaps)) != ordre:
                 continue
             vaps.sort()
             d = diag(*vaps)
@@ -1601,6 +1622,18 @@ class Matriu:
         Retorna True si és simètrica
         """
         return self == self.transposada()
+    #
+    #
+    #
+    def es_diagonal(self):
+        """
+        Retorna True si és una matriu diagonal
+        """
+        for i in range(self.files):
+            for j in range(self.columnes):
+                if i != j and self.matriu[i,j] != 0:
+                    return False
+        return True
     #
     #
     #
@@ -2010,11 +2043,11 @@ class SistemaEquacions:
         """
         system = (self.A.matriu,Matrix(self.B.dimensio,1,self.B.components))
         s = linsolve(system,*self.unknowns)
-        self.solucio = list(linsolve(system,*self.unknowns))[0]
+        self.solucio = [k for k in list(linsolve(system,*self.unknowns))[0]]
     #
     #
     #
-    def solucio_latex(self):
+    def solucio_latex(self,linia=False):
         """
         Retorna l'expressió en latex de la solució del sistema d'equacions
         """
@@ -2050,8 +2083,12 @@ class SistemaEquacions:
                 eqs.append(f"{self.unknowns[i]} &= \\frac{{{mylatex(eq)}}}{{{factor}}}")
         if len(eqs) == 1:
             return eqs[0].replace('','')
-        eqs = " \\\\ ".join(eqs)
-        return f"\\left.\\aligned {eqs} \\endaligned\\;\\right\\}}"
+        if not linia:
+            eqs = " \\\\ ".join(eqs)
+            return f"\\left.\\aligned {eqs} \\endaligned\\;\\right\\}}"
+        eqs = " $, $".join(eqs)
+        eqs = eqs.replace('&','')
+        return f"$ {eqs} $"
 
 class EquacioParametrica:
     """
@@ -2456,6 +2493,15 @@ class ReferenciaAfi(object):
     #
     #
     #
+    @classmethod
+    def aleatoria(cls,dimensio=3,unitaria=False):
+        origen = Punt.aleatori(l=dimensio,maxim=3,nuls=False)
+        m = Matriu.invertible(ordre=3,maxim=3,mzeros=0,unitaria=unitaria)
+        base = Base.from_matriu(m)
+        return cls(origen,base)
+    #
+    #
+    #
     def punt_de_coordenades(self,punt):
         """
         Retorna un nou punt expressat en la referència canònica del
@@ -2574,7 +2620,7 @@ class PlaAfi(object):
             return None
         a = Matriu.from_vectors_fila([w])
         l = a.nucli()
-        return cls(l[0],l[1],p)
+        return cls(p,l[0],l[1])
     #
     #
     #
@@ -2726,6 +2772,12 @@ class RectaAfi(object):
         w = self.u.cross(other.u,simplificar=True)
         u = self.p - other.p
         return abs(u.dot(w) / w.length())
+    #
+    #
+    #
+    def punt(self,t):
+        q = self.p + t * self.u
+        return Punt(q.components)
 
 class SubespaiVectorial(object):
     """
@@ -2856,8 +2908,11 @@ class SubespaiVectorial(object):
         Retorna una base ortogonal amb orientació positiva de R^n
         que comença amb una base del subespai
         """
-        h = self.suplementari_ortogonal()
-        b = Base(self.base_ortogonal() + h.base_ortogonal(),unitaria)
+        if self.es_total():
+            b = Base(self.base_ortogonal(),unitaria)
+        else:
+            h = self.suplementari_ortogonal()
+            b = Base(self.base_ortogonal() + h.base_ortogonal(),unitaria)
         b.orientacio_positiva()
         return b
     #
@@ -3373,21 +3428,21 @@ class TransformacioAfi:
 
 class FormaQuadratica(object):
     """
-    Classe per treballar amb formes quadrètiques
+    Classe per treballar amb formes quadràtiques
     Atributs:
        matriu: matriu de la forma quadrètica en la base canònica
        dimensio: n
        vaps: valors propis
-       veps: vectors propis
+       base: base oronormal en la que diagonalitza
     """
     #
     #
     #
-    def __new__(cls,matriu,vaps=None,base=None):
+    def __new__(cls,matriu,base=None):
         """
         Contructor:
         Paràmetres:
-           matriu: matriu de la forma quadratica
+           matriu: matriu de la forma quadratica en la base base
         """
         if not isinstance(matriu,Matriu):
             return None
@@ -3395,13 +3450,6 @@ class FormaQuadratica(object):
             return None
         if matriu != matriu.transposada():
             return None
-        if vaps is not None:
-            if isinstance(c,list) or isinstance(c,tuple):
-                vaps = Vector(vaps)
-            if not isinstance(vaps,Vector):
-                return None
-            if vaps.dimensio != matriu.columnes:
-                return None
         if base is not None:
             if not isinstance(base,Base):
                 return None
@@ -3413,40 +3461,41 @@ class FormaQuadratica(object):
     #
     #
     #
-    def __init__(self,matriu,vaps=None,base=None):
-        self.matriu = matriu
-        self.dimensio = self.matriu.columnes
-        if vaps is None:
-            l = matriu.matriu.eigenvals()
-            vaps = []
-            for k,v in l.items():
-                for p in range(v):
-                    vaps.append(k)
-            self.vaps = Vector(vaps)
-        else:
-            self.vaps = vaps
+    def __init__(self,matriu,base=None):
+        self.dimensio = matriu.columnes
         if base is None:
-            self.vaps = []
-            veps = []
-            e = self.matriu.matriu.eigenvects()
-            for v, m, us in e:
-                for k in range(m):
-                    self.vaps.append(v)
-                    m = Matriu(us[k])
-                    vep = m.vectors_columna()[0]
-                    vep.simplificar()
-                    veps.append(vep)
-            s = SubespaiVectorial(veps)
-            self.base = Base(s.base_ortogonal(),unitaria=True)
+            self.matriu = matriu
         else:
-            self.base = base
+            c = base.matriu()
+            self.matriu = c * matriu * c.transposada()
+        e = self.matriu.matriu.eigenvects()
+        vaps = []
+        veps = []
+        va, ve = vaps_veps_amb_signe(e,signe=1)
+        vaps += va
+        veps += ve
+        va, ve = vaps_veps_amb_signe(e,signe=-1)
+        vaps += va
+        veps += ve
+        s = SubespaiVectorial(veps)
+        self.base = s.amplia_base(unitaria=True)
+        self.vaps = Vector(vaps + (self.dimensio - len(vaps)) * [0])
     #
     #
     #
     def __repr__(self):
         """
-        Retorna l'expressió en latex de la forma quadrètica com a polinomi
-        de segon grau
+        Retorna l'expressió en latex de la forma quadràtica com a polinomi
+        de segon grau en la base canònica
+        """
+        return self.latex()
+    #
+    #
+    #
+    def latex(self,base=None,prime=0):
+        """
+        Retorna l'expressió en latex de la forma quadràtica com a polinomi
+        de segon grau en la base base
         """
         if self.dimensio <= 4:
             x, y, z, t = symbols('x y z t')
@@ -3456,15 +3505,27 @@ class FormaQuadratica(object):
             s = [x1, x2, x3, x4, x5, x6, x7, x8]
         s = Vector(s[0:self.dimensio])
         m = Matriu.matriu_columna(s)
-        r = m.transposada() * self.matriu * m
+        if base is None:
+            q = self.matriu
+        else:
+            c = base.matriu()
+            q = c.transposada() * self.matriu * c
+        r = m.transposada() * q * m
         if self.dimensio <= 4:
-            return mylatex(r[0,0].expand())
-        return latex(r[0,0].expand())
+            expr = mylatex(r[0,0].expand())
+        else:
+            expr = latex(r[0,0].expand())
+        if prime == 0:
+            return expr
+        p = prime * "'"
+        for k in s.components:
+            expr = expr.replace(latex(k),latex(k)+p)
+        return expr
     #
     #
     #
     @classmethod
-    def aleatoria(cls,ordre=3,maxim=20):
+    def aleatoria(cls,ordre=3,maxim=20,vapsnonuls=2):
         """
         Retorna una forma quadràtica aleatòria amb valors propis "vaps". Si "vaps"
         és None, els genera aleatòriament
@@ -3474,19 +3535,17 @@ class FormaQuadratica(object):
             vaps = Vector.aleatori(l=ordre,maxim=3)
             if len(set(vaps.components)) == 1:
                 continue
+            nonuls = [x for x in vaps.components if x != 0]
+            if len(nonuls) < vapsnonuls:
+                continue
             d = Matriu.diagonal(vaps)
             b = Base.ortogonal(ordre=ordre,maxim=5)
             c = b.matriu()
             m = c * d * c.transposada()
-            trobat = m.norma_maxim() <= maxim
-        b.set_unitaria()
-        l = m.matriu.eigenvals()
-        vaps = []
-        for k,v in l.items():
-            for p in range(v):
-                vaps.append(k)
-        vaps = Vector(vaps)
-        return cls(m,vaps,b)
+            if m.norma_maxim() > maxim:
+                continue
+            trobat = not m.es_diagonal()
+        return cls(m)
     #
     #
     #
@@ -3505,6 +3564,20 @@ class FormaQuadratica(object):
     #
     #
     #
+    def classificacio(self):
+        r, s = self.signatura()
+        if r == self.dimensio:
+            return "definida positiva"
+        if s == self.dimensio:
+            return "definida negativa"
+        if s == 0:
+            return "semidefinida positiva"
+        if r == 0:
+            return "semidefinida negativa"
+        return "no definida"
+    #
+    #
+    #
     def rank(self):
         """
         Retorna la signatura o índexs d'inèrcia de la forma quadràtica
@@ -3519,6 +3592,16 @@ class FormaQuadratica(object):
         Retorna el polinomi característic de la froma
         """
         return self.matriu.polinomi_caracteristic()
+    #
+    #
+    #
+    def expressio_euclidiana(self,prime=1):
+        """
+        Retorna l'expressió euclidiana reduïda
+        """
+        return self.latex(self.base,prime=prime)
+
+
 
 class Conica(object):
     """
