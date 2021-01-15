@@ -2,8 +2,8 @@
 # -*- coding: utf-8
 """
 Filename:   Algebra.py
-Author:     Rafel Amer (rafel.amer AT upc.edu
-Copyright:  Rafel Amer 2020
+Author:     Rafel Amer (rafel.amer AT upc.edu)
+Copyright:  Rafel Amer 2020--2021
 Disclaimer: This program is provided "as is", without warranty of any kind,
             either expressed or implied, including, but not linmited to, the
             implied warranties of merchantability and fitness for a particular
@@ -47,10 +47,10 @@ ddict = collections.OrderedDict([(p**2,1),(q**2,2),(u**2,3),(v**2,4),
 
 class Impresora(Printer):
     """
-       La funció latex() del sympy té la mania d'escriure les variables x, y, z i t
-       en l'ordre t, x, y i z. L'única manera que, de moment, he trobat per resoldre
-       aquest inconvenient és definir la classe Impresora i la funció mylatex().
-       Ho he trobat a StackOverflow.
+    La funció latex() del sympy té la mania d'escriure les variables x, y, z i t
+    en l'ordre t, x, y i z. L'única manera que, de moment, he trobat per resoldre
+    aquest inconvenient és definir la classe Impresora i la funció mylatex().
+    Ho he trobat a StackOverflow.
     """
     printmethod = 'impresora'
     #
@@ -226,6 +226,9 @@ def nzeros(m):
 def matriu_latex(m,format=None,ampliada=False):
     """
     Retorna l'expressió en latex d'una matriu del tipus Matrix del sympy
+    Parametres:
+        format:
+        ampliada: 
     """
     f, c = m.shape
     vert = ""
@@ -284,6 +287,18 @@ def vaps_veps_amb_signe(result,signe=1):
     for l, m, us in result:
         if l * signe <= 0:
             continue
+        for k in range(m):
+            vaps.append(l)
+            n1 = Matriu(us[k])
+            vep = n1.vectors_columna()[0]
+            vep.simplificar()
+            veps.append(vep)
+    return (vaps,veps)
+
+def vaps_veps(result):
+    vaps = []
+    veps = []
+    for l, m, us in result:
         for k in range(m):
             vaps.append(l)
             n1 = Matriu(us[k])
@@ -976,6 +991,16 @@ class Base(object):
             return f"\\{{{base}\\}}"
         base = ",".join([v.latex(True) for v in self.vecs])
         return f"\\left\\{{{base}\\right\\}}"
+    #
+    #
+    #
+    def vectors(self,unitaris=False):
+        """
+        Retorna els vectors la base
+        """
+        if not unitaris:
+            return self.vecs
+        return [v/v.length() for v in self.vecs]
     #
     #
     #
@@ -2469,7 +2494,7 @@ class ReferenciaAfi(object):
         Constructor.
         Paràmetres:
           origen: origen de la referència
-          base: base de la referència u2: generadors del pla
+          base: base de la referència
         """
         if not isinstance(origen,Punt):
             return None
@@ -2495,6 +2520,9 @@ class ReferenciaAfi(object):
     #
     @classmethod
     def aleatoria(cls,dimensio=3,unitaria=False):
+        """
+            Retorna una referència aleatòria
+        """
         origen = Punt.aleatori(l=dimensio,maxim=3,nuls=False)
         m = Matriu.invertible(ordre=3,maxim=3,mzeros=0,unitaria=unitaria)
         base = Base.from_matriu(m)
@@ -2557,6 +2585,14 @@ class ReferenciaAfi(object):
         m = self.base.matriu().inversa()
         b = Base.from_matriu(m)
         return ReferenciaAfi(q,b)
+    #
+    #
+    #
+    def vectors(self,unitaris=False):
+        """
+            Retorna els vectors de la base de la referència
+        """
+        return self.base.vectors(unitaris)
 
 class PlaAfi(object):
     """
@@ -3574,7 +3610,7 @@ class FormaQuadratica(object):
             return "semidefinida positiva"
         if r == 0:
             return "semidefinida negativa"
-        return "no definida"
+        return "indefinida"
     #
     #
     #
@@ -3651,6 +3687,55 @@ class Conica(object):
     #
     #
     #
+    @classmethod
+    def from_equacio(cls,eq):
+        """
+            Classifica la cònica a partir de la seva equació.
+            Només per a el·lipses, hipèrboles i paràboles
+        """
+        x, y = symbols('x y')
+        unknowns = [x,y]
+        a = diff(eq,x,2) / 2
+        b = diff(eq,x,y) / 2
+        c = diff(eq,y,2) / 2
+        d = (diff(eq,x).subs({x:1,y:0}) - 2 * a) / 2
+        e = (diff(eq,y).subs({x:0,y:1}) - 2 * c) / 2
+        f = eq.subs({x:0,y:0})
+        Q = Matrix([[a,b],[b,c]])
+        L = Matrix(2,1,[d,e])
+        vs = Q.eigenvects()
+        (t1,t2), veps = vaps_veps(vs)
+        s = list(linsolve((Q,-L),*unknowns))
+        if t1 * t2 < 0:
+            s = Punt(list(s[0]))
+            fp = eq.subs({x:s[0],y:s[1]})
+            a2 = -fp/t1
+            b2 = -fp/t2
+            if a2 > 0:
+                u = veps[0]
+            else:
+                a2, b2 = b2, a2
+                u = veps[1]
+            return Hiperbola(a2,-b2,s,u)
+        if t1 * t2 > 0:
+            s = Punt(list(s[0]))
+            fp = eq.subs({x:s[0],y:s[1]})
+            if fp == 0:
+                return None
+            a2 = -fp/t1
+            b2 = -fp/t2
+            if a2 < 0:
+                return None
+            if a2 >= b2:
+                u = veps[0]
+            else:
+                a2, b2 = b2, a2
+                u = veps[1]
+            return Ellipse(a2,b2,s,u)
+        return None
+    #
+    #
+    #
     def __repr__(self):
         """
         Retorna l'equació en latex de l'equació de la cònica en la referència
@@ -3708,6 +3793,9 @@ class Conica(object):
     #
     #
     def tipus(self):
+        """
+            Retorna el tipus de cònica
+        """
         if isinstance(self,Ellipse):
             return "El·lipse"
         if isinstance(self,Hiperbola):
@@ -3715,6 +3803,22 @@ class Conica(object):
         if isinstance(self,Parabola):
             return "Paràbola"
         return ""
+    #
+    #
+    #
+    def referencia_principal(self):
+        """
+            Retorna la referencia principal
+        """
+        return self.ref
+    #
+    #
+    #
+    def vectors(self,unitaris=False):
+        """
+            Retorna els vectors de la base de la referència principal
+        """
+        return self.ref.vectors(unitaris)
 
 class Ellipse(Conica):
     """
@@ -3820,6 +3924,27 @@ class Ellipse(Conica):
         a2 = self.semieix_major()**2
         b2 = self.semieix_menor()**2
         return sqrt(a2 - b2)
+    #
+    #
+    #
+    def focus(self):
+        """
+            Retorna els focus de l'l·lipse
+        """
+        c = self.semidistancia_focal()
+        f = [Punt(c,0),Punt(-c,0)]
+        return list(map(self.ref.punt_de_coordenades,f))
+    #
+    #
+    #
+    def vertexs(self):
+        """
+            Retorna els focus de l'el·lipse
+        """
+        a = self.semieix_major()
+        b = self.semieix_menor()
+        v = [Punt(a,0),Punt(-a,0),Punt(0,b),Punt(0,-b)]
+        return list(map(self.ref.punt_de_coordenades,v))
     #
     #
     #
@@ -3954,6 +4079,26 @@ class Hiperbola(Conica):
         if b2 == 1:
             return f"\\frac{{x'^2}}{{{a2}}} - y'^2 = 1"
         return f"\\frac{{x'^2}}{{{a2}}} - \\frac{{y'^2}}{{{b2}}} = 1"
+    #
+    #
+    #
+    def focus(self):
+        """
+            Retorna els focus de la hipèrbola
+        """
+        c = self.semidistancia_focal()
+        f = [Punt(c,0),Punt(-c,0)]
+        return list(map(self.ref.punt_de_coordenades,f))
+    #
+    #
+    #
+    def vertexs(self):
+        """
+            Retorna els vèrtexs de la hipèrbola
+        """
+        a = self.semieix_rea()
+        v = [Punt(a,0),Punt(-a,0)]
+        return list(map(self.ref.punt_de_coordenades,v))
     #
     #
     #
@@ -4140,90 +4285,143 @@ class Quadrica(object):
     #
     @classmethod
     def ellipsoide(cls,maxim=30,diagonal=15):
+        """
+        Retorna un el·lipsoide de manera aleatòria
+        Paràmetres:
+            maxim: valor màxim de la matriu projectiva de la quàdrica
+            diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+        """
         trobat = False
         while not trobat:
             e = Ellipsoide.aleatoria()
-            trobat = e.canonica.norma_maxim() <= maxim and e.canonica.nzeros() < 4 and e.canonica.max_diagonal() < diagonal
+            trobat = e.canonica.norma_maxim() <= maxim and e.canonica.nzeros() < 3 and e.canonica.max_diagonal() < diagonal
         return e
     #
     #
     #
     @classmethod
     def hiperboloideunafulla(cls,maxim=30,diagonal=15):
+        """
+        Retorna un hiperboloide d'una fulla de manera aleatòria
+        Paràmetres:
+            maxim: valor màxim de la matriu projectiva de la quàdrica
+            diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+        """
         trobat = False
         while not trobat:
             h = HiperboloideUnaFulla.aleatoria()
-            trobat = h.canonica.norma_maxim() <= maxim and h.canonica.nzeros() < 4 and h.canonica.max_diagonal() < diagonal
+            trobat = h.canonica.norma_maxim() <= maxim and h.canonica.nzeros() < 3 and h.canonica.max_diagonal() < diagonal
         return h
     #
     #
     #
     @classmethod
     def hiperboloideduesfulla(cls,maxim=30,diagonal=15):
+        """
+        Retorna un hiperboloide de dues fulles de manera aleatòria
+        Paràmetres:
+            maxim: valor màxim de la matriu projectiva de la quàdrica
+            diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+        """
         trobat = False
         while not trobat:
             h = HiperboloideDuesFulles.aleatoria()
-            trobat = h.canonica.norma_maxim() <= maxim and h.canonica.nzeros() < 4 and h.canonica.max_diagonal() < diagonal
+            trobat = h.canonica.norma_maxim() <= maxim and h.canonica.nzeros() < 3 and h.canonica.max_diagonal() < diagonal
         return h
     #
     #
     #
     @classmethod
     def con(cls,maxim=30,diagonal=15):
+        """
+        Retorna un con de manera aleatòria
+        Paràmetres:
+            maxim: valor màxim de la matriu projectiva de la quàdrica
+            diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+        """
         trobat = False
         while not trobat:
             c = Con.aleatoria()
-            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 4 and c.canonica.max_diagonal() < diagonal
+            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 3 and c.canonica.max_diagonal() < diagonal
         return c
     #
     #
     #
     @classmethod
     def cilindreelliptic(cls,maxim=30,diagonal=15):
+        """
+        Retorna un cilindre el·líptic de manera aleatòria
+        Paràmetres:
+            maxim: valor màxim de la matriu projectiva de la quàdrica
+            diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+        """
         trobat = False
         while not trobat:
             c = CilindreElliptic.aleatoria()
-            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 4 and c.canonica.max_diagonal() < diagonal
+            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 3 and c.canonica.max_diagonal() < diagonal
         return c
     #
     #
     #
     @classmethod
     def cilindrehiperbolic(cls,maxim=30,diagonal=15):
+        """
+        Retorna un cilindre hiperbòlic de manera aleatòria
+        Paràmetres:
+            maxim: valor màxim de la matriu projectiva de la quàdrica
+            diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+        """
         trobat = False
         while not trobat:
             c = CilindreHiperbolic.aleatoria()
-            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 4 and c.canonica.max_diagonal() < diagonal
+            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 3 and c.canonica.max_diagonal() < diagonal
         return c
     #
     #
     #
     @classmethod
     def paraboloideelliptic(cls,maxim=30,diagonal=15):
+        """
+        Retorna un paraboloide el·líptic de manera aleatòria
+        Paràmetres:
+            maxim: valor màxim de la matriu projectiva de la quàdrica
+            diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+        """
         trobat = False
         while not trobat:
             p = ParaboloideElliptic.aleatoria()
-            trobat = p.canonica.norma_maxim() <= maxim and p.canonica.nzeros() < 4 and p.canonica.max_diagonal() < diagonal
+            trobat = p.canonica.norma_maxim() <= maxim and p.canonica.nzeros() < 3 and p.canonica.max_diagonal() < diagonal
         return p
     #
     #
     #
     @classmethod
     def paraboloidehiperbolic(cls,maxim=30,diagonal=15):
-        trobat = False
+        """
+        Retorna un paraboloide hiperbòlic de manera aleatòria
+        Paràmetres:
+            maxim: valor màxim de la matriu projectiva de la quàdrica
+            diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+        """                trobat = False
         while not trobat:
             p = ParaboloideHiperbolic.aleatoria()
-            trobat = p.canonica.norma_maxim() <= maxim and p.canonica.nzeros() < 4 and p.canonica.max_diagonal() < diagonal
+            trobat = p.canonica.norma_maxim() <= maxim and p.canonica.nzeros() < 3 and p.canonica.max_diagonal() < diagonal
         return p
     #
     #
     #
     @classmethod
     def cilindreparabolic(cls,maxim=30,diagonal=15):
+        """
+        Retorna un cilindre parabòlic de manera aleatòria
+        Paràmetres:
+            maxim: valor màxim de la matriu projectiva de la quàdrica
+            diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+        """
         trobat = False
         while not trobat:
             c = CilindreParabolic.aleatoria()
-            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 4 and c.canonica.max_diagonal() < diagonal
+            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 3 and c.canonica.max_diagonal() < diagonal
         return c
     #
     #
@@ -4231,7 +4429,10 @@ class Quadrica(object):
     @classmethod
     def aleatoria(cls,maxim=30,diagonal=15):
         """
-        Retorna una quàdrica de forma aleatòria
+        Retorna una quàdrica de manera aleatòria
+        Paràmetres:
+            maxim: valor màxim de la matriu projectiva de la quàdrica
+            diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
         """
         r = random.randint(0,9)
         if r == 0:
@@ -4255,6 +4456,9 @@ class Quadrica(object):
     #
     #
     def tipus(self):
+        """
+        Retorna el tipus de quàdrica
+        """
         if isinstance(self,Ellipsoide):
             return "Ellipsoide"
         if isinstance(self,HiperboloideUnaFulla):
@@ -4290,7 +4494,8 @@ class Ellipsoide(Quadrica):
            eix1: direcció de l'eix principal (de les x')
            eix2: en pricipi és la direcció de l'eix de les y', però si no és
                  perpendicular a eix1, es calcula el perpendicular que està
-                 en el mateix pla vectorial que <eix1,eix2>
+                 en el mateix pla vectorial que <eix1,eix2> aplicant el
+                 mètode de Gram-Schmidt
         """
         if not isinstance(centre,Punt):
             return None
@@ -4431,7 +4636,8 @@ class HiperboloideUnaFulla(Quadrica):
            eix1: direcció de l'eix principal (de les x')
            eix2: en pricipi és la direcció de l'eix de les y', però si no és
                  perpendicular a eix1, es calcula el perpendicular que està
-                 en el mateix pla vectorial que <eix1,eix2>
+                 en el mateix pla vectorial que <eix1,eix2> aplicant el
+                 mètode de Gram-Schmidt
         """
         if not isinstance(centre,Punt):
             return None
@@ -4479,7 +4685,7 @@ class HiperboloideUnaFulla(Quadrica):
     @classmethod
     def aleatoria(cls):
         """
-        Retorna un hiperboloide d'una fulla de manera aleatòria aleatòria
+        Retorna un hiperboloide d'una fulla de manera aleatòria
         """
         trobat = False
         while not trobat:
@@ -4572,7 +4778,8 @@ class HiperboloideDuesFulles(Quadrica):
            eix1: direcció de l'eix principal (de les x')
            eix2: en pricipi és la direcció de l'eix de les y', però si no és
                  perpendicular a eix1, es calcula el perpendicular que està
-                 en el mateix pla vectorial que <eix1,eix2>
+                 en el mateix pla vectorial que <eix1,eix2> aplicant el
+                 mètode de Gram-Schmidt
         """
         if not isinstance(centre,Punt):
             return None
@@ -4714,7 +4921,8 @@ class Con(Quadrica):
            eix1: direcció de l'eix principal (de les x')
            eix2: en pricipi és la direcció de l'eix de les y', però si no és
                  perpendicular a eix1, es calcula el perpendicular que està
-                 en el mateix pla vectorial que <eix1,eix2>
+                 en el mateix pla vectorial que <eix1,eix2> aplicant el
+                 mètode de Gram-Schmidt
         """
         if not isinstance(centre,Punt):
             return None
@@ -4855,7 +5063,8 @@ class CilindreElliptic(Quadrica):
            eix1: direcció de l'eix principal (de les x')
            eix2: en pricipi és la direcció de l'eix de les y', però si no és
                  perpendicular a eix1, es calcula el perpendicular que està
-                 en el mateix pla vectorial que <eix1,eix2>
+                 en el mateix pla vectorial que <eix1,eix2> aplicant el
+                 mètode de Gram-Schmidt
         """
         if not isinstance(centre,Punt):
             return None
@@ -4993,7 +5202,8 @@ class CilindreHiperbolic(Quadrica):
            eix1: direcció de l'eix principal (de les x')
            eix2: en pricipi és la direcció de l'eix de les y', però si no és
                  perpendicular a eix1, es calcula el perpendicular que està
-                 en el mateix pla vectorial que <eix1,eix2>
+                 en el mateix pla vectorial que <eix1,eix2> aplicant el
+                 mètode de Gram-Schmidt
         """
         if not isinstance(centre,Punt):
             return None
@@ -5131,7 +5341,8 @@ class ParaboloideElliptic(Quadrica):
            eix1: direcció de l'eix principal (de les x')
            eix2: en pricipi és la direcció de l'eix de les y', però si no és
                  perpendicular a eix1, es calcula el perpendicular que està
-                 en el mateix pla vectorial que <eix1,eix2>
+                 en el mateix pla vectorial que <eix1,eix2> aplicant el
+                 mètode de Gram-Schmidt
         """
         if not isinstance(vertex,Punt):
             return None
@@ -5263,7 +5474,8 @@ class ParaboloideHiperbolic(Quadrica):
            eix1: direcció de l'eix principal (de les x')
            eix2: en pricipi és la direcció de l'eix de les y', però si no és
                  perpendicular a eix1, es calcula el perpendicular que està
-                 en el mateix pla vectorial que <eix1,eix2>
+                 en el mateix pla vectorial que <eix1,eix2> aplicant el
+                 mètode de Gram-Schmidt
         """
         if not isinstance(vertex,Punt):
             return None
@@ -5449,13 +5661,16 @@ class CilindreParabolic(Quadrica):
     #
     #
     def vertex(self):
+        """
+            Retorna l'origen de la referència principal
+        """
         return (self.ref.origen)
     #
     #
     #
     def equacio_reduida(self):
         """
-        Retorna l'equacio reduïda de la paràbola
+        Retorna l'equacio reduïda del cilindre parabòlic
         """
         p = self.parametre()
         if 2 * p == 1:

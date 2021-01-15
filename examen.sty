@@ -21,6 +21,7 @@
 \RequirePackage{array}
 \RequirePackage[T1]{fontenc}
 \RequirePackage{asymptote}
+\RequirePackage{makecell}
 %
 %
 %
@@ -143,25 +144,28 @@
 %
 % Composici de les pàgines
 %
+\AtBeginDocument{
+\setlength{\abovedisplayskip}{4pt minus 2 pt}
+\setlength{\abovedisplayshortskip}{4pt minus 2 pt}
+\setlength{\belowdisplayskip}{4pt minus 2 pt}
+\setlength{\belowdisplayshortskip}{4pt minus 2 pt}
+}
 \textwidth=18cm
 \textheight=23cm
 \marginparsep=11pt
 \footskip=30pt
 \hoffset=-0.3in
 \topmargin=0pt
-\headsep=25pt
+\headsep=12pt
 \marginparwidth=55pt
 \oddsidemargin=0pt
 \evensidemargin=0pt
 \ifthenelse{\boolean{nomicognoms}}
-{\advance\headheight by 1.8cm
+{\advance\headheight by 2.8cm
 \advance\textheight by -1.8cm}{}
-\voffset=-3cm
-%
-% Paràgrafs
-%
+\voffset=-4cm
 \parindent=0pt
-\parskip=1pt minus 1pt
+\parskip=5pt minus 1pt
 %
 % Logo de la UPC i del Departament
 %
@@ -255,7 +259,7 @@
 
 \newenvironment{apartats}
 {
- \vspace{-1pt}
+ \vspace{-5pt}
  \begin{list}{\llap{\hss(\alph{@apartats})\hspace{0.5em}}}
  {\usecounter{@apartats}\leftmargin 2.2em\labelsep 0pt\labelwidth 16pt
  \listparindent 0pt\parsep 0pt\itemsep 0pt\topsep -12pt}
