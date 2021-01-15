@@ -227,8 +227,9 @@ def matriu_latex(m,format=None,ampliada=False):
     """
     Retorna l'expressió en latex d'una matriu del tipus Matrix del sympy
     Parametres:
-        format:
-        ampliada: 
+        format:   format de les columnes de la matriu. Per defecte "r"
+        ampliada: si es vol separar amb una línia vertical l'última
+                  columna de la matriu
     """
     f, c = m.shape
     vert = ""
@@ -279,9 +280,22 @@ def primer_no_nul(list):
     return None
 
 def vectors_latex(l):
+    """
+    Retorna la llista de vectors l escrita en latex
+    Paràmetres:
+        l: llista de vectors o punts
+    """
     return ",".join([str(k) for k in l])
 
 def vaps_veps_amb_signe(result,signe=1):
+    """
+    Donada una matriu A del sympy, result ha de ser el resultat de la funció
+    r = A.eigenvects(). Aleshores aquesta funció retorna la llista valors propis
+    positius (signe > 0) o negatius (signe < 0) i els seus vectors propis.
+    Paràmetres:
+        result: resultat de la funció eigenvects() del sympy
+        signe: positiu o negatiu, en funció de quins valors i vectors propis es volen
+    """
     vaps = []
     veps = []
     for l, m, us in result:
@@ -296,6 +310,11 @@ def vaps_veps_amb_signe(result,signe=1):
     return (vaps,veps)
 
 def vaps_veps(result):
+    """
+    Retorna la llista valors propis i els seus vectors propis.
+    Paràmetres:
+        result: resultat de la funció eigenvects() del sympy
+    """
     vaps = []
     veps = []
     for l, m, us in result:
@@ -322,6 +341,8 @@ class Radicals(object):
         """
         Afegeix els termes que apareixen dins d'arrels quadrades a la llista
         self.quadrats
+        Paràmetres:
+            el: expressió del sympy
         """
         if isinstance(el,Pow) and el.args[1] == Rational(1,2):
             if el.args[0] not in self.quadrats:
@@ -339,6 +360,8 @@ class Radicals(object):
         """
         Afegeix els termes que apareixen als denominadors a la llista
         self.fraccions
+        Paràmetres:
+            el: expressió del sympy
         """
         if isinstance(el,Pow):
             return
@@ -404,7 +427,11 @@ class Vector(object):
         """
         Constructor.
         Paràmetres:
-           c: Llista de nombres
+           c: Una única llista de nombres o una llista de paràmetres
+              que han de ser nombres
+        Exemples:
+           u = Vector([2,3,1,2])
+           v = Vector(3,1,-2)
         """
         if len(args) == 1:
             c = args[0]
@@ -524,10 +551,13 @@ class Vector(object):
     #
     def __add__(self,other):
         """
-        Defineix la suma de vectors. Per exemple:
-        u1 = Vector([3,2,1,3])
-        u2 = Vector[-2,4,-3,1])
-        v = u1 + u2
+        Defineix la suma de vectors.
+        Paràmetres:
+            other: un altre vector
+        Exemple:
+            u1 = Vector(3,2,1,3)
+            u2 = Vector(-2,4,-3,1)
+            v = u1 + u2
         """
         if not isinstance(other,Vector):
             return None
@@ -544,10 +574,13 @@ class Vector(object):
     #
     def __sub__(self,other):
         """
-        Defineix la resta de vectors.Per exemple:
-        u1 = Vector([3,2,1,3])
-        u2 = Vector[-2,4,-3,1])
-        v = u1 - u2
+        Defineix la resta de vectors.
+        Paràmetres:
+            other: un altre vector
+        Exemple:
+            u1 = Vector(3,2,1,3)
+            u2 = Vector(-2,4,-3,1)
+            v = u1 - u2
         """
         if not isinstance(other,Vector):
             return None
@@ -563,6 +596,12 @@ class Vector(object):
     #
     #
     def __neg__(self):
+        """
+        Retorna l'oposat d'un vector.
+        Exemple:
+            u1 = Vector(3,2,1,3)
+            u2 = - u1
+        """
         p = [-k for k in self.components]
         return Vector(p)
     #
@@ -571,10 +610,15 @@ class Vector(object):
     def __mul__(self,other):
         """
         Defineix el producte d'un escalar per un vector i el
-        producte d'una vector per una matriu. Per exemple,
-        u1 = Vector([3,2,1,3])
-        u2 = Vector[-2,4,-3,1])
-        v = 5*u1 - 4*u2
+        producte d'una vector per una matriu.
+        Paràmetres:
+            other: un escalar o una matriu (classe Matriu)
+        Exemples:
+            u1 = Vector(3,2,1,3)
+            u2 = Vector(-2,4,-3,1)
+            v = 5 * u1 - 4 * u2
+            a = Matriu.aleatoria(f=4,c=2)
+            u = v * a
         """
         types = [Rational,float,int,Float,Pow,Add,Mul]
         for t in types:
@@ -600,9 +644,12 @@ class Vector(object):
     #
     def __getitem__(self,i):
         """
-        Permet indexar els elements d'un vector. Per exemple:
-        v = Vector([3,2,1,3,5])
-        x = v[2] + v[3]
+        Permet indexar els elements d'un vector.
+        Paràmetres:
+            i : índex
+        Exemple:
+            v = Vector(3,2,1,3,5)
+            x = v[2] + v[3]
         """
         try:
             return self.components[i]
@@ -613,15 +660,32 @@ class Vector(object):
     #
     def __setitem__(self,i,value):
         """
-        Permet assignar valors mitjançant índexs. Per exemple:
-        v = Vector.aleatori(l=4)
-        v[0] = 3
+        Permet assignar valors mitjançant índexs.
+        Paràmetres:
+            i     : índex
+            valor : valor vàlid del sympy
+        Exemple:
+            v = Vector.aleatori(l=4)
+            v[0] = 3
         """
-        self.components[i] = value
+        try:
+            self.components[i] = value
+        except:
+            pass
     #
     #
     #
     def __eq__(self,other):
+        """
+        Determina si dos vectors són iguals
+        Paràmetres:
+            other: un altre vector
+        Exemple:
+            u = Vector(1,2,3)
+            v = Vector(1,2,3)
+            if u == v:
+                pass
+        """
         if self.dimensio != other.dimensio:
             return False
         for k in range(self.dimensio):
@@ -633,10 +697,13 @@ class Vector(object):
     #
     def dot(self,other):
         """
-        Retorna el producte escalar de dos vectors: Per exemple:
-        u = Vector.aleatori(l=3)
-        v = Vector.aleatori(l=3)
-        p = u.dot(v)
+        Retorna el producte escalar de dos vectors.
+        Paràmetres:
+            other: un altre vector
+        Exemple:
+            u = Vector.aleatori(l=3)
+            v = Vector.aleatori(l=3)
+            p = u.dot(v)
         """
         if not isinstance(other,Vector):
             return None
@@ -661,6 +728,24 @@ class Vector(object):
     #
     #
     def normalitzar(self):
+        """
+        Converteix el vector en unitari
+        Exemple:
+            u = Vector(1,2,3)
+            u.normalitzar()
+        """
+        l = self.length()
+        self.components = [k / l for k in self.components]
+    #
+    #
+    #
+    def normalitzat(self):
+        """
+        Retorna el vector unitari en la direcció i sentit del vector
+        Exemple:
+            u = Vector(1,2,3)
+            v = u.normalitzat()
+        """
         l = self.length()
         self.components = [k / l for k in self.components]
     #
@@ -668,7 +753,10 @@ class Vector(object):
     #
     def maxim(self):
         """
-        Retorna el màxil dels valors absoluts de les seves components
+        Retorna el màxim dels valors absoluts de les seves components
+        Exemple:
+            u = Vector.aleatori(l=5,maxim=4,nuls=False)
+            m = u.maxim()
         """
         m = 0
         for k in self.components:
@@ -685,6 +773,9 @@ class Vector(object):
         llista d'enters amb mcd igual a 1.
         Només té sentit si totes les components del vector són nombres enters
         o racionals
+        Exemple:
+            u = Vector(-1,2,2,Rational(3,2))
+            u.simplificar()
         """
         if self.length() == 0:
             return
@@ -709,15 +800,13 @@ class Vector(object):
     #
     #
     #
-    def te_fraccions(self):
-        for k in self.components:
-            if te_fraccions(k):
-                return True
-        return False
-    #
-    #
-    #
     def radsimplificar(self):
+        """
+        Simplifica el vector quan alguna de les seves components té radicals
+        Exemple:
+            u = Vector(sqrt(2),-3*sqrt(2),-sqrt(2))
+            u.radsimplificar()
+        """
         r = Radicals()
         for k in self.components:
             r.busca_quadrats(k)
@@ -749,10 +838,13 @@ class Vector(object):
         """
         Retorna un nou vector que és el producte vectorial de dos vectors:
         Si simplificar és True, simplifica el vector resultant
-        Per exemple:
-        u = Vector.aleatori(l=3)
-        v = Vector.aleatori(l=3)
-        p = u.cross(v)
+        Paràmetres:
+            other: un altre vector
+            simplificar: si es vol simplificar el resultat o no
+        Exemple:
+            u = Vector.aleatori(l=3)
+            v = Vector.aleatori(l=3)
+            w = u.cross(v,simplificar=True)
         """
         if not isinstance(other,Vector):
             return None
@@ -770,8 +862,9 @@ class Vector(object):
     #
     def latex(self,unitari=False):
         """
-        Retorna l'expressió en latex del vector. Si unitari és True,
-        divideix per la seva longitud
+        Retorna l'expressió en latex del vector.
+        Paràmetres:
+            unitari: si unitari és True, el retorna dividit per la seva longitud
         """
         if unitari:
             f,v = self.factor_comu()
@@ -787,6 +880,8 @@ class Vector(object):
         """
         Retorna un nou vector amb les components del vector (donem per fet
         que estan en la base canònica) en la base "base"
+        Paràmetres:
+            base: una base (classe Base)
         """
         if base is None:
             return Vector(self.components)
@@ -853,6 +948,8 @@ class Punt(Vector):
     def coordenades_en_referencia(self,ref):
         """
         Retorna les coordenades del punt en la referència "ref"
+        Paràmetres:
+            ref: referència de la classe ReferenciaAfi
         """
         if not isinstance(ref,ReferenciaAfi):
             return None
@@ -878,9 +975,13 @@ class Base(object):
         Contructor.
         Paràmetres:
            vecs: llista de vectors
-           unitaria: valor de unitaria.
+           unitaria: True o False.
                      Serveix per si volem imprimir o fer servir els seus
                      vectors com a unitaris
+        Exemple:
+            base = Base([Vector(1,1),Vector(-1,1)],unitaria=True)
+            print(base)
+            print(base.vecs)
         """
         if len(vecs) == 0:
             return None
@@ -910,7 +1011,8 @@ class Base(object):
     #
     def es_unitaria(self):
         """
-        Retorna si la matriu és unitària
+        Retorna si la base és unitària. Notem que els vectors no es guarden
+        com a unitaris.
         """
         return self.unitaria
     #
@@ -918,7 +1020,7 @@ class Base(object):
     #
     def es_ortogonal(self):
         """
-        Retorna si la matriu és ortogonal
+        Retorna si la base és ortogonal
         """
         for i in range(self.dimensio):
             for j in range(i+1,self.dimensio):
@@ -949,7 +1051,8 @@ class Base(object):
     #
     def orientacio_positiva(self):
         """
-        Fa que tingui orientació positiva
+        Fa que tingui orientació positiva canviant, si cal, de signe l'últim
+        vector
         """
         if not self.te_orientacio_positiva():
             self.vecs[-1] = - self.vecs[-1]
@@ -958,7 +1061,7 @@ class Base(object):
     #
     def matriu(self):
         """
-        Retorna la matriu de la classe Matriu que té per coulumnes
+        Retorna la matriu de la classe Matriu que té per columnes
         els vectors de la base
         """
         if not self.unitaria:
@@ -997,6 +1100,8 @@ class Base(object):
     def vectors(self,unitaris=False):
         """
         Retorna els vectors la base
+        Paràmetres:
+            unitaris: si és True, els divideix per la seva longitud
         """
         if not unitaris:
             return self.vecs
@@ -1019,8 +1124,10 @@ class Base(object):
     #
     def vector_de_components(self,vec):
         """
-        Retorna un nou vector expressat en la base canònica del vectors
-        que em aqiesta base té components "vec"
+        Retorna un nou vector expressat en la base canònica del vector
+        que en aquesta base té components "vec"
+        Paràmetres:
+            vec: vector
         """
         if not isinstance(vec,Vector):
             return None
@@ -1039,6 +1146,10 @@ class Base(object):
     def ortogonal(cls,ordre=3,maxim=5,unitaria=False):
         """
         Retorna una base ortogonal "aleatòria"
+        Paràmetres:
+            ordre: dimensió
+            maxim: màxim per a les components dels vectors de la base
+            unitaria: si és True, la base serà ortonormal
         """
         trobat = False
         while not trobat:
@@ -1066,11 +1177,10 @@ class Base(object):
     #
     def quadrats_longituds(self):
         """
-        Retorna els quadrats de les lo0ngituds dels vectors de la base sense tenir
+        Retorna els quadrats de les longituds dels vectors de la base sense tenir
         en compte si la base és unitària
         """
         return [v.length()**2 for v in self.vecs]
-
 
 class Matriu:
     """
@@ -1083,7 +1193,7 @@ class Matriu:
         columnes: nombre de columnes de la matriu
         matriu: matriu de la classe Matrix del sympy
 
-        Només s'utilitzen quen generem una matriu diagonalitzble
+        Només s'utilitzen quan generem una matriu diagonalitzble
           vaps: llista de vectors propis de la matriu
           veps: llista de vectors propis de la matriu
     """
@@ -1109,6 +1219,8 @@ class Matriu:
     def set_vaps(self,vaps):
         """
         Assigna un llista de valors propis a la variable self.vaps
+        Paràmetres:
+            vaps: llista de nombres
         """
         self.vaps = vaps
     #
@@ -1117,6 +1229,8 @@ class Matriu:
     def set_veps(self,veps):
         """
         Assigna un llista de vectors propis simplificats a la variable self.veps
+        Paràmetres:
+            vaps: llista de vectors
         """
         for v in veps:
             v.simplificar()
@@ -1129,10 +1243,10 @@ class Matriu:
         """
         Genera una matriu aleatoria.
         Paràmetres:
-          f: nombre de files de la matriu
-          c: nombre de columnes de la matriu
-          maxim: tots els elements tindran valor absolut menor que "maxim"
-          nuls: la matriu pot contenir coeficients nuls o no
+            f: nombre de files de la matriu
+            c: nombre de columnes de la matriu
+            maxim: tots els elements tindran valor absolut menor que "maxim"
+            nuls: la matriu pot contenir coeficients nuls o no
         """
         m = Matrix(f,c,lambda i, j : random.randint(-maxim,maxim))
         if not nuls:
@@ -1162,6 +1276,10 @@ class Matriu:
     #
     #
     def max_diagonal(self):
+        """
+        Retorna el màxim en valor absolut dels coeficients de la diagonal
+        Si la matriu no és quadrada retorna None
+        """
         if self.files == 0 or self.columnes == 0:
             return 0
         max = 0
@@ -1202,7 +1320,10 @@ class Matriu:
     #
     def __getitem__(self,tup):
         """
-        Permet indexar els elements d'una matriu. Per exemple:
+        Permet indexar els elements d'una matriu.
+        Paràmetres:
+            tup: tupla d'índexs
+        Exemple:
         m = Matriu.aleatoria()
         k = m[2,1]
         """
@@ -1216,9 +1337,13 @@ class Matriu:
     #
     def __setitem__(self,tup,value):
         """
-        Permet assignar valors mitjançant índexs. Per exemple:
-        m = Matriu.aleatoria()
-        m[2,1] = 5
+        Permet assignar valors mitjançant índexs.
+        Paràmetres:
+            tup: tupla d'índexs
+            valor: valor assignat
+        Exemple:
+            m = Matriu.aleatoria()
+            m[2,1] = 5
         """
         i, j = tup
         self.matriu[i,j] = value
@@ -1227,10 +1352,13 @@ class Matriu:
     #
     def __add__(self,other):
         """
-        Defineix la suma de matrius. Per exemple:
-        a1 = Matriu.aleatoria()
-        a2 = Matriu.aleatoria())
-        b = a1 + a2
+        Defineix la suma de matrius.
+        Paràmetres:
+            other: una altra matriu
+        Exemple:
+            a1 = Matriu.aleatoria()
+            a2 = Matriu.aleatoria())
+            b = a1 + a2
         """
         if not isinstance(other,Matriu):
             return None
@@ -1245,10 +1373,13 @@ class Matriu:
     #
     def __sub__(self,other):
         """
-        Defineix la resta de matrius. Per exemple:
-        a1 = Matriu.aleatoria()
-        a2 = Matriu.aleatoria())
-        b = a1 - a2
+        Defineix la resta de matrius.
+        Paràmetres:
+            other: una altra matriu
+        Exemple:
+            a1 = Matriu.aleatoria()
+            a2 = Matriu.aleatoria())
+            b = a1 - a2
         """
         if not isinstance(other,Matriu):
             return None
@@ -1262,16 +1393,21 @@ class Matriu:
     #
     #
     def __neg__(self):
+        """
+        Retorna l'oposada de la matriu
+        """
         return Matriu(-self.matriu)
     #
     #
     #
     def __rmul__(self,other):
         """
-        Defineix el producte d'un escalar per un vector i el
-        producte d'una vector per una matriu. Per exemple:
-        a = Matriu.aleatoria(f=4,c=3,maxim=7,nuls=False)
-        b = 4 * a
+        Defineix el producte d'un escalar per una matriu
+        Paràmetrers:
+            other: un escalar
+        Exemple:
+            a = Matriu.aleatoria(f=4,c=3,maxim=7,nuls=False)
+            c = 4 * a
         """
         types = [Rational,float,int,Float,Pow,Add,Mul]
         for t in types:
@@ -1283,10 +1419,15 @@ class Matriu:
     #
     def __mul__(self,other):
         """
-        Defineix el producte de matrius. Per exemple:
-        a1 = Matriu.aleatoria()
-        a2 = Matriu.aleatoria())
-        b = a1 * a2
+        Defineix el producte de matrius i el producte d'una matriu per un vector
+        Paràmetrers:
+            other: un vector (classe Vector) o un matriu (classe Matriu)
+        Exemple:
+            a1 = Matriu.aleatoria()
+            a2 = Matriu.aleatoria()
+            b = a1 * a2
+            v = Vector(2,1,-1)
+            w = a1 * v
         """
         if isinstance(other,Matriu):
             if self.columnes != other.files:
@@ -1358,6 +1499,16 @@ class Matriu:
     #
     #
     def __eq__(self,other):
+        """
+        Compara si dues matriu són iguals
+        Paràmetres:
+            other: una altra matriu
+        Exemple:
+            a1 = Matriu.aleatoria()
+            a2 = Matriu.aleatoria()
+            if a1 == a2:
+                pass
+        """
         if self.files != other.files:
             return False
         if self.columnes != other.columnes:
@@ -1373,7 +1524,9 @@ class Matriu:
     @classmethod
     def diagonal(cls,vals):
         """
-        Genera una matriu diagonal amb valors "vals" a la diagonal
+        Retorna una matriu diagonal amb valors "vals" a la diagonal
+        Paràmetres:
+            vals: llista d'escalars o vector (class Vector o Punt)
         """
         if isinstance(vals,Vector):
             vals = vals.components
@@ -1427,11 +1580,11 @@ class Matriu:
         """
         Retorna una matriu quadrada aleatoria invertible.
         Paràmetres:
-          ordre: nombre de files i columnes de la matriu
-          maxim: tots els elements tindran valor absolut menor que "maxim"
-          mzeros: si nzeros >= 0, nombre màxim de zeros que tindrà la matrius
-                  si nzeros < 0, el nombre de zeros no està limitat
-          unitaria: si volem que el determinant sigui 1 o -1
+            ordre: nombre de files i columnes de la matriu
+            maxim: tots els elements tindran valor absolut menor que "maxim"
+            mzeros: si nzeros >= 0, nombre màxim de zeros que tindrà la matrius
+                    si nzeros < 0, el nombre de zeros no està limitat
+            unitaria: si volem que el determinant sigui 1 o -1
         """
         opcions = []
         for i in range(1,13):
@@ -1462,12 +1615,13 @@ class Matriu:
         """
         Retorna una matriu quadrada aleatoria diagonalitzable.
         Paràmetres:
-          ordre: nombre de files i columnes de la matriu
-          maxim: tots els elements tindran valor absolut menor o igual que "maxim"
-          mzeros: si nzeros >= 0, nombre màxim de zeros que tindrà la matrius
-                  si nzeros < 0, el nombre de zeros no està limitat
-          mvaps: tots els valors propis tindran valor absolut menor o igual que "mvaps"
-          vapsnuls: si hi pot aparèixer el valor propi nul
+            ordre: nombre de files i columnes de la matriu
+            maxim: tots els elements tindran valor absolut menor o igual que "maxim"
+            mzeros: si nzeros >= 0, nombre màxim de zeros que tindrà la matrius
+                    si nzeros < 0, el nombre de zeros no està limitat
+            mvaps: tots els valors propis tindran valor absolut menor o igual que "mvaps"
+            vapsnuls: si hi pot aparèixer el valor propi nul
+            vapsrepetits: si hi pot aparèixer valors propis repetits
         """
         trobat = False
         while not trobat:
@@ -1501,12 +1655,13 @@ class Matriu:
     @classmethod
     def gram(cls,ordre=3,maxim=5,mzeros=-1):
         """
-        Retorna una matriu quadrada aleatoria que serà d'un producte escalar.
+        Retorna una matriu quadrada aleatoria que serà d'un producte escalar,
+        és a dir, una matriu de Gram
         Paràmetres:
-          ordre: nombre de files i columnes de la matriu
-          maxim: tots els elements tindran valor absolut menor o igual que "maxim"
-          mzeros: si nzeros >= 0, nombre màxim de zeros que tindrà la matrius
-                  si nzeros < 0, el nombre de zeros no està limitat
+            ordre: nombre de files i columnes de la matriu
+            maxim: tots els elements tindran valor absolut menor o igual que "maxim"
+            mzeros: si nzeros >= 0, nombre màxim de zeros que tindrà la matrius
+                    si nzeros < 0, el nombre de zeros no està limitat
         """
         trobat = False
         while not trobat:
@@ -1525,6 +1680,8 @@ class Matriu:
     def matriu_fila(cls,v):
         """
         Retorna una nova matriu fila a partir de les components del vector v
+        Paràmetres:
+            v: vector o punt
         """
         if not isinstance(v,Vector):
             return None
@@ -1537,6 +1694,8 @@ class Matriu:
     def matriu_columna(cls,v):
         """
         Retorna una nova matriu columna a partir de les components del vector v
+        Paràmetres:
+            v: vector o punt
         """
         if not isinstance(v,Vector):
             return None
@@ -1550,6 +1709,8 @@ class Matriu:
         """
         Retorna una nova matriu a partir d'una llista de vectors.
         Les components dels vectors seran les files de la nova matriu
+        Paràmetres:
+            v: llista de vectors o punts
         """
         if len(vecs) == 0:
             return None
@@ -1574,6 +1735,8 @@ class Matriu:
         """
         Retorna una nova matriu a partir d'una llista de vectors.
         Les components dels vectors seran les columnes de la nova matriu
+        Paràmetres:
+            v: llista de vectors o punts
         """
         if not (isinstance(vecs,list) or isinstance(vecs,tuple)):
             return None
@@ -1598,6 +1761,8 @@ class Matriu:
     def vectors_columna(self,simplificar=False):
         """
         Retorna una llista amb els vectors columna de la matriu
+        Paràmetres:
+            simplificar: si és True retornarà els vectors simplificats
         """
         vecs = []
         m = self.matriu
@@ -1614,6 +1779,8 @@ class Matriu:
     def vectors_fila(self,simplificar=False):
         """
         Retorna una llista amb els vectors fila de la matriu
+        Paràmetres:
+            simplificar: si és True retornarà els vectors simplificats
         """
         vecs = []
         m = self.matriu
@@ -1664,7 +1831,9 @@ class Matriu:
     #
     def intercanvia_columnes(self,i,j):
         """
-        Intercanvia les columnes i i j
+        Retorna una matriu amb les columnes i i j permutades
+        Paràmetres:
+            i, j: índexs de les columnes
         """
         if i >= self.columnes or j >= self.columnes:
             return None
@@ -1705,6 +1874,9 @@ class Matriu:
     def inserta_fila(self,pos,fila):
         """
         Retorna una nova matriu amb la fila "fila" insertada a la posició "pos"
+        Paràmetrers:
+            fila: nova fila de la matriu
+            pos: posició que ha d'ocupar la nova fila
         """
         if not isinstance(fila,Vector):
             return None
@@ -1721,6 +1893,9 @@ class Matriu:
     def inserta_columna(self,pos,columna):
         """
         Retorna una nova matriu amb la columna "columna" insertada a la posició "pos"
+        Paràmetrers:
+            columna: nova columna de la matriu
+            pos: posició que ha d'ocupar la nova columna
         """
         if not isinstance(columna,Vector):
             return None
@@ -1736,7 +1911,7 @@ class Matriu:
     #
     def factor_comu(self):
         """
-        Retorna quin factor co,ú podem treure de la matriu
+        Retorna quin factor comú podem treure de la matriu
         """
         d = []
         for i in range(self.files):
@@ -1785,10 +1960,10 @@ class EquacioLineal:
     """
     Classe per treballar amb equacions lineals.
     Atributs:
-      equacio: terme de l'esquerra en la equacio "eq = 0"
-      unknowns: incògnites que apareixen a l'equació
-      amp: True o False
-      prime: nombre de primes que escriurem a l'equació
+        equacio: terme de l'esquerra en la equacio "eq = 0"
+        unknowns: incògnites que apareixen a l'equació
+        amp: True o False
+        prime: nombre de primes que escriurem a l'equació
     """
     #
     #
@@ -1826,6 +2001,11 @@ class EquacioLineal:
         """
         Retorna una nova equació amb coeficients de les incògnites el vector "a" i
         terme independent b
+        Paràmetres:
+            a: cector amb els coeficients de les incògnites
+            b: terme independents
+            amp: si és True l'equació s'escriurà amb el &= per al LaTeX
+            prime: nombre de primes que s'escriuran a les incògnites
         """
         if not isinstance(a,Vector):
             return None
@@ -1859,7 +2039,6 @@ class EquacioLineal:
         Retorna l'expressió en latex de l'equació.
         Si els coeficients són enters o racionals, treu el denominador comú
         """
-        x, y, z, t = symbols('x y z t')
         other = False
         d = self.equacio.as_coefficients_dict()
         l = list(d.values())
@@ -1905,7 +2084,9 @@ class EquacioLineal:
     #
     def __add__(self,other):
         """
-        Serveix per sumar equacions
+        Suma d'equacions
+        Paràmetres:
+            other: una altra equació
         """
         if not isinstance(other,EquacioLineal):
             return None
@@ -1918,7 +2099,9 @@ class EquacioLineal:
     #
     def __sub__(self,other):
         """
-        Serveix per restar equacions
+        Resta d'equacions
+        Paràmetres:
+            other: una altra equació
         """
         if not isinstance(other,EquacioLineal):
             return None
@@ -1931,7 +2114,9 @@ class EquacioLineal:
     #
     def __mul__(self,other):
         """
-        Serveix per multiplicar un escalar per una equació
+        Producte d'un escalar per una equació
+        Paràmetres:
+            other: un escalar
         """
         types = [Rational,float,int,Float,Pow,Add,Mul]
         for t in types:
@@ -1942,7 +2127,6 @@ class EquacioLineal:
     #
     #
     __rmul__ = __mul__
-
 
 class SistemaEquacions:
     """
@@ -1998,21 +2182,21 @@ class SistemaEquacions:
     #
     #
     @classmethod
-    def from_equacions(cls,eqs,number,prime=0):
+    def from_equacions(cls,eqs,nombre,prime=0):
         """
         Retorna un sistema d'equacions amb equacions "eqs"
-        Paràmetre:
-          eqs: llista de EquacioLineal
-          number: nombre d'incògnites
-          prime: nombre de primes que escriurem a les equacions
+        Paràmetres:
+            eqs: llista de EquacioLineal
+            nombre: nombre d'incògnites
+            prime: nombre de primes que s'escriuran a les incògnites
         """
-        if number <= 4:
+        if nombre <= 4:
             x, y, z, t = symbols('x y z t')
             unknowns = [x,y,z,t]
         else:
             x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
             unknowns = [x1,x2,x3,x4,x5,x6,x7,x8]
-        unknowns = unknowns[0:number]
+        unknowns = unknowns[0:nombre]
         t = []
         vecs = []
         for e in eqs:
@@ -2050,11 +2234,19 @@ class SistemaEquacions:
     #
     #
     def matriu_incognites(self):
+        """
+        Retorna la matriu dels coeficients de les incògnites expressada
+        en LaTeX
+        """
         return f"{self.A}"
     #
     #
     #
     def matriu_ampliada(self):
+        """
+        Retorna la matriu ampliada del sistema d'equacions expressada
+        en LaTeX
+        """
         c = self.A.inserta_columna(self.A.columnes,self.B)
         return matriu_latex(c.matriu,ampliada=True)
     #
@@ -2074,7 +2266,10 @@ class SistemaEquacions:
     #
     def solucio_latex(self,linia=False):
         """
-        Retorna l'expressió en latex de la solució del sistema d'equacions
+        Retorna l'expressió en LaTex de la solució del sistema d'equacions
+        Paràmetres:
+            linia: si és True escriu la solució en una línia, en cas contrari
+                   ho fa com un sistema d'equacions
         """
         if self.solucio is None:
             self.resol()
@@ -4402,7 +4597,8 @@ class Quadrica(object):
         Paràmetres:
             maxim: valor màxim de la matriu projectiva de la quàdrica
             diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
-        """                trobat = False
+        """
+        trobat = False
         while not trobat:
             p = ParaboloideHiperbolic.aleatoria()
             trobat = p.canonica.norma_maxim() <= maxim and p.canonica.nzeros() < 3 and p.canonica.max_diagonal() < diagonal
