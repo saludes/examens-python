@@ -327,6 +327,8 @@ def test_transformacio_lineal():
     print(t1)
     print(t2)
     print(t1 * t2)
+    u = Vector(3,-1)
+    print(t1 * u, t2 * u)
     s = SubespaiVectorial([Vector(2,1,1),Vector(1,3,-1)])
     t = TransformacioLineal.projeccio_ortogonal(s)
     print(t)
@@ -357,7 +359,11 @@ def test_transformacio_afi():
     p = Punt(2,1,3)
     v = VarietatLineal(p,s)
     t = TransformacioAfi.projeccio_ortogonal(v)
+    u = Vector(1,1,1)
+    recta = RectaAfi(p,u)
+    r = TransformacioAfi.moviment_helicoidal(recta,240,alpha=2)
     print (t)
+    print (r * p)
     q = p + 5 * u1.cross(u2)
     print(q,t.transforma(q))
     ref = ReferenciaAfi(p,s.amplia_base())
@@ -380,7 +386,6 @@ def test_formes_quadratiques():
     print(q.base,q.vaps)
     print(q)
     print()
-
 #
 # Tests amb coniques
 #
@@ -392,6 +397,13 @@ def test_coniques():
         print(q)
         print(q.equacio_reduida())
         print()
+    x,y = symbols('x y')
+    eq = x**2 - 2*x*y + y**2 - 6*x - 2*y + 21
+    q = Conica.from_equacio(eq)
+    print(q.equacio_reduida())
+    print(q.focus())
+    print(q.vertex())
+    print(q.referencia_principal())
 
 #
 # Tests amb quàdriques

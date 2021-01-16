@@ -2040,6 +2040,8 @@ class EquacioLineal:
         Si els coeficients són enters o racionals, treu el denominador comú
         """
         t = symbols('t')
+        x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
+        incgs = {x1, x2, x3, x4, x5, x6, x7, x8}
         other = False
         d = self.equacio.as_coefficients_dict()
         l = list(d.values())
@@ -2070,7 +2072,10 @@ class EquacioLineal:
         if t in self.unknowns:
             str = mylatex(eq)
         else:
-            str = mylatex(simplify(eq.expand()))
+            if len(incgs & set(self.unknowns)) > 0:
+                str = latex(simplify(eq.expand()))
+            else:
+                str = mylatex(simplify(eq.expand()))
         if self.amp:
             str = f"{str} &= {latex(-d[1] - terme)}"
         else:
@@ -3800,7 +3805,7 @@ class TransformacioAfi:
             return None
         if not recta.u.dimensio == 3:
             return None
-        rotacio = TransformacioLineal.rotacio(recta.u,angle,radians)
+        rotacio = TransformacioLineal.rotacio(recta.u,angle,radiants)
         p = - rotacio.transforma(recta.p) + recta.p + alpha * recta.u
         return cls(p,rotacio)
     #
