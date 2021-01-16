@@ -2039,6 +2039,7 @@ class EquacioLineal:
         Retorna l'expressió en latex de l'equació.
         Si els coeficients són enters o racionals, treu el denominador comú
         """
+        t = symbols('t')
         other = False
         d = self.equacio.as_coefficients_dict()
         l = list(d.values())
@@ -2314,10 +2315,10 @@ class EquacioParametrica:
     """
     Classe per treballar amb equacions paramètriques
     Atributs:
-      equacio: l'equació paramètrica
-      b: terme independent de l'equaqció
-      coefs: coeficients dels paràmetres
-      unknown: incògina de l'equació paramètrica
+        equacio: l'equació paramètrica
+        b: terme independent de l'equaqció
+        coefs: coeficients dels paràmetres
+        unknown: incògina de l'equació paramètrica
     """
     #
     #
@@ -2330,7 +2331,7 @@ class EquacioParametrica:
               -x + 2*t1 - 3*t2 + t3 - 4
              amb el signe menys a la incògnita
           amp: True o False en funció si hem d'escriure &= o només = en la representació
-               en latex de l'equació
+               en LaTeX de l'equació
         """
         x, y, z, t = symbols('x y z t')
         x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
@@ -2358,13 +2359,20 @@ class EquacioParametrica:
     def coeficients(cls,a,b,p=0,total=1,amp=True):
         """
         Genera una equació amb coeficients dels paràmtres el vector "a", terme
-        independent b i incògnita número p d'un total de "total". Per exemple:
-
-           e = EquacioParametrica(Vector([3,-2,1],5,1,4) genera l'equació
-               - y + 3*t1 - 2*t2 + t3 + 5
-
-           e = EquacioParametrica(Vector([3,-2,1,3,7],-5,3,7) genera l'equació
+        independent b i incògnita número p d'un total de "total".
+        Paràmetres:
+            a: vector amb els coeficients dels paràmetres
+            b: terme independent
+            p: índex que representa la incògnita
+            total: nombre total d'incònites
+        Exemple:
+           e = EquacioParametrica(Vector(3,-2,1),5,1,4) genera l'equació
+                        - y + 3*t1 - 2*t2 + t3 + 5
+           e = EquacioParametrica(Vector(3,-2,1,3],-5,3,7) genera l'equació
                - x3 + 3*t1 - 2*t2 + t3 + 3*t4 + 7*t5 - 5
+        Observació:
+            si hi ha un màxim de quatre incògnites, son (x,y,z,t)
+            si n'hi ha més, són (x1,x2,x3,x4,...)
         """
         if not isinstance(a,Vector):
             return None
@@ -2389,7 +2397,7 @@ class EquacioParametrica:
     #
     def __repr__(self):
         """
-        Retorna l'expessió en latex de l'equació paramètrica
+        Retorna l'expessió en LaTeX de l'equació paramètrica
         """
         t1, t2, t3, t4, t5, t6, t7, t8 = symbols('t1 t2 t3 t4 t5 t6 t7 t8')
         x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
@@ -2435,10 +2443,10 @@ class EquacionsParametriques(object):
     """
     Classe per treballar amb sistemes d'equacions paramètriques
     Atributs:
-      A: matriu dels coeficients dels paràmetres
-      B: vector dels termes independents
-      equacions: llista de EquacioParametrica
-      nombre: nombre d'equacions
+        A: matriu dels coeficients dels paràmetres
+        B: vector dels termes independents
+        equacions: llista de EquacioParametrica
+        nombre: nombre d'equacions
     """
     #
     #
@@ -2451,8 +2459,8 @@ class EquacionsParametriques(object):
         Paràmetres:
           a: matriu dels coeficients dels paràmetres
           b: vector de termes independents
-          amp: True o False en funció si hem d'escriure &= o només = en la representació
-               en latex del sistema
+          amp: True o False en funció si s'ha d'escriure &= o només = en la representació
+               en LaTeX del sistema
         """
         if not isinstance(a,Matriu):
             return None
@@ -2478,7 +2486,7 @@ class EquacionsParametriques(object):
     #
     def __repr__(self):
         """
-        Retorna la representació en latex del sistema d'equacions paramètriques
+        Retorna la representació en LaTeX del sistema d'equacions paramètriques
         """
         l = list(map(str,self.equacions))
         eqs = " \\\\ ".join(l)
@@ -2509,7 +2517,7 @@ class PlaVectorial(object):
         """
         Constructor.
         Paràmetres:
-          u1, u2: generadors del pla
+            u1, u2: generadors del pla
         """
         if not isinstance(u1,Vector):
             return None
@@ -2532,7 +2540,7 @@ class PlaVectorial(object):
     #
     def __repr__(self):
         """
-        Retorna l'expressió en latex dels dos vectors generadors
+        Retorna l'expressió en LaTeX dels dos vectors generadors
         """
         return f"{self.u1}, {self.u2}"
     #
@@ -2540,9 +2548,12 @@ class PlaVectorial(object):
     #
     def equacio_implicita(self,base=None,prime=0):
         """
-        Retorna l'equació implícita del pla en la base "base" en format latex.
-        Normalment, si la base no és la canònica posarem prime > 0 perquè el resultat
-        sigui de l'estil 2x'-3y'+4z'=0
+        Retorna l'equació implícita del pla en la base "base" en format LaTeX.
+        Normalment, si la base no és la canònica es posa prime > 0 perquè el resultat
+        sigui de l'estil 2x'-3y'+4z'= 0
+        Paràmetres:
+            base: una base (classe Base). Si és None, serà la canònica
+            prime: nombre de primes que s'escriuran a les incògnites
         """
         if base is None:
             w = self.u1.cross(self.u2)
@@ -2560,6 +2571,8 @@ class PlaVectorial(object):
     def from_matriu(cls,m):
         """
         Crea el pla vectorial generat per les columnes de la matriu "m"
+        Paràmetres:
+            m: matriu. Ha de tenir 3 files, dues columnes i rang 2
         """
         if not isinstance(m,Matriu):
             return None
@@ -2574,10 +2587,14 @@ class PlaVectorial(object):
     def amb_associat(cls,w):
         """
         Genera el pla vectorial que té vector perpendicular "w"
+        Paràmetres:
+            v: vector no nul de dimensió 3
         """
         if not isinstance(w,Vector):
             return None
         if w.dimensio != 3:
+            return None
+        if w.length() == 0:
             return None
         a = Matriu.from_vectors_fila([w])
         l = a.nucli()
@@ -2599,7 +2616,7 @@ class RectaVectorial(object):
     """
     Classe per treballar amb rectes vectorials, dimensió 2 o 3
     Atributs:
-      u: generador de la recta vectorial
+        u: generador de la recta vectorial
     """
     #
     #
@@ -2608,7 +2625,7 @@ class RectaVectorial(object):
         """
         Constructor.
         Paràmetres:
-          u: vector amb dimensió 2 o 3
+            u: vector amb dimensió 2 o 3
         """
         if not isinstance(u,Vector):
             return None
@@ -2628,10 +2645,9 @@ class RectaVectorial(object):
         Retorna l'equació implícita (dimensió 2) o el sistema d'equacions implícites
         (dimensió 3) en la base "base".
         Paràmetres:
-          base: Base en la que calculem les equacions implícites
-          prime: Quantes primes volem posar a les equacions
-          aleatori: només s'aplica a dimensió 3 i genera unes equacions implícites
-                    no trivials
+            base: Base en la que calculem les equacions implícites
+            prime: Quantes primes volem posar a les equacions
+            aleatori: només s'aplica a dimensió 3 i genera unes equacions implícites no trivials
         """
         if base is None:
             a = Matriu.matriu_fila(self.u)
@@ -2651,9 +2667,11 @@ class RectaVectorial(object):
     #
     def equacio_continua(self,base=None,prime=0):
         """
-        Retorna l'expressió en latex de l'equqció contínua de la recta vectorial
-        en la base "base". El valor prime "determina" si l'equació o equacions
-        s'escriuran amb primes
+        Retorna l'expressió en LaTeX de l'equació contínua de la recta vectorial
+        en la base "base".
+        Paràmetres:
+            base: base del pla o de l'espai vectorial (classe Base)
+            prime: nombre de primes amb el que s'escriuran les incògnites
         """
         if base is None:
             v = Vector(self.u.components)
@@ -2677,9 +2695,9 @@ class ReferenciaAfi(object):
     """
     Classe per treballar amb referències afins de P^n
     Atributs:
-      origen = origen de la referència
-      base = base de la referència
-      dimensio: n
+        origen: origen de la referència (classe Punt)
+        base: base de la referència (classe Base)
+        dimensio: dimensió de l'espai corresponent
     """
     #
     #
@@ -2688,8 +2706,8 @@ class ReferenciaAfi(object):
         """
         Constructor.
         Paràmetres:
-          origen: origen de la referència
-          base: base de la referència
+            origen: origen de la referència
+            base: base de la referència
         """
         if not isinstance(origen,Punt):
             return None
@@ -2709,6 +2727,9 @@ class ReferenciaAfi(object):
     #
     #
     def __repr__(self):
+        """
+        Retorna l'expressió en LaTeX de la referència
+        """
         return f"\\left\\{{{self.origen};{self.base.vectors_latex()}\\right\\}}"
     #
     #
@@ -2716,7 +2737,10 @@ class ReferenciaAfi(object):
     @classmethod
     def aleatoria(cls,dimensio=3,unitaria=False):
         """
-            Retorna una referència aleatòria
+        Retorna una referència aleatòria
+        Paràmetres:
+            dimensio: dimensió de l'espai corresponent
+            unitaria: si és True la matriu del canvi de base tindrà determinant 1 o -1
         """
         origen = Punt.aleatori(l=dimensio,maxim=3,nuls=False)
         m = Matriu.invertible(ordre=3,maxim=3,mzeros=0,unitaria=unitaria)
@@ -2729,6 +2753,8 @@ class ReferenciaAfi(object):
         """
         Retorna un nou punt expressat en la referència canònica del
         punt que en aquesta referencia té coordenades "punt"
+        Paràmetres:
+            punt: coordenades d'un punt en la referència actual
         """
         if not isinstance(punt,Punt):
             return None
@@ -2747,8 +2773,10 @@ class ReferenciaAfi(object):
     def canvi_coordenades(self,prime1=0,prime2=1):
         """
         Restorna en format latex l'expressió del canvi de coordenades de la referència
-        a la canònica
-        prime:
+        actual a la referència canònica
+        Paràmetres:
+            prime1: primes que s'escriuran a les coordenades en la referència canònica
+            prime2: primes que s'escriuran a les coordenades en la referència actual
         """
         if self.dimensio <= 3:
             x, y, z = symbols('x y z')
@@ -2775,6 +2803,10 @@ class ReferenciaAfi(object):
     #
     #
     def referencia_inversa(self):
+        """
+        Retorna una referència que es correspon amb el canvi de coordenades de
+        de la referència canònica a l'actual
+        """
         p = Punt.nul(self.dimensio)
         q = p.coordenades_en_referencia(self)
         m = self.base.matriu().inversa()
@@ -2785,7 +2817,9 @@ class ReferenciaAfi(object):
     #
     def vectors(self,unitaris=False):
         """
-            Retorna els vectors de la base de la referència
+        Retorna els vectors de la base de la referència
+        Paràmetres:
+            unitaris: si és True els retorna dividits per la seva longitud
         """
         return self.base.vectors(unitaris)
 
@@ -2793,8 +2827,8 @@ class PlaAfi(object):
     """
     Classe per treballar amb plans afins.
     Atributs:
-      u1, u2: vectors directors del pla
-      p: punt de pas
+        u1, u2: vectors directors del pla
+        p: punt de pas
     """
     #
     #
@@ -2803,8 +2837,9 @@ class PlaAfi(object):
         """
         Constructor.
         Paràmetres:
-          u1, u2: generadors del pla
-          p: punt de pas
+            p: punt de pas
+            u1, u2: generadors del pla
+            ref: referència en que estan expressats u1, u2 i p
         """
         if not isinstance(u1,Vector):
             return None
@@ -2844,6 +2879,9 @@ class PlaAfi(object):
     def amb_associat(cls,w,p):
         """
         Genera el pla afí que té vector perpendicular "w" i passa pel punt p
+        Paràmetres:
+            w: vector associat
+            p: punt de pas
         """
         if not isinstance(w,Vector):
             return None
@@ -2856,13 +2894,19 @@ class PlaAfi(object):
     #
     #
     def __repr__(self):
+        """
+        Retorna l'equació vectorial del pla en LaTeX
+        """
         return f"(x,y,z)={self.p}+t_1{self.u1}+t_2{self.u2}"
     #
     #
     #
     def equacio_implicita(self,ref=None,prime=0):
         """
-        Retorna l'expressió de l'equació implícta del pla en la referència "ref"
+        Retorna l'expressió de l'equació implícita del pla en la referència "ref"
+        Paràmetres:
+            ref: referència afí
+            prime: nombre de primes que s'escriuran a les incògnites
         """
         if ref is None:
             w = self.u1.cross(self.u2)
@@ -2886,18 +2930,62 @@ class PlaAfi(object):
         v2 = v1.dot(v1) * u2 - v1.dot(u2) * v1
         v2.simplificar()
         return [v1,v2]
+    #
+    #
+    #
+    def associat(self,base=None):
+        """
+        Retorna un vector perpendicular al pla expressat en la base "base"
+        Paràmetres:
+            base: base de l'espai vectorial. Si és None, serà la canònica
+        """
+        w = self.u1.cross(self.u2,simplificar=True)
+        if base is None:
+            return w
+        return w.components_en_base(base)
+    #
+    #
+    #
+    def distancia(self,other):
+        """
+        Retorna la distància entre el pla actual i un punt, una recta o un altre pla
+        Paràmetres:
+            other: un punt (classe Punt), una recta (classe RectaAfi) o
+            un pla (class PlaAfi)
+        """
+        if isinstance(other,Punt):
+            v = self.p - other
+            w = self.u1.cross(self.u2,simplificar=True)
+            return abs(v.dot(w))/w.length()
+        if isinstance(other,PlaAfi):
+            w1 = self.associat()
+            w2 = other.associat()
+            w = w1.cross(w2)
+            if w.length() == 0:
+                return self.distancia(other.p)
+            return 0
+        if isinstance(other,RectaAfi):
+            return other.distancia(self)
+        return None
 
 class RectaAfi(object):
     """
     Classe per treballar amb rectes afins, dimensió 2 o 3
     Atributs:
-      u: generador de la recta vectorial
-      p: punt de pas
+        u: generador de la recta vectorial
+        p: punt de pas
     """
     #
     #
     #
     def __new__(cls,p,u,ref=None):
+        """
+        Constructor.
+        Paràmetres:
+            p: punt de pas
+            u: vector director de la recta
+            ref: referència en que estan expressats u i p
+        """
         if not isinstance(u,Vector):
             return None
         if not isinstance(p,Punt):
@@ -2926,6 +3014,9 @@ class RectaAfi(object):
     #
     #
     def __repr__(self):
+        """
+        Retorna l'equació vectorial de la recta en LaTeX
+        """
         if self.u.dimensio == 2:
             return f"(x,y)={self.p}+t{self.u}"
         else:
@@ -2936,8 +3027,10 @@ class RectaAfi(object):
     def equacio_continua(self,ref=None,prime=0):
         """
         Retorna l'expressió en latex de l'equqció contínua de la recta afí
-        en la referència "ref". El valor prime "determina" si l'equació o equacions
-        s'escriuran amb primes
+        en la referència "ref".
+        Paràmetres:
+            ref: referència afí. Si és None, serà la canònica
+            prime: nombre de primes que s'escriuran a les incògnites
         """
         if ref is None:
             v = Vector(self.u.components)
@@ -2969,10 +3062,10 @@ class RectaAfi(object):
         Retorna l'equació implícita (dimensió 2) o el sistema d'equacions implícites
         (dimensió 3) de la recta afí en la referència "ref".
         Paràmetres:
-           ref: Referència en la que calculem les equacions implícites
-           prime: Quantes primes volem posar a les equacions
+           ref: referència en la que calculem les equacions implícites
+           prime: nombre de primes que s'escriran a les incògnites
            aleatori: només s'aplica a dimensió 3 i genera unes equacions implícites
-                     no trivials
+           amb tots els coeficients de les incògnites no nuls
         """
         if ref is None:
             v = Vector(self.u.components)
@@ -3000,13 +3093,37 @@ class RectaAfi(object):
     #
     #
     def distancia(self,other):
-        w = self.u.cross(other.u,simplificar=True)
-        u = self.p - other.p
-        return abs(u.dot(w) / w.length())
+        """
+        Retorna la distància entre la recta actual i un punt, una recta o un pla
+        Paràmetres:
+            other: un punt (classe Punt), una recta (classe RectaAfi) o un plan
+            (class PlaAfi)
+        """
+        if isinstance(other,Punt):
+            v = self.p - other
+            w = self.u.cross(v)
+            return w.length()/self.u.length()
+        if isinstance(other,RectaAfi):
+            w = self.u.cross(other.u,simplificar=True)
+            if w.length() > 0:
+                u = self.p - other.p
+                return abs(u.dot(w) / w.length())
+            return self.distancia(other.p)
+        if isinstance(other,PlaAfi):
+            w = other.associat()
+            if w.dot(self.u) == 0:
+                return other.distancia(self.p)
+            return 0
+        return None
     #
     #
     #
     def punt(self,t):
+        """
+        Retorna el punt de la recta amb paràmetre t
+        Paràmetres:
+            t: escalar
+        """
         q = self.p + t * self.u
         return Punt(q.components)
 
@@ -3025,8 +3142,10 @@ class SubespaiVectorial(object):
     def __new__(cls,vecs,basern=None):
         """
         Constructor.
+        Retorna el subespai vectorial generat per una llista de vectors
         Paràmetres:
            vecs: llista de vectors
+           basern: base en la que estan expressats els vectors
         """
         a = Matriu.from_vectors_columna(vecs)
         if a is None:
@@ -3065,6 +3184,11 @@ class SubespaiVectorial(object):
     #
     @classmethod
     def from_equacions_implicites(cls,eqs):
+        """
+        Retorna el subespai vectorial que té equacions implícites "eqs"
+        Paràmetres:
+            eqs: equacions implícites (classe SistemaEquacions)
+        """
         return cls(eqs.A.nucli())
     #
     #
@@ -3087,7 +3211,10 @@ class SubespaiVectorial(object):
     #
     def equacions_implicites(self,basern=None,prime=0):
         """
-        Retorna les equacions implícites del subespai
+        Retorna unes equacions implícites del subespai
+        Paràmetres:
+            basern: base en la que s'escriuran les equacions implícites
+            prime: nombre de primes a les incògnites
         """
         if self.es_total():
             return None
@@ -3138,6 +3265,8 @@ class SubespaiVectorial(object):
         """
         Retorna una base ortogonal amb orientació positiva de R^n
         que comença amb una base del subespai
+        Paràmetres:
+            unitaria: si és True, retorna una base ortonormal
         """
         if self.es_total():
             b = Base(self.base_ortogonal(),unitaria)
@@ -3153,6 +3282,8 @@ class SubespaiVectorial(object):
         """
         Retorna una base ortogonal amb orientació positiva de R^n
         que comença amb una base del suplementari ortogonal del subespai
+        Paràmetres:
+            unitaria: si és True, retorna una base ortonormal
         """
         h = self.suplementari_ortogonal()
         b = Base(h.base_ortogonal() + self.base_ortogonal(),unitaria)
@@ -3172,10 +3303,11 @@ class VarietatLineal(object):
     def __new__(cls,p,s,ref=None):
         """
         Constructor.
+        Retorna la varietat lineal que passa per p i té subespai director s
         Paràmetres:
            p: punt de pas
            s: subespai director
-           ref: referència afí
+           ref: referència afí en la que estan expressats el punt p
         """
         if not isinstance(p,Punt):
             return None
@@ -3219,7 +3351,10 @@ class VarietatLineal(object):
     #
     def equacions_implicites(self,ref=None,prime=0):
         """
-        Retorna les equacions implícites del subespai
+        Retorna unes equacions implícites de la varietat lineal
+        Paràmetres:
+            ref: referència en la que s'escriuran les equacions implícites
+            prime: nombre de primes de les incògnites
         """
         if self.es_total():
             return None
@@ -3237,21 +3372,22 @@ class VarietatLineal(object):
     #
     def base_ortogonal(self):
         """
-        Retorna una base ortogonal del subespai director
-        de la varietat lineal
+        Retorna una base ortogonal del subespai director de la varietat lineal
         """
         return self.subespai.base_ortogonal()
     #
     #
     #
     def varietat_ortogonal(self,p):
+        """
+        Retorna la varietat ortogonal a l'actual que passa pel punt p
+        """
         if not isinstance(p,Punt):
             return None
         if p.dimensio != self.subespai.espai:
             return None
         s = self.subespai.suplementari_ortogonal()
         return VarietatLineal(p,s)
-
 
 class TransformacioLineal(object):
     """
@@ -3266,9 +3402,10 @@ class TransformacioLineal(object):
     def __new__(cls,matriu,base=None):
         """
         Constructor.
+        Retorna una nova transformació lineal
         Paràmetres:
-          matriu: matriu de la transformació lineal en la base "base"
-          base: base de R^n. Si és None serà la canònica
+            matriu: matriu de la transformació lineal en la base "base"
+            base: base de R^n. Si és None serà la canònica
         """
         if not isinstance(matriu,Matriu):
             return None
@@ -3323,9 +3460,12 @@ class TransformacioLineal(object):
     #
     #
     #
-    def eix_angle_rotacio(self,radians=False):
+    def eix_angle_rotacio(self,radiants=False):
         """
         Retorna l'eix i l'angle de rotació
+        Paràmetres:
+            radiants: si és True retorna l'angle en radiants, en cas contrari,
+            ho fa en graus
         """
         if not self.es_rotacio():
             return None
@@ -3341,15 +3481,18 @@ class TransformacioLineal(object):
         u = l * u
         if e[0] != u[0]:
             alpha = 2 * pi - alpha
-        if not radians:
+        if not radiants:
             alpha = alpha * 180/pi
-        return e,alpha
+        return (e,alpha)
     #
     #
     #
-    def angles_euler(self,radians=False):
+    def angles_euler(self,radiants=False):
         """
-        Retorna els angles d'Euler d'una rotació
+        Retorna els angles d'Euler de la rotació
+        Paràmetres:
+            radiants: si és True retorna els angles en radiants, en cas contrari,
+            ho fa en graus
         """
         if not self.es_rotacio():
             return None
@@ -3369,8 +3512,15 @@ class TransformacioLineal(object):
     #
     #
     @classmethod
-    def rotacio(cls,eix,angle,radians=False):
-        if not radians:
+    def rotacio(cls,eix,angle,radiants=False):
+        """
+        Retorna la rotació d'angle "angle" al voltant del vector "eix"
+        Paràmetres:
+            eix: vector al voltant del qual fem la rotació
+            angle: angle de rotació
+            radiants: si l'angle està en radiants, ha de ser True
+        """
+        if not radiants:
             angle *= pi / 180
         v = Vector(eix.components)
         v.normalitzar()
@@ -3385,6 +3535,11 @@ class TransformacioLineal(object):
     #
     @classmethod
     def projeccio_ortogonal(cls,s):
+        """
+        Retorna la projecció ortogonal sobre el subespai "s"
+        Paràmetres:
+            s: subespai vectorial (classe SubespaiVectorial)
+        """
         if not isinstance(s,SubespaiVectorial):
             return None
         n = s.espai
@@ -3400,6 +3555,11 @@ class TransformacioLineal(object):
     #
     @classmethod
     def simetria(cls,s):
+        """
+        Retorna la simetria respecte al subespai "s"
+        Paràmetres:
+            s: subespai vectorial (classe SubespaiVectorial)
+        """
         if not isinstance(s,SubespaiVectorial):
             return None
         n = s.espai
@@ -3414,6 +3574,11 @@ class TransformacioLineal(object):
     #
     #
     def matriu_en_base(self,base):
+        """
+        Retorna la matriu de la transformacio lineal en la base "base"
+        Paràmetres:
+            base: base de R^n (classe Base)
+        """
         if base is None:
             return self.canonica
         c = base.matriu()
@@ -3427,8 +3592,8 @@ class TransformacioLineal(object):
         Retorna l'expressió en latex de la transformació lineal en la base "base"
         Si base és None, serà en la base canònica
         Paràmetres:
-          base: base de R^n
-          prime: nombre de primes que s'han d'escriure
+            base: base de R^n
+            prime: nombre de primes que s'han d'escriure
         """
         if self.dimensio <= 4:
             x, y, z, t = symbols('x y z t')
@@ -3446,7 +3611,6 @@ class TransformacioLineal(object):
         o = " \\\\ ".join([latex(x)+p for x in o])
         d = " \\\\ ".join([latex(x)+p for x in d])
         if base is None:
-
              m = self.canonica
         else:
             if not isinstance(base,Base):
@@ -3470,11 +3634,21 @@ class TransformacioLineal(object):
     #
     #
     def __eq__(self,other):
+        """
+        Permet comparar transfonacions lineals amb ==
+        Paràmetres:
+            other: una altra transformació lineal
+        """
         return self.canonica == other.canonica
     #
     #
     #
     def __add__(self,other):
+        """
+        Suma de transformacions lineals
+        Paràmetres:
+            other: una altra transformació lineal
+        """
         if other.dimensio != self.dimensio:
             return None
         m = self.canonica + other.canonica
@@ -3483,23 +3657,39 @@ class TransformacioLineal(object):
     #
     #
     def __mul__(self,other):
-        if other.dimensio != self.dimensio:
-            return None
-        m = self.canonica * other.canonica
-        return TransformacioLineal(m)
+        """
+        Composició de transformacions lineal o càlcul de imatges
+        Paràmetres:
+            other: transformació lineal o vector
+        """
+        if isinstance(other,TransformacioLineal):
+            if other.dimensio != self.dimensio:
+                return None
+            m = self.canonica * other.canonica
+            return TransformacioLineal(m)
+        if isinstance(other,Vector):
+            if other.dimensio != self.dimensio:
+                return None
+            return self.canonica * other
+        return None
     #
     #
     #
     def es_simetrica(self):
+        """
+        Retorna si la transformació lineal és simètrica
+        """
         return self.canonica == self.canonica.transposada()
     #
     #
     #
     def transforma(self,vec,base=None):
         """
-        Calcula el transformat del vector "vec". vec seran les components d'aquest
-        vector en la base "base" i el transformat també estarà expressat en la base
-        "base"
+        Calcula el transformat (image) del vector "vec".
+        Paràmetres:
+            vec: vector
+            base: si no és None, vec seran les compoents del vectors en aquesta
+            base. El transformat o imatge també estarà expressat en aquesta base
         """
         if not isinstance(vec,Vector):
             return None
@@ -3522,7 +3712,7 @@ class TransformacioLineal(object):
     #
     def polinomi_caracteristic(self):
         """
-        Retorna el polinomi característic de la froma
+        Retorna el polinomi característic de la transformació lineal
         """
         return self.canonica.polinomi_caracteristic()
 
@@ -3531,9 +3721,9 @@ class TransformacioAfi:
     Classe per treballar amb transformacions afins T:P^n ----> P^n, on
     T(p) = T + A(p)
     Atributs:
-       transformacio: Transformació lineal
-       translacio: translació de la transformació afí en la referència canònica
-       dimensio: n
+        transformacio: Transformació lineal donada per la matriu A
+        translacio: translació de la transformació afí en la referència canònica
+        dimensio: n
     """
     #
     #
@@ -3541,6 +3731,7 @@ class TransformacioAfi:
     def __new__(cls,p,t):
         """
         Contructor:
+        Retorna una transformació afí
         Paràmetres:
            p: Punt que representa la translació en la referencia canònica,
               és a dir, el transformat del punt zero
@@ -3565,6 +3756,11 @@ class TransformacioAfi:
     #
     @classmethod
     def simetria(cls,v):
+        """
+        Retorna la simetria respecte a la variatat lineal "v"
+        Paràmetres:
+            v: varietat lineal (classe VarietatLineal)
+        """
         if not isinstance(VarietatLineal):
             return None
         t = TransformacioLineal.simetria(v.subespai)
@@ -3575,6 +3771,11 @@ class TransformacioAfi:
     #
     @classmethod
     def projeccio_ortogonal(cls,v):
+        """
+        Retorna la projecció ortogonal sobre la variatat lineal "v"
+        Paràmetres:
+            v: varietat lineal (classe VarietatLineal)
+        """
         if not isinstance(v,VarietatLineal):
             return None
         t = TransformacioLineal.projeccio_ortogonal(v.subespai)
@@ -3584,7 +3785,17 @@ class TransformacioAfi:
     #
     #
     @classmethod
-    def moviment_helicoidal(cls,recta,angle,radians=False,alpha=0):
+    def moviment_helicoidal(cls,recta,angle,radiants=False,alpha=0):
+        """
+        Retorna el moviment helicoidal de P_3 que consisteix en la rotació
+        d'angle "angle" al voltant de la recta "recta" seguit d'una translació
+        de vector alpha * vector director de la recta.
+        Paràmetres:
+            recta: eix de rotació
+            angle: angle de rotació
+            radiants: si és True, l'angle ha d'estar expressat en radiants
+            alpha: factor de la translació
+        """
         if not isinstance(recta,RectaAfi):
             return None
         if not recta.u.dimensio == 3:
@@ -3596,8 +3807,15 @@ class TransformacioAfi:
     #
     #
     @classmethod
-    def rotacio(cls,recta,angle,radians=False):
-        return cls.moviment_helicoidal(recta,angle,radians)
+    def rotacio(cls,recta,angle,radiants=False):
+        """
+        Retorna la rotació d'angle "angle" al voltant de la recta "recta"
+        Paràmetres:
+            recta: eix de rotació
+            angle: angle de rotació
+            radiants: si és True, l'angle ha d'estar expressat en radiants
+        """
+        return cls.moviment_helicoidal(recta,angle,radiants)
     #
     #
     #
@@ -3611,6 +3829,13 @@ class TransformacioAfi:
     #
     #
     def latex(self,ref=None,prime=0):
+        """
+        Retorna l'expressió en latex de la transformació afí en la referència
+        "ref". Si ref és None, serà en la referència canònica
+        Paràmetres:
+            base: referència de P^n
+            prime: nombre de primes que s'escriuran
+        """
         if self.dimensio <= 4:
             x, y, z, t = symbols('x y z t')
             u, v, w, r = symbols('u v w r')
@@ -3641,11 +3866,61 @@ class TransformacioAfi:
     #
     #
     #
+    def __eq__(self,other):
+        """
+        Permet comparar transfonacions afins amb ==
+        Paràmetres:
+            other: una altra transformació afí
+        """
+        return self.canonica == other.canonica and self.translacio == other.translacio
+    #
+    #
+    #
+    def __add__(self,other):
+        """
+        Suma de transformacions afins
+        Paràmetres:
+            other: una altra transformació afi
+        """
+        if other.dimensio != self.dimensio:
+            return None
+        m = self.canonica + other.canonica
+        t = TansformacioLineal(m)
+        tr = self.translacio + other.translacio
+        return TransformacioAfi(tr,t)
+    #
+    #
+    #
+    def __mul__(self,other):
+        """
+        Composició de transformacions afins o càlcul de imatges de punts
+        Paràmetres:
+            other: transformació afi o punt
+        """
+        if isinstance(other,TransformacioAfi):
+            if other.dimensio != self.dimensio:
+                return None
+            t = self.translacio + self.transformacio * other.translacio
+            t = Punt(t.components)
+            tr = self.transformacio * other.transformacio
+            return TransformacioAfi(t,tr)
+        if isinstance(other,Punt):
+            if other.dimensio != self.dimensio:
+                return None
+            t = self.translacio + self.transformacio * other
+            return Punt(t.components)
+        return None
+    #
+    #
+    #
     def transforma(self,p,ref=None):
         """
-        Calcula el transformat del punt "p". p seran les components d'aquest
-        punt en la referència "ref" i el transformat també estarà expressat
+        Calcula el transformat o imatge del punt "p". p seran les coordenades
+        d'aquest punt en la referència "ref" i el transformat també estarà expressat
         en aquesta referència
+        Paràmetres:
+            punt: punt (classe Punt)
+            ref: referència afí. Si és None, serà la referència canònica
         """
         if not isinstance(p,Vector):
             return None
@@ -3661,10 +3936,10 @@ class FormaQuadratica(object):
     """
     Classe per treballar amb formes quadràtiques
     Atributs:
-       matriu: matriu de la forma quadrètica en la base canònica
-       dimensio: n
-       vaps: valors propis
-       base: base oronormal en la que diagonalitza
+        matriu: matriu de la forma quadrètica en la base canònica
+        dimensio: n
+        vaps: valors propis
+        base: base oronormal en la que diagonalitza
     """
     #
     #
@@ -3672,8 +3947,10 @@ class FormaQuadratica(object):
     def __new__(cls,matriu,base=None):
         """
         Contructor:
+        Retorna una forma quadràtica
         Paràmetres:
-           matriu: matriu de la forma quadratica en la base base
+           matriu: matriu simètrica de la forma quadratica en la base "base"
+           base: base ortonormal de R^n. Si és None, serà la canònica
         """
         if not isinstance(matriu,Matriu):
             return None
@@ -3726,7 +4003,12 @@ class FormaQuadratica(object):
     def latex(self,base=None,prime=0):
         """
         Retorna l'expressió en latex de la forma quadràtica com a polinomi
-        de segon grau en la base base
+        de segon grau en la base "base"
+        Paràmetres:
+            base: base de R^n. No cal que sigui ortormal. Si és None, serà la
+            base canònica
+            prime: nombre de primes que s'escriuran a les variables del polinomi
+            segon grau
         """
         if self.dimensio <= 4:
             x, y, z, t = symbols('x y z t')
@@ -3758,8 +4040,11 @@ class FormaQuadratica(object):
     @classmethod
     def aleatoria(cls,ordre=3,maxim=20,vapsnonuls=2):
         """
-        Retorna una forma quadràtica aleatòria amb valors propis "vaps". Si "vaps"
-        és None, els genera aleatòriament
+        Retorna una forma quadràtica aleatòria
+        Paràmetres:
+            ordre: ordre de la matriu simètrica de la forma quadràtica
+            maxim: nombre màxim dels coeficients de la matriu
+            vapsnonuls: nombre mínim de valrs propis no nuls
         """
         trobat = False
         while not trobat:
@@ -3796,6 +4081,9 @@ class FormaQuadratica(object):
     #
     #
     def classificacio(self):
+        """
+        Retorna la classificació de la forma quadràtica
+        """
         r, s = self.signatura()
         if r == self.dimensio:
             return "definida positiva"
@@ -3811,7 +4099,7 @@ class FormaQuadratica(object):
     #
     def rank(self):
         """
-        Retorna la signatura o índexs d'inèrcia de la forma quadràtica
+        Retorna el rang de la forma quadràtica
         """
         r, s = self.signatura()
         return r + s
@@ -3820,7 +4108,7 @@ class FormaQuadratica(object):
     #
     def polinomi_caracteristic(self):
         """
-        Retorna el polinomi característic de la froma
+        Retorna el polinomi característic de la forma quadràtica
         """
         return self.matriu.polinomi_caracteristic()
     #
@@ -3828,11 +4116,12 @@ class FormaQuadratica(object):
     #
     def expressio_euclidiana(self,prime=1):
         """
-        Retorna l'expressió euclidiana reduïda
+        Retorna l'expressió euclidiana reduïda de la forma de polinomi
+        expressat en LaTeX
+        Paràmetres:
+            prime: nombre de primes que s'escriuran a les variables
         """
         return self.latex(self.base,prime=prime)
-
-
 
 class Conica(object):
     """
@@ -3840,14 +4129,21 @@ class Conica(object):
     sinó generar coniques a partir dels elements característics o de manera
     aleatòria.
     Atributs:
-      ref: Referència afí
-      matriu: matriu projectiva de la cònica en la referència "ref"
-      canonica: matriu projectiva de la cònica en la referència canònica
+        ref: referència afí
+        matriu: matriu projectiva de la cònica en la referència "ref"
+        canonica: matriu projectiva de la cònica en la referència canònica
     """
     #
     #
     #
     def __new__(cls,matriu,ref=None):
+        """
+        Retorna una nova cònica
+        Paràmetres:
+            matriu: matriu projectiva de la cònica en la referència "ref"
+            Ha de ser 3x3
+            ref: referència afí. Si és None, serà la referència canònica
+        """
         if not isinstance(matriu,Matriu):
             return None
         if matriu.files != matriu.columnes:
@@ -3885,8 +4181,8 @@ class Conica(object):
     @classmethod
     def from_equacio(cls,eq):
         """
-            Classifica la cònica a partir de la seva equació.
-            Només per a el·lipses, hipèrboles i paràboles
+        Retorna i classifica la cònica a partir de la seva equació.
+        Només per a el·lipses, hipèrboles i paràboles
         """
         x, y = symbols('x y')
         unknowns = [x,y]
@@ -3898,10 +4194,14 @@ class Conica(object):
         f = eq.subs({x:0,y:0})
         Q = Matrix([[a,b],[b,c]])
         L = Matrix(2,1,[d,e])
+        l = Vector(d,e)
         vs = Q.eigenvects()
         (t1,t2), veps = vaps_veps(vs)
         s = list(linsolve((Q,-L),*unknowns))
         if t1 * t2 < 0:
+            #
+            # Hipèrbola
+            #
             s = Punt(list(s[0]))
             fp = eq.subs({x:s[0],y:s[1]})
             a2 = -fp/t1
@@ -3913,6 +4213,9 @@ class Conica(object):
                 u = veps[1]
             return Hiperbola(a2,-b2,s,u)
         if t1 * t2 > 0:
+            #
+            # Paràbola
+            #
             s = Punt(list(s[0]))
             fp = eq.subs({x:s[0],y:s[1]})
             if fp == 0:
@@ -3927,7 +4230,27 @@ class Conica(object):
                 a2, b2 = b2, a2
                 u = veps[1]
             return Ellipse(a2,b2,s,u)
-        return None
+        if len(s) > 0:
+            return None
+        if t1 == 0 and t2 == 0:
+            return None
+        #
+        # Paràbola
+        #
+        if t1 == 0:
+            t1, t2 = t2, t1
+            veps.reverse()
+        veps[0].simplificar()
+        veps[1].simplificar()
+        b = Base(veps,unitaria=True)
+        b.orientacio_positiva()
+        es = t1 * veps[0].dot(Vector(x,y)) + veps[0].dot(l)
+        vertex = Punt(solve([es,eq],x,y)[0])
+        ref = ReferenciaAfi(vertex,b)
+        ep = veps[1].dot(l)/veps[1].length()
+        p = - ep/t1
+        focus = ref.punt_de_coordenades(Punt(0,p/2))
+        return Parabola(vertex,focus)
     #
     #
     #
@@ -3945,6 +4268,11 @@ class Conica(object):
     #
     @classmethod
     def ellipse(cls,maxim=30):
+        """
+        Retorna una el·lipse aleatòria
+        Paràmetres:
+            maxim: nombre màxim de la matriu projectiva de la cònica
+        """
         trobat = False
         while not trobat:
             e = Ellipse.aleatoria()
@@ -3955,6 +4283,11 @@ class Conica(object):
     #
     @classmethod
     def hiperbola(cls,maxim=30):
+        """
+        Retorna una hipèrbola aleatòria
+        Paràmetres:
+            maxim: nombre màxim de la matriu projectiva de la cònica
+        """
         trobat = False
         while not trobat:
             h = Hiperbola.aleatoria()
@@ -3965,6 +4298,11 @@ class Conica(object):
     #
     @classmethod
     def parabola(cls,maxim=30):
+        """
+        Retorna una paràbola aleatòria
+        Paràmetres:
+            maxim: nombre màxim de la matriu projectiva de la cònica
+        """
         trobat = False
         while not trobat:
             p = Parabola.aleatoria()
@@ -3976,7 +4314,9 @@ class Conica(object):
     @classmethod
     def aleatoria(cls,maxim=30):
         """
-        Retorna una el·lipse, hipèrbola o paràbola aleatòria
+        Retorna una el·lipse, hipèrbola o paràbola aleatòries
+        Paràmetres:
+            maxim: nombre màxim de la matriu projectiva de la cònica
         """
         r = random.randint(0,2)
         if r == 0:
@@ -3989,7 +4329,7 @@ class Conica(object):
     #
     def tipus(self):
         """
-            Retorna el tipus de cònica
+        Retorna el tipus de cònica
         """
         if isinstance(self,Ellipse):
             return "El·lipse"
@@ -4003,7 +4343,7 @@ class Conica(object):
     #
     def referencia_principal(self):
         """
-            Retorna la referencia principal
+        Retorna la referencia principal
         """
         return self.ref
     #
@@ -4011,7 +4351,9 @@ class Conica(object):
     #
     def vectors(self,unitaris=False):
         """
-            Retorna els vectors de la base de la referència principal
+        Retorna els vectors de la base de la referència principal
+        Paràmetres:
+            unitaris: si és True, els retorna unitaris
         """
         return self.ref.vectors(unitaris)
 
@@ -4025,10 +4367,12 @@ class Ellipse(Conica):
     def __new__(cls,a2,b2,centre,eix):
         """
         Constructor.
+        Retorna una el·lipse
         Paràmetres:
-           a2: semieix major al quadrat
-           b2: semieix menor al quadrat
-           eix: direcció de l'eix principal (de les x')
+            a2: semieix major al quadrat
+            b2: semieix menor al quadrat
+            centre: centre de l'el·lipse
+            eix: direcció de l'eix principal (de les x')
         """
         if not isinstance(centre,Punt):
             return None
@@ -4124,7 +4468,7 @@ class Ellipse(Conica):
     #
     def focus(self):
         """
-            Retorna els focus de l'l·lipse
+        Retorna els focus de l'el·lipse
         """
         c = self.semidistancia_focal()
         f = [Punt(c,0),Punt(-c,0)]
@@ -4134,7 +4478,7 @@ class Ellipse(Conica):
     #
     def vertexs(self):
         """
-            Retorna els focus de l'el·lipse
+        Retorna els vèrtex de l'el·lipse
         """
         a = self.semieix_major()
         b = self.semieix_menor()
@@ -4145,7 +4489,7 @@ class Ellipse(Conica):
     #
     def equacio_reduida(self):
         """
-        Retorna l'equacio reduïda de l'el·lipse
+        Retorna l'equacio reduïda de l'el·lipse en format LaTeX
         """
         a2 = self.semieix_major()**2
         b2 = self.semieix_menor()**2
@@ -4157,8 +4501,18 @@ class Ellipse(Conica):
     #
     #
     #
-    def to_asy(self):
-        return f"Ellipse({self.centre()},{self.ref.base.vecs[0]},{self.semieix_major()**2},{self.semieix_menor()**2},x=13,y=10)"
+    def to_asy(self,x=13,y=10):
+        """
+        Retorna una expressió per fer servir amb el programa Asymtote
+        Paràmetres:
+            x, y: nombres enters. El gràfic es representarà en una quadricula
+            de límits (-x,x) i (-y,y)
+        """
+        a2 = self.semieix_major()**2
+        b2 = self.semieix_menor()**2
+        centre = self.centre()
+        vector = self.vectors()[0]
+        return f"Ellipse({centre},{vector},{a2},{b2},x={x},y={y})"
 
 class Hiperbola(Conica):
     """
@@ -4170,10 +4524,12 @@ class Hiperbola(Conica):
     def __new__(cls,a2,b2,centre,eix):
         """
         Constructor.
+        Retorna una hipèrbola
         Paràmetres:
-           a2: semieix real al quadrat
-           b2: semieix imaginari al quadrat
-           eix: direcció de l'eix principal (de les x')
+            a2: semieix real al quadrat
+            b2: semieix imaginari al quadrat
+            centre: centre de la hipèrbola
+            eix: direcció de l'eix principal (de les x')
         """
         if not isinstance(centre,Punt):
             return None
@@ -4265,7 +4621,7 @@ class Hiperbola(Conica):
     #
     def equacio_reduida(self):
         """
-        Retorna l'equacio reduïda de la hipèrbola
+        Retorna l'equacio reduïda de la hipèrbola en format LaTeX
         """
         a2 = self.semieix_real()**2
         b2 = self.semieix_imaginari()**2
@@ -4279,7 +4635,7 @@ class Hiperbola(Conica):
     #
     def focus(self):
         """
-            Retorna els focus de la hipèrbola
+        Retorna els focus de la hipèrbola
         """
         c = self.semidistancia_focal()
         f = [Punt(c,0),Punt(-c,0)]
@@ -4289,15 +4645,19 @@ class Hiperbola(Conica):
     #
     def vertexs(self):
         """
-            Retorna els vèrtexs de la hipèrbola
+        Retorna els vèrtexs de la hipèrbola
         """
-        a = self.semieix_rea()
+        a = self.semieix_real()
         v = [Punt(a,0),Punt(-a,0)]
         return list(map(self.ref.punt_de_coordenades,v))
     #
     #
     #
     def vectors_directors_asimptotes(self):
+        """
+        Retorna els vectors directors de les asímptotes expressats en la
+        base canònica
+        """
         l = self.ref.base.vecs[0].length()
         a = l * self.semieix_real()
         b = l * self.semieix_imaginari()
@@ -4310,6 +4670,11 @@ class Hiperbola(Conica):
     #
     #
     def equacio_continua_asimptota(self,v):
+        """
+        Retorna l'equació contínua de l'asímptota amb direccio v en format LaTeX
+        Paràmetres:
+            v: vector director de l'asímptota
+        """
         x, y = symbols('x y')
         centre = self.centre()
         if v[0] == 1:
@@ -4325,8 +4690,18 @@ class Hiperbola(Conica):
     #
     #
     #
-    def to_asy(self):
-        return f"Hiperbola({self.centre()},{self.ref.base.vecs[0]},{self.semieix_real()**2},{self.semieix_imaginari()**2},x=10,y=10)"
+    def to_asy(self,x=10,y=10):
+        """
+        Retorna una expressió per fer servir amb el programa Asymtote
+        Paràmetres:
+            x, y: nombres enters. El gràfic es representarà en una quadricula
+            de límits (-x,x) i (-y,y)
+        """
+        a2 = self.semieix_real()**2
+        b2 = self.semieix_imaginari()**2
+        centre = self.centre()
+        vector = self.vectors()[0]
+        return f"Hiperbola({centre},{vector},{a2},{b2},x={x},y={y})"
 
 class Parabola(Conica):
     """
@@ -4338,10 +4713,10 @@ class Parabola(Conica):
     def __new__(cls,vertex,focus):
         """
         Constructor.
+        Retorna una paràbola
         Paràmetres:
-          p: paràmetre de la paràbola
-          vertex: vèrtex
-          eix: direcció de l'eix principal (de les x')
+            vertex: vèrtex
+            focus: focus de la paràbola
         """
         if not isinstance(vertex,Punt):
             return None
@@ -4391,13 +4766,16 @@ class Parabola(Conica):
     #
     #
     def vertex(self):
+        """
+        Retorna el vèrtex de la paràbola
+        """
         return (self.ref.origen)
     #
     #
     #
     def equacio_reduida(self):
         """
-        Retorna l'equacio reduïda de la paràbola
+        Retorna l'equacio reduïda de la paràbola en format LaTeX
         """
         p = self.parametre()
         if 2 * p == 1:
@@ -4415,8 +4793,14 @@ class Parabola(Conica):
     #
     #
     #
-    def to_asy(self):
-        return f"Parabola({self.vertex()},{self.focus()},x=10,y=10)"
+    def to_asy(self,x=10,y=10):
+        """
+        Retorna una expressió per fer servir amb el programa Asymtote
+        Paràmetres:
+            x, y: nombres enters. El gràfic es representarà en una quadricula
+            de límits (-x,x) i (-y,y)
+        """
+        return f"Parabola({self.vertex()},{self.focus()},x={x},y={y})"
 
 class Quadrica(object):
     """
@@ -4424,14 +4808,21 @@ class Quadrica(object):
     sinó generar-les a partir dels elements característics o de manera
     aleatòria.
     Atributs:
-      ref: Referència afí
-      matriu: matriu projectiva de la quàdrica en la referència "ref"
-      canonica: matriu projectiva de la quàdrica en la referència canònica
+        ref: Referència afí
+        matriu: matriu projectiva de la quàdrica en la referència "ref"
+        canonica: matriu projectiva de la quàdrica en la referència canònica
     """
     #
     #
     #
     def __new__(cls,matriu,ref=None):
+        """
+        Retorna una nova quàdrica
+        Paràmetres:
+            matriu: matriu projectiva de la quàdrica en la referència "ref"
+            Ha de ser 4x4
+            ref: referència afí. Si és None, serà la referència canònica
+        """
         if not isinstance(matriu,Matriu):
             return None
         if matriu.files != matriu.columnes:
