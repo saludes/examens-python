@@ -3507,8 +3507,10 @@ class TransformacioLineal(object):
             psi = atan2(m[2,0],m[2,1])
             phi = atan2(m[0,2],-m[1,2])
         else:
-            pass
-        if not radians:
+            phi = 0
+            theta = acos(m[2,2])
+            psi = atan2(m[2,2] * m[1,0],m[0,0])
+        if not radiants:
             theta *= 180 / pi
             psi *= 180 / pi
             phi *= 180 / pi
