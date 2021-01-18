@@ -6629,7 +6629,7 @@ class RectaRegressio(object):
         if self.solucio == n:
             return "y=0"
         a, b = self.solucio.factor_comu()
-        eq = b[0]*x + b[1]
+        eq = a.p * (b[0]*x + b[1])
         if a.q == 1:
             return f"y = {mylatex(eq)}"
         return f"y = \\frac{{ {mylatex(eq)} }}{{ {a.q} }}"
