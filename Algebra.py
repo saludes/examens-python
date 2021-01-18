@@ -6659,3 +6659,23 @@ class RectaRegressio(object):
         ys = [random.randint(-max,max) for k in range(l)]
         punts = [Punt(xs[k],ys[k]) for k in range(l)]
         return cls(punts)
+    #
+    #
+    #
+    def llista_punts(self):
+        """
+        Retorna la llista de punts en format LaTeX
+        """
+        l = list(map(lambda item: f"${item}$",self.punts))
+        return ", ".join(l[0:-1]) + f" i {l[-1]}"
+    #
+    #
+    #
+    def taula_punts(self):
+        """
+        Retorna una taula en format LaTeX dels punts
+        """
+        format = "c|" + len(self.punts) * "r"
+        xs = " & ".join([f"${p[0]}$" for p in self.punts])
+        ys = " & ".join([f"${p[1]}$" for p in self.punts])
+        return f"\\begin{{tabular}}{{{format}}} {xs} \\\\ \\hline {ys} \\end{{tabular}}"
