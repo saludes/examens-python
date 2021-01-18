@@ -6625,6 +6625,9 @@ class RectaRegressio(object):
         Retorna l'equació de la recta de regressió expressada en LaTeX
         """
         x = symbols('x')
+        n = Vector.nul(l=2)
+        if self.solucio == n:
+            return "y=0"
         a, b = self.solucio.factor_comu()
         eq = b[0]*x + b[1]
         if a.q == 1:
