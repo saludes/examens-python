@@ -31,7 +31,8 @@
 \setboolean{use@times}{false}
 \newboolean{use@mtpro}
 \setboolean{use@mtpro}{false}
-
+\newboolean{use@apretat}
+\setboolean{use@apretat}{false}
 \DeclareOption{stix}{
  \setboolean{use@stix}{true}
  \catcode`\·=\active
@@ -41,6 +42,9 @@
 }
 \DeclareOption{mtpro}{
  \setboolean{use@mtpro}{true}
+}
+\DeclareOption{apretat}{
+ \setboolean{use@apretat}{true}
 }
 %
 % Dades de l'alumne
@@ -106,6 +110,25 @@
 \headheight=0.7in
 \ProcessOptions\relax
 %
+% Apretat
+%
+\ifthenelse{\boolean{use@apretat}}{
+ \AtBeginDocument{
+  \setlength{\abovedisplayskip}{4pt minus 2 pt}
+  \setlength{\abovedisplayshortskip}{4pt minus 2 pt}
+  \setlength{\belowdisplayskip}{0pt minus 2 pt}
+  \setlength{\belowdisplayshortskip}{0pt minus 2 pt}
+ }
+}
+{
+ \AtBeginDocument{
+  \setlength{\abovedisplayskip}{12pt minus 2 pt}
+  \setlength{\abovedisplayshortskip}{12pt minus 2 pt}
+  \setlength{\belowdisplayskip}{10pt minus 2 pt}
+  \setlength{\belowdisplayshortskip}{10pt minus 2 pt}
+ }
+}
+%
 % Font
 %
 \ifthenelse{\boolean{use@stix}}{
@@ -144,12 +167,6 @@
 %
 % Composici de les pàgines
 %
-\AtBeginDocument{
-\setlength{\abovedisplayskip}{4pt minus 2 pt}
-\setlength{\abovedisplayshortskip}{4pt minus 2 pt}
-\setlength{\belowdisplayskip}{0pt minus 2 pt}
-\setlength{\belowdisplayshortskip}{0pt minus 2 pt}
-}
 \textwidth=18cm
 \textheight=23cm
 \marginparsep=11pt
@@ -259,7 +276,7 @@
 
 \newenvironment{apartats}
 {
- \vspace{-1pt}
+ \ifthenelse{\boolean{use@apretat}}{\vspace{-1pt}}{}
  \begin{list}{\llap{\hss(\alph{@apartats})\hspace{0.5em}}}
  {\usecounter{@apartats}\leftmargin 2.2em\labelsep 0pt\labelwidth 16pt
  \listparindent 0pt\parsep 0pt\itemsep 0pt\topsep -12pt}
