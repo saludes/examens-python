@@ -1571,7 +1571,7 @@ class Matriu:
         """
         Retorna una nova matriu que és l'adjunta de l'actual
         """
-        return Matriu(self.matriu.adjugate())
+        return Matriu(self.matriu.adjugate().T)
     #
     #
     #
