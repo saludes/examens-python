@@ -4883,7 +4883,7 @@ class Quadrica(object):
         x, y, z = symbols('x y z')
         m = Matriu.matriu_columna(Vector([x,y,z,1]))
         r = m.transposada() * self.canonica * m
-        return mylatex(r[0,0].expand())
+        return mylatex(r[0,0].expand()) + " = 0"
     #
     #
     #
@@ -4932,7 +4932,7 @@ class Quadrica(object):
     #
     #
     @classmethod
-    def hiperboloideduesfulla(cls,maxim=30,diagonal=15):
+    def hiperboloideduesfulles(cls,maxim=30,diagonal=15):
         """
         Retorna un hiperboloide de dues fulles de manera aleatòria
         Paràmetres:
@@ -5257,8 +5257,8 @@ class Quadrica(object):
                         return None
                     v1 = positius
                     v2 = negatius
-                    a2 = -tip / positius[0][1]
-                    b2 = -tip / negatius[0][1]
+                    a2 = -tip / positius[0][0]
+                    b2 = -tip / negatius[0][0]
                     if a2 < 0:
                         a2, b2 = b2, a2
                         v1, v2 = v2, v1
@@ -5909,9 +5909,9 @@ class Con(Quadrica):
         else:
             str += f" + \\frac{{y'^2}}{{ {latex(b2)} }}"
         if c2 == 1:
-            str += " - z'^2 = 1"
+            str += " - z'^2 = 0"
         else:
-            str += f" - \\frac{{z'^2}}{{ {latex(c2)} }} = 1"
+            str += f" - \\frac{{z'^2}}{{ {latex(c2)} }} = 0"
         return str
 
 class CilindreElliptic(Quadrica):
@@ -6392,7 +6392,10 @@ class ParaboloideHiperbolic(Quadrica):
         a2 = a2 // g
         b2 = b2 // g
         q = base.quadrats_longituds()
-        t *= sqrt(q[2])
+        if random.randint(0,1):
+            t /= sqrt(q[2])
+        else:
+            t *= sqrt(q[2])
         m = Matriu(Matrix([[b2,0,0,0],[0,-a2,0,0],[0,0,0,-t/2],[0,0,-t/2,0]]))
         Quadrica.__init__(self,m,r)
     #
@@ -6414,7 +6417,7 @@ class ParaboloideHiperbolic(Quadrica):
         while not trobat:
             vertex = Punt.aleatori(l=3,maxim=4)
             trobat = vertex.length() > 0
-        c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60]
+        c = [1,2,3,4,5,8,10,12,16]
         trobat = False
         while not trobat:
             a = random.randint(0,len(c) - 1)
@@ -6539,7 +6542,8 @@ class CilindreParabolic(Quadrica):
         s = SubespaiVectorial([eix])
         base = s.amplia_base(unitaria=True)
         q = base.quadrats_longituds()
-        c = [k for k in range(1,6)] + [-k for k in range(1,6)]
+        c = [k for k in range(1,3)] + [-k for k in range(1,3)]
+        c += [Rational(1,k) for k in range(1,4)] + [-Rational(1,k) for k in range(1,4)]
         a = random.randint(0,len(c) - 1)
         p = 2 * c[a] * sqrt(q[2])
         return cls(p,vertex,eix)
