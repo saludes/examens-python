@@ -31,22 +31,24 @@ Un cop tenim en una carpeta els fitxers _examen.tex_, _Problemes.py_, _estudiant
 Les opcions que tenim són
 ```
 Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<enter> [--no-solucions] [--tex-engine=pdflatex]
-   --examen=<fitxer>        : Fitxer LaTeX amb el model d'examen
-   --estudiants=<fitxer>    : Fitxer amb nom:cognoms dels estudiants
-   --problemes=<nombre>     : Nombre de problemes
-   --tex-engine=<programa>  : Nom del programa de LaTeX utilitzat
-                            : Si no s'especifica, no es generen els PDF
-   --aleatori               : L'ordre dels problemes serà aleatori
-   --no-solucions           : No es generen els fitxers amb les solucions
+   --examen=<fitxer>                 : Fitxer LaTeX amb el model d'examen
+   --estudiants=<fitxer>             : Fitxer amb nom:cognoms dels estudiants
+   --problemes=<nombre o llista>     : Nombre de problemes o llista de problemes
+   --possibles-problemes=<nombre>    : Nombre de possibles problemes
+                                     : Si problemes és menor que possibles-problemes, s'escullen a l'atzar per a
+                                     : cada estudiants
+   --tex-engine=<programa>           : Nom del programa de LaTeX utilitzat
+                                     : Si no s'especifica, no es generen els PDF
+   --aleatori                        : L'ordre dels problemes serà aleatori
+   --no-solucions                    : No es generen els fitxers amb les solucions
 ```
 
-Si en l'examen hi volem incloure gràfics generats amb l'asymptote (https://asymptote.sourceforge.io/), hem d'instal·lar-lo i també convé instal·lar el
-_latexmk_:
+Si en l'examen hi volem incloure gràfics generats amb l'asymptote (https://asymptote.sourceforge.io/), hem d'instal·lar-lo i també convé instal·lar el _latexmk_:
  ```
 ~# apt install asymptote
 ~# apt install latexmk
  ```
-i copiar el fitxer _LatexMk_ a la carpeta _/etc_. Aleshores, per generar els PDF executarem la comanda  _examen.py_ amb l'opció _--tex-engine=latexmk-pdf_.
+i copiar el fitxer _LatexMk_ a la carpeta _/etc_. Aleshores, per generar els PDF executarem la comanda  _examen.py_ amb l'opció _--tex-engine=latexmk -pdf_.
 
 ## Enviament de correus amb Google API
 
@@ -85,3 +87,15 @@ Quan els vulguem tornar a utilitzar, els hem de desencriptar:
 ```
 
 ### Enviament dels correus
+
+Un cop generat els fitxers PDF amb els enunciats dels exàmens, es poden enviar per correu electrònic als estudiants amb la comanda
+```
+~$ enviar-examens.py --estudiants=estudiants.csv --subject="Examen Final" --sender=rafel.amer@upc.edu --message=correu.txt
+```
+
+En el fitxer _correu.txt_ hi tindrem el cos del missatge que volem enviar a cada estudiant. Per exemple, hi podem escriure les instruccions per a la realització de l'examen
+
+Quan hagi finalitzat l'examen, podem enviar les solucions a cada estudiant afegint l'opció _--solucions_ a la comanda anterior.
+```
+~$ enviar-examens.py --estudiants=estudiants.csv --subject="Solucions de l'Examen Final" --sender=rafel.amer@upc.edu --message=correu2.txt --solucions
+```
