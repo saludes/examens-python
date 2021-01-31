@@ -23,6 +23,7 @@ import os
 import re
 import unidecode
 import random
+import glob
 from optparse import OptionParser
 sys.path.append('.')
 from Problemes import Problemes
@@ -196,7 +197,12 @@ class Examen:
                     comanda = f"{engine} {filename}-solucio.tex > /dev/null 2>&1 "
                     print (comanda)
                     os.system(comanda)
-        os.system('rm -f *.log *.aux *.asy *-1.pdf *.pre *.fls *.fdb_*')
+        names = ['*.log','*.aux','*.asy','*-1.pdf','*.pre','*.fls','*.fdb_*']
+        files = []
+        for n in names:
+            files += glob.glob(n)
+        for f in files:
+            os.remove(f)
         os.chdir(dir)
     #
     #
