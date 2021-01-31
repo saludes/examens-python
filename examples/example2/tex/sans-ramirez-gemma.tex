@@ -1,0 +1,230 @@
+\documentclass[10pt,catalan]{article}
+
+\usepackage[ca,NIC]{examen}
+
+\data{15 de gener de 2021}
+\examen{Examen Final}
+\quadrimestre{Tardor}
+\curs{2020-2021}
+\assignatura{Àlgebra}
+\cognoms{Sans Ramírez}
+\nom{Gemma}
+
+\begin{asydef}
+import eixos;
+import graph;
+usepackage("amsfonts");
+usepackage("amssymb");
+usepackage("times");
+usepackage("txfonts");
+\end{asydef}
+
+\begin{document}
+
+\begin{enunciat}
+Donada la matriu
+\[
+   A=\begin{pmatrix}{*{3}r} 3 & -2 & 2\\ 2 & -1 & 2\\ 4 & -5 & 4\end{pmatrix}\,,
+\]
+\begin{apartats}
+\item calculeu el seu poliniomi característic;
+\item justifiqueu que la matriu $A$ és diagonalitzable i escriviu la matriu diagonal corresponent  ordenants els valors propis de menor a major.
+\end{apartats}
+\end{enunciat}
+
+\begin{quadricula}
+\begin{tabular}{|L{5cm}{2cm}|L{9cm}{2cm}|}
+\hline
+\multicolumn{2}{|L{14cm}{0.8cm}|}{$p(\lambda)=$} \\
+\hline
+$D=$ & \begin{minipage}[t]{8.8cm}Justificació:\vspace{1.8cm} \end{minipage}\\
+\hline
+\end{tabular}
+\end{quadricula}
+
+\begin{solucio}
+\begin{center}
+\begin{tabular}{|L{5cm}{2cm}|L{9cm}{2cm}|}
+\hline
+\multicolumn{2}{|L{14cm}{0.8cm}|}{$p(\lambda)=- \lambda^{3} + 6 \lambda^{2} - 11 \lambda + 6$} \\
+\hline
+$D=\begin{pmatrix}{*{3}r} 1 & 0 & 0\\ 0 & 2 & 0\\ 0 & 0 & 3\end{pmatrix}$ & 
+\begin{minipage}[t]{8.8cm}
+Justificació: tota matriu amb valors propis diferents o de multiplicitat 1, és diagonalitzable.
+\vspace{1cm}
+\end{minipage} \\
+\hline
+\end{tabular}
+\end{center}
+\end{solucio}
+
+
+
+
+
+\begin{enunciat}
+Donat el sistema d'equacions
+\[
+  \left.\aligned m x + 3 y + z &= -11 \\ 3 x + 3 y + z &= m - 14 \\ - x + y - z &= 1 \endaligned\;\right\}\,,
+\]
+\begin{apartats}
+\item trobeu el valor o valors de $m$ per al qual el sistema és compatible indeterminat;
+\item resoleu-lo per a aquests valors de $m$.
+\end{apartats}
+\end{enunciat}
+
+\begin{quadricula}
+\begin{tabular}{|L{3cm}{1.5cm}|L{7cm}{1.5cm}|}
+\hline
+$m=$ & \\
+\hline
+\end{tabular}
+\end{quadricula}
+
+\begin{solucio}
+\begin{center}
+\begin{tabular}{|L{3cm}{1.5cm}|L{7cm}{1.5cm}|}
+\hline
+$m=3$ & $\left.\aligned x &= \frac{- 2 z -7}{3} \\ y &= \frac{z -4}{3} \endaligned\;\right\}$\\
+\hline
+\end{tabular}
+\end{center}
+\end{solucio}
+
+
+
+
+
+\begin{enunciat}
+Siguin $R$ la recta d'equació contínua
+\[
+  x - 2 = \frac{y - 2}{-1} = \frac{z - 2}{-1}\,.
+\]
+\begin{apartats}
+\item Quina és la representació en la referència canònica del moviment helicoidal que consisteix en una rotacio d'angle $120^\circ$ al voltant de la recta $R$ seguida d'una translació de $(2,-2,-2)$.
+\item Trobeu els angles d'Euler de la rotació d'angle $120^\circ$ al voltant del vector $(1,-1,-1)$.
+\end{apartats}
+\end{enunciat}
+
+\begin{quadricula}
+\begin{tabular}{|L{10cm}{2cm}|}
+\hline
+  \\
+\hline
+\multicolumn{1}{|C{10cm}{0.8cm}|}
+{$\psi=$\hspace{3.5cm}$\theta=$\hspace{3.5cm}$\phi=$\hspace{3.5cm}} \\
+\hline
+\end{tabular}
+\end{quadricula}
+
+\begin{solucio}
+\begin{center}
+\begin{tabular}{|C{10cm}{2cm}|}
+\hline
+$\begin{pmatrix}{c} u \\ v \\ w\end{pmatrix} = 
+\begin{pmatrix}{*{1}r} 6\\ 2\\ -2\end{pmatrix} + 
+\begin{pmatrix}{*{3}r} 0 & 0 & -1\\ -1 & 0 & 0\\ 0 & 1 & 0\end{pmatrix}
+\begin{pmatrix}{c} x \\ y \\ z\end{pmatrix}$ \\
+\hline
+\multicolumn{1}{|C{10cm}{0.8cm}|}
+{$\psi=0^\circ$\hspace{1.7cm}$\theta=90^\circ$\hspace{1.7cm}$\phi=-90^\circ$} \\
+\hline
+\end{tabular}
+\end{center}
+\end{solucio}
+
+
+
+
+
+\begin{enunciat}
+Siguin $R_1$ i $R_2$ les rectes d'equacions respectives
+\[
+  \frac{x + 2}{3} = y - 3 = \frac{z + 1}{-3}\qquad\text{i}\qquad \left.\aligned - x + 3 y + 2 z &= -15 \\ - x + y + z &= -7 \endaligned\;\right\}\,.
+\]
+\begin{apartats}
+\item Calculeu la distància entre les dues rectes.
+\item Trobeu l'equació del pla que conté la primera recta i és paral·lel a la segona. 
+\end{apartats}
+\end{enunciat}
+
+\begin{quadricula}
+\begin{tabular}{|L{5cm}{0.8cm}|L{7cm}{0.8cm}|}
+\hline
+$d=$ & \\ 
+\hline
+\end{tabular}
+\end{quadricula}
+
+\begin{solucio}
+\begin{center}
+\begin{tabular}{|L{5cm}{0.8cm}|C{7cm}{0.8cm}|}
+\hline
+$d=\displaystyle \frac{27 \sqrt{2}}{7}$ & $x + 9 y + 4 z = 21$ \\
+\hline
+\end{tabular}
+\end{center}
+\end{solucio}
+
+
+
+
+
+\begin{enunciat}
+Donada la cònica d'equació
+\[
+  x^{2} + y^{2} + 2 x y + 16 x - 32 y + 16 = 0
+\]
+\begin{apartats}
+\item trobeu la seva referència principal, l'equació reduïda i el tipus de cònica;
+\item representeu-la gràficament.
+\end{apartats}
+\end{enunciat}
+
+\begin{quadricula}
+\begin{tabular}{|L{16cm}{1cm}|}
+\hline
+  \\
+\hline
+\end{tabular}
+\begin{figure}[!t]
+\begin{center}
+\begin{asy}
+unitsize(0.45cm);
+
+Canonica(-13,13,-10,10);
+
+\end{asy}
+\end{center}
+\caption{Representació gràfica de la cònica}
+\end{figure}
+\end{quadricula}
+
+\begin{solucio}
+\begin{figure}[!t]
+\begin{center}
+\begin{asy}
+unitsize(0.45cm);
+
+Canonica(-11,15,-8,12);
+Parabola((2,2),(-1,5),x=10,y=10);
+clip((-11,-8)--(15,-8)--(15,12)--(-11,12)--cycle);
+\end{asy}
+\end{center}
+\caption{Representació gràfica de la cònica}
+\end{figure}
+\begin{center}
+\begin{tabular}{|C{16cm}{1cm}|}
+\hline
+$\cal R'=\left\{(2,2);\deufrac{1}{\sqrt{2}}(1,1),\deufrac{1}{\sqrt{2}}(-1,1)\right\}$\hspace{2cm} $\displaystyle y' = \frac{x'^2}{12 \sqrt{2}}$  \hspace{2cm} Paràbola\\
+\hline
+\end{tabular}
+\end{center}
+\end{solucio}
+
+
+
+
+
+
+\end{document}

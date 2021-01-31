@@ -1,0 +1,55 @@
+\begin{enunciat}
+Donada la cònica d'equació
+\[
+  EQUACIO
+\]
+\begin{apartats}
+\item trobeu la seva referència principal, l'equació reduïda i el tipus de cònica;
+\item representeu-la gràficament.
+\end{apartats}
+\end{enunciat}
+
+\begin{quadricula}
+\begin{tabular}{|L{16cm}{1cm}|}
+\hline
+  \\
+\hline
+\end{tabular}
+\begin{figure}[!t]
+\begin{center}
+\begin{asy}
+unitsize(0.45cm);
+
+Canonica(-13,13,-10,10);
+
+\end{asy}
+\end{center}
+\caption{Representació gràfica de la cònica}
+\end{figure}
+\end{quadricula}
+
+\begin{solucio}
+\begin{figure}[!t]
+\begin{center}
+\begin{asy}
+unitsize(0.45cm);
+
+Canonica(MINIMX,MAXIMX,MINIMY,MAXIMY);
+CONICA;
+clip((MINIMX,MINIMY)--(MAXIMX,MINIMY)--(MAXIMX,MAXIMY)--(MINIMX,MAXIMY)--cycle);
+\end{asy}
+\end{center}
+\caption{Representació gràfica de la cònica}
+\end{figure}
+\begin{center}
+\begin{tabular}{|C{16cm}{1cm}|}
+\hline
+$\cal R'=PRINCIPAL$\hspace{2cm} $\displaystyle REDUIDA$  \hspace{2cm} TIPUS\\
+\hline
+\end{tabular}
+\end{center}
+\end{solucio}
+
+
+
+

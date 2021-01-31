@@ -122,10 +122,10 @@
 }
 {
  \AtBeginDocument{
-  \setlength{\abovedisplayskip}{12pt minus 2 pt}
-  \setlength{\abovedisplayshortskip}{12pt minus 2 pt}
-  \setlength{\belowdisplayskip}{10pt minus 2 pt}
-  \setlength{\belowdisplayshortskip}{10pt minus 2 pt}
+  \setlength{\abovedisplayskip}{8pt minus 2 pt}
+  \setlength{\abovedisplayshortskip}{8pt minus 2 pt}
+  \setlength{\belowdisplayskip}{8pt minus 2 pt}
+  \setlength{\belowdisplayshortskip}{8pt minus 2 pt}
  }
 }
 %
@@ -168,7 +168,7 @@
 % Composici de les pàgines
 %
 \textwidth=18cm
-\textheight=23cm
+\textheight=24cm
 \marginparsep=11pt
 \footskip=30pt
 \hoffset=-0.3in
@@ -178,9 +178,18 @@
 \oddsidemargin=0pt
 \evensidemargin=0pt
 \ifthenelse{\boolean{nomicognoms}}
-{\advance\headheight by 2.8cm
-\advance\textheight by -1.8cm}{}
+{
+\advance\headheight by 2.8cm
+\advance\textheight by -1.8cm
+}{}
+\ifthenelse{\boolean{solucions}}
+{
 \voffset=-4cm
+}
+{
+\voffset=-4.5cm
+}
+
 \parindent=0pt
 \parskip=5pt minus 1pt
 %
