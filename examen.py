@@ -24,6 +24,8 @@ import re
 import unidecode
 import random
 import glob
+import json
+import subprocess
 from optparse import OptionParser
 sys.path.append('.')
 from Problemes import Problemes
@@ -112,8 +114,8 @@ class Examen:
                     try:
                         data = line.split(':')
                         self.estudiants.append({'nom' : data[0].strip(),
-                                                'cognoms' : data[1].strip()
-                                                })
+                                                'cognoms' : data[1].strip(),
+                                                'email' : data[1].strip()})
                     except:
                         continue
                 f.close()
@@ -140,6 +142,21 @@ class Examen:
             except:
                 print("Error en els enunciats dels problemes")
                 sys.exit(0)
+        #
+        # Fitxer JSON en el que guardarem les dades
+        #
+        dades = glob.glob('examen*.json')
+        count = 0
+        for f in dades:
+            f = f.replace('examen','')
+            f = f.replace('.json','')
+            try:
+                v = int(f)
+                if v > count:
+                    count = v
+            except:
+                pass
+        self.count = count + 1
     #
     #
     #
@@ -155,7 +172,9 @@ class Examen:
                 sys.exit(0)
         os.chdir('tex')
 
+        js = {}
         for e in self.estudiants:
+            js[e['email']] = {}
             examen = []
             problemes = probs.problemes()
             if isinstance(self.problemes,list):
@@ -172,6 +191,8 @@ class Examen:
                 for k,v in relacio.items():
                     p = p.replace(k,v)
                 examen.append(p)
+                v = f"problema{i}"
+                js[e['email']][v] = relacio
             if self.options.aleatori:
                 random.shuffle(examen)
             enunciats = "\n\n".join(examen)
@@ -190,13 +211,19 @@ class Examen:
                     f.write(examen)
                     f.close()
             if engine is not None:
-                comanda = f"{engine} {filename}.tex > /dev/null 2>&1 "
-                print (comanda)
-                os.system(comanda)
+                comanda = [f"{engine}","-interaction=nonstopmode", f"{filename}.tex"]
+                print (f"S'està executant {engine} {filename}.tex")
+                p = subprocess.run(comanda,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+                if p.returncode != 0:
+                    print (f"Hi ha un error en el fitxer {filename}.tex")
+                    sys.exit(0)
                 if self.options.solucions:
-                    comanda = f"{engine} {filename}-solucio.tex > /dev/null 2>&1 "
-                    print (comanda)
-                    os.system(comanda)
+                    comanda = [f"{engine}","-interaction=nonstopmode", f"{filename}-solucio.tex"]
+                    print (f"S'està executant {engine} {filename}-solucio.tex")
+                    p = subprocess.run(comanda,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+                    if p.returncode != 0:
+                        print (f"Hi ha un error en el fitxer {filename}-solucio.tex")
+                        sys.exit(0)
         names = ['*.log','*.aux','*.asy','*-1.pdf','*.pre','*.fls','*.fdb_*']
         files = []
         for n in names:
@@ -204,6 +231,17 @@ class Examen:
         for f in files:
             os.remove(f)
         os.chdir(dir)
+        jsonfile = self.options.examen.replace('.tex','')
+        t = ("%3d.json" % self.count).replace(' ','0')
+        jsonfile += t
+        with open(jsonfile,'w') as f:
+            json.dump(js,f)
+        f.close()
+    #
+    #
+    #
+    def recuperar_examen(self):
+        pass
     #
     #
     #
