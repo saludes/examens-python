@@ -37,6 +37,7 @@ class Examen:
         self.parser.add_option("--estudiants",dest="estudiants",default=None)
         self.parser.add_option("--problemes",dest="problemes",default=None)
         self.parser.add_option("--possibles-problemes",dest="possibles",default=None)
+        self.parser.add_option("--dades",dest="fitxerdades",default=None)
         self.parser.add_option("--tex-engine",dest="engine",default=None)
         self.parser.add_option("--no-solucions",action="store_false",dest="solucions",default=True)
         self.parser.add_option("--aleatori",action="store_true",dest="aleatori",default=False)
@@ -52,13 +53,14 @@ class Examen:
     #
     #
     def ajuda(self):
-        print("Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<enter> [--no-solucions] [--tex-engine=pdflatex]\n")
+        print("Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> [--problemes=<enter>] [--dades=<fitxer>] [--no-solucions] [--tex-engine=pdflatex]\n")
         print("Opcions:")
         print("   --examen=<fitxer>              : Fitxer LaTeX amb el model d'examen")
         print("   --estudiants=<fitxer>          : Fitxer amb nom:cognoms dels estudiants")
         print("   --problemes=<nombre|llista>    : Nombre de problemes o llista de problemes")
         print("   --possibles-problemes=<nombre> : Nombre de possibles problemes")
         print("                                  : S'escullen aleatòriament \"nombre\" problemes")
+        print("   --dades                        : Fitxer amb les dades generades anteriorment")
         print("   --tex-engine=<programa>        : Nom del programa de LaTeX utilitzat")
         print("                                  : Si no s'especifica, no es generen els PDF")
         print("   --aleatori                     : L'ordre dels problemes serà aleatori")
@@ -72,6 +74,7 @@ class Examen:
         est = self.options.estudiants
         prob = self.options.problemes
         possibles = self.options.possibles
+        dades = self.options.fitxerdades
         try:
             prob = int(prob)
         except:
@@ -90,8 +93,14 @@ class Examen:
         if possibles is None and isinstance(prob,int):
             prob = list(range(prob + 1))
         regex = re.compile('^\s*#.$',re.IGNORECASE)
-        if ex is None or est is None or prob is None:
+        #
+        # Comprovacions
+        #
+        if ex is None or est is None:
             self.ajuda()
+        if prob is not None and dades is not None:
+            print ("No es poden especificar les opcions --problemes i --dades simultàniament")
+            sys.exit(0)
         #
         # Enunciat de l'examen
         #
@@ -115,7 +124,7 @@ class Examen:
                         data = line.split(':')
                         self.estudiants.append({'nom' : data[0].strip(),
                                                 'cognoms' : data[1].strip(),
-                                                'email' : data[1].strip()})
+                                                'email' : data[2].strip()})
                     except:
                         continue
                 f.close()
@@ -128,7 +137,7 @@ class Examen:
         self.problemes = prob
         if isinstance(self.problemes,int):
             self.maxproblema = self.problemes
-        else:
+        elif isinstance(self.problemes,list):
             self.maxproblema = max(self.problemes)
         self.possibles = possibles
         if self.possibles is not None and self.possibles > self.maxproblema:
@@ -160,9 +169,43 @@ class Examen:
     #
     #
     #
-    def generar_examens(self):
-        probs = Problemes()
+    def generar_examen(self,examen,estudiant):
         engine = self.options.engine
+        if self.options.aleatori:
+            random.shuffle(examen)
+        enunciats = "\n\n".join(examen)
+        relacio = {'COGNOMS' : estudiant['cognoms'], 'NOM' : estudiant['nom'], 'ENUNCIATS' : enunciats}
+        examen = self.examen
+        for k,v in relacio.items():
+            examen = examen.replace(k,v)
+        filename = f"{estudiant['cognoms']}-{estudiant['nom']}".lower().replace(' ','-')
+        filename = unidecode.unidecode(filename)
+        with open(f"{filename}.tex",'w') as f:
+            f.write(examen)
+            f.close()
+        examen = examen.replace('NIC','nicsol')
+        if self.options.solucions:
+            with open(f"{filename}-solucio.tex",'w') as f:
+                f.write(examen)
+                f.close()
+        if engine is not None:
+            comanda = [f"{engine}","-interaction=nonstopmode", f"{filename}.tex"]
+            print (f"S'està executant {engine} {filename}.tex")
+            p = subprocess.run(comanda,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,shell=True)
+            if p.returncode != 0:
+                print (f"Hi ha un error en el fitxer {filename}.tex")
+                sys.exit(0)
+            if self.options.solucions:
+                comanda = [f"{engine}","-interaction=nonstopmode", f"{filename}-solucio.tex"]
+                print (f"S'està executant {engine} {filename}-solucio.tex")
+                p = subprocess.run(comanda,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,shell=True)
+                if p.returncode != 0:
+                    print (f"Hi ha un error en el fitxer {filename}-solucio.tex")
+                    sys.exit(0)
+    #
+    #
+    #
+    def crea_carpeta_tex(self):
         dir = os.getcwd()
         if not os.path.exists('tex'):
             try:
@@ -171,7 +214,23 @@ class Examen:
                 print("Error en crear la carpeta tex")
                 sys.exit(0)
         os.chdir('tex')
-
+        return dir
+    #
+    #
+    #
+    def borra_fitxers(self):
+        names = ['*.log','*.aux','*.asy','*-1.pdf','*.pre','*.fls','*.fdb_*']
+        files = []
+        for n in names:
+            files += glob.glob(n)
+        for f in files:
+            os.remove(f)
+    #
+    #
+    #
+    def generar_examens(self):
+        probs = Problemes()
+        dir = self.crea_carpeta_tex()
         js = {}
         for e in self.estudiants:
             js[e['email']] = {}
@@ -191,45 +250,10 @@ class Examen:
                 for k,v in relacio.items():
                     p = p.replace(k,v)
                 examen.append(p)
-                v = f"problema{i}"
+                v = f"problema{i + 1}"
                 js[e['email']][v] = relacio
-            if self.options.aleatori:
-                random.shuffle(examen)
-            enunciats = "\n\n".join(examen)
-            relacio = {'COGNOMS' : e['cognoms'], 'NOM' : e['nom'], 'ENUNCIATS' : enunciats}
-            examen = self.examen
-            for k,v in relacio.items():
-                examen = examen.replace(k,v)
-            filename = f"{e['cognoms']}-{e['nom']}".lower().replace(' ','-')
-            filename = unidecode.unidecode(filename)
-            with open(f"{filename}.tex",'w') as f:
-                f.write(examen)
-                f.close()
-            examen = examen.replace('NIC','nicsol')
-            if self.options.solucions:
-                with open(f"{filename}-solucio.tex",'w') as f:
-                    f.write(examen)
-                    f.close()
-            if engine is not None:
-                comanda = [f"{engine}","-interaction=nonstopmode", f"{filename}.tex"]
-                print (f"S'està executant {engine} {filename}.tex")
-                p = subprocess.run(comanda,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
-                if p.returncode != 0:
-                    print (f"Hi ha un error en el fitxer {filename}.tex")
-                    sys.exit(0)
-                if self.options.solucions:
-                    comanda = [f"{engine}","-interaction=nonstopmode", f"{filename}-solucio.tex"]
-                    print (f"S'està executant {engine} {filename}-solucio.tex")
-                    p = subprocess.run(comanda,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
-                    if p.returncode != 0:
-                        print (f"Hi ha un error en el fitxer {filename}-solucio.tex")
-                        sys.exit(0)
-        names = ['*.log','*.aux','*.asy','*-1.pdf','*.pre','*.fls','*.fdb_*']
-        files = []
-        for n in names:
-            files += glob.glob(n)
-        for f in files:
-            os.remove(f)
+            self.generar_examen(examen,e)
+        self.borra_fitxers()
         os.chdir(dir)
         jsonfile = self.options.examen.replace('.tex','')
         t = ("%3d.json" % self.count).replace(' ','0')
@@ -240,14 +264,64 @@ class Examen:
     #
     #
     #
+    def problemes_json(self,js):
+        problemes = []
+        for k, v in js.items():
+            probs = [int(x.replace('problema','')) for x in v.keys()]
+            for p in probs:
+                if p not in problemes:
+                    problemes.append(p)
+        return problemes
+    #
+    #
+    #
     def recuperar_examen(self):
-        pass
+        try:
+            with open(self.options.fitxerdades) as f:
+                js = json.load(f)
+            f.close()
+        except:
+            print (f"Error llegint el fitxer JSON {self.options.fitxerdades}")
+            sys.exit(0)
+        #
+        # Llegim els enunciats dels problemes
+        #
+        problemes = self.problemes_json(js)
+        problemes.sort()
+        for i in problemes:
+            try:
+                with open(f"p{i}.tex") as f:
+                    e = f.read()
+                f.close()
+                self.enunciats.append(e)
+            except:
+                print("Error en els enunciats dels problemes")
+                sys.exit(0)
+
+        dir = self.crea_carpeta_tex()
+        for e in self.estudiants:
+            examen = []
+            dades = js[e['email']]
+            probs = [int(x.replace('problema','')) for x in dades.keys()]
+            probs.sort()
+            for i in probs:
+                 relacio = dades[f"problema{i}"]
+                 p = self.enunciats[i - 1]
+                 for k,v in relacio.items():
+                     p = p.replace(k,v)
+                 examen.append(p)
+            self.generar_examen(examen,e)
+        self.borra_fitxers()
+        os.chdir(dir)
     #
     #
     #
     def main(self):
         self.read_data()
-        self.generar_examens()
+        if self.options.fitxerdades is not None:
+            self.recuperar_examen()
+        else:
+            self.generar_examens()
 
 if __name__ == '__main__':
     main = Examen()

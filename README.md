@@ -28,6 +28,10 @@ Un cop tenim en una carpeta els fitxers _examen.tex_, _Problemes.py_, _estudiant
 ```
 ~$ examen.py --examen=examen.tex --estudiants=estudiants.csv --problemes=4
 ```
+Cada línia del fitxer _estudiants.csv_ ha de ser de la forma
+```
+NOM:COGNOMS:CORREU ELECTRÒNIC
+```
 Les opcions que tenim són
 ```
 Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<enter> [--no-solucions] [--tex-engine=pdflatex]
@@ -37,10 +41,16 @@ Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<ent
    --possibles-problemes=<nombre>    : Nombre de possibles problemes
                                      : Si problemes és menor que possibles-problemes, s'escullen a l'atzar per a
                                      : cada estudiants
+   --dades=<fitxer>                  : Fitxer amb les dades generades anteriorment                                  
    --tex-engine=<programa>           : Nom del programa de LaTeX utilitzat
                                      : Si no s'especifica, no es generen els PDF
    --aleatori                        : L'ordre dels problemes serà aleatori
    --no-solucions                    : No es generen els fitxers amb les solucions
+```
+
+Cada vegada que es fa una col·lecció d'exàmens aleatoris, es guarden les dades aleatòries en un fitxer JSON, que en el cas anterior seria _examen001.json_. Si volem tornar a generar els exàmens amb les mateixes dades, haurem d'executar
+```
+~$ examen.py --examen=examen.tex --estudiants=estudiants.csv --dades=examen001.json
 ```
 
 Si en l'examen hi volem incloure gràfics generats amb l'asymptote (https://asymptote.sourceforge.io/), hem d'instal·lar-lo i també convé instal·lar el _latexmk_:
