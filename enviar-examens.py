@@ -18,7 +18,7 @@ License:    This program is free software: you can redistribute it and/or modify
  	        See https://www.gnu.org/licenses/
 """
 
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly','https://www.googleapis.com/auth/gmail.send']
+SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
 import pickle
 import mimetypes
@@ -142,19 +142,21 @@ except:
     sys.exit(0)
 
 try:
-    with open(f"{HOME}/credentials/token.pickle", 'rb') as token:
+    tokenfile = os.path.join(f"{HOME}","credentials","token.pickle")
+    with open(tokenfile,'rb') as token:
         creds = pickle.load(token)
 except:
-    print(f"Error en llegir el fitxer {HOME}/credentials/token.pickle")
+    print(f"Error en llegir el fitxer {tokenfile}")
     sys.exit(0)
 
 if not creds or not creds.valid:
     if creds and creds.expired and creds.refresh_token:
         creds.refresh(Request())
     else:
-        flow = InstalledAppFlow.from_client_secrets_file(f"{HOME}/credentials/credentials.json", SCOPES)
+        credentials = = os.path.join(f"{HOME}","credentials","credentials.json")
+        flow = InstalledAppFlow.from_client_secrets_file(credentials, SCOPES)
         creds = flow.run_local_server(port=0)
-        with open(f"{HOME}/credentials/token.pickle", 'wb') as token:
+        with open(tokenfile,'wb') as token:
             pickle.dump(creds, token)
 
 service = build('gmail', 'v1', credentials=creds)
@@ -164,7 +166,7 @@ for e in estudiants:
     m = message
     for k,v in relacio.items():
         m = m.replace(k,v)
-    filename = f"tex/{e['cognoms']}-{e['nom']}".lower().replace(' ','-')
+    filename = os.path.join("tex","f{e['cognoms']}-{e['nom']}".lower().replace(' ','-')
     filename = unidecode.unidecode(filename)
     if options.solucions:
         filename += "-solucio.pdf"

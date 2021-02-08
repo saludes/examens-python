@@ -11,9 +11,7 @@ from google.auth.transport.requests import Request
 #
 # If modifying these scopes, delete the file token.pickle.
 #
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly',
-          'https://www.googleapis.com/auth/gmail.send']
-
+SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
 def main():
     creds = None
@@ -23,8 +21,9 @@ def main():
     # created automatically when the authorization flow completes for the first
     # time.
     #
-    if os.path.exists(f"{HOME}/credentials/token.pickle"):
-        with open(f"{HOME}/credentials/token.pickle", 'rb') as token:
+    tokenfile = os.path.join(f"{HOME}","credentials","token.pickle")
+    if os.path.exists(tokenfile):
+        with open(tokenfile,'rb') as token:
             creds = pickle.load(token)
     #
     # If there are no (valid) credentials available, let the user log in.
@@ -33,11 +32,11 @@ def main():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                f"{HOME}/credentials/credentials.json", SCOPES)
+            credentials = os.path.join(f"{HOME}","credentials","credentials.json")
+            flow = InstalledAppFlow.from_client_secrets_file(credentials,SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open(f"{HOME}/credentials/token.pickle", 'wb') as token:
+        with open(tokenfile,'wb') as token:
             pickle.dump(creds, token)
 
     service = build('gmail', 'v1', credentials=creds)
