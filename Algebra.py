@@ -24,8 +24,6 @@ import copy
 import collections
 import itertools
 import re
-from fractions import gcd
-from functools import reduce
 from sympy import *
 from sympy.solvers.solveset import linsolve
 from sympy.vector import Vector
