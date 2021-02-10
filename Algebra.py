@@ -29,8 +29,8 @@ from functools import reduce
 from sympy import *
 from sympy.solvers.solveset import linsolve
 from sympy.vector import Vector
-from fractions import gcd
 from functools import reduce
+from math import gcd
 from sympy import Basic, Function, Symbol
 from sympy.printing.printer import Printer
 from sympy.printing.latex import print_latex
