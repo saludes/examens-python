@@ -28,7 +28,6 @@ import json
 import subprocess
 from optparse import OptionParser
 sys.path.append('.')
-from Problemes import Problemes
 
 class Examen:
     def __init__(self):
@@ -47,6 +46,10 @@ class Examen:
         self.problemes = []
         self.maxproblema = 0
         self.enunciats = []
+        try:
+            from Problemes import Problemes
+        except:
+            self.ajuda()
         if self.options.ajuda:
             self.ajuda()
     #
@@ -65,6 +68,7 @@ class Examen:
         print("                                  : Si no s'especifica, no es generen els PDF")
         print("   --aleatori                     : L'ordre dels problemes serà aleatori")
         print("   --no-solucions                 : No es generen els fitxers amb les solucions")
+        print("   --ajuda                        : Imprimeix questa ajuda")
         sys.exit(0)
     #
     #
