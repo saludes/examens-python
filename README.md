@@ -58,7 +58,7 @@ Si en l'examen hi volem incloure gràfics generats amb l'asymptote (https://asym
 ~# apt install asymptote
 ~# apt install latexmk
  ```
-i copiar el fitxer _LatexMk_ a la carpeta _/etc_. Aleshores, per generar els PDF executarem la comanda  _examen.py_ amb l'opció _--tex-engine=latexmk -pdf_.
+i copiar el fitxer _LatexMk_ a la carpeta _/etc_. Aleshores, per generar els PDF executarem la comanda  _examen.py_ amb l'opció _--tex-engine='latexmk -pdf'_.
 
 ## Enviament de correus amb Google API
 

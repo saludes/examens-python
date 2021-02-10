@@ -153,7 +153,7 @@ if not creds or not creds.valid:
     if creds and creds.expired and creds.refresh_token:
         creds.refresh(Request())
     else:
-        credentials = = os.path.join(f"{HOME}","credentials","credentials.json")
+        credentials = os.path.join(f"{HOME}","credentials","credentials.json")
         flow = InstalledAppFlow.from_client_secrets_file(credentials, SCOPES)
         creds = flow.run_local_server(port=0)
         with open(tokenfile,'wb') as token:

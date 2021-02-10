@@ -15,5 +15,5 @@ _eixos.asy_ és un fitxer amb funcions predefinides per generar quadrícules i g
 
 Per generar els fitxers TeX i els PDF amb els exàmens, hem d'executar la comanda
 ```
-~$ examen.py --examen=examen.tex --estudiants=estudiants.csv --problemes=4 --tex-engine='latexmk -pdf'
+~$ examen.py --examen=examen.tex --estudiants=estudiants.csv --problemes=5 --tex-engine='latexmk -pdf'
 ```
