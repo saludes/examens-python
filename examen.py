@@ -28,6 +28,10 @@ import json
 import subprocess
 from optparse import OptionParser
 sys.path.append('.')
+try:
+    from Problemes import Problemes
+except:
+    pass
 
 class Examen:
     def __init__(self):
@@ -46,10 +50,6 @@ class Examen:
         self.problemes = []
         self.maxproblema = 0
         self.enunciats = []
-        try:
-            from Problemes import Problemes
-        except:
-            self.ajuda()
         if self.options.ajuda:
             self.ajuda()
     #
@@ -195,14 +195,14 @@ class Examen:
         if engine is not None:
             comanda = [f"{engine}","-interaction=nonstopmode", f"{filename}.tex"]
             print (f"S'està executant {engine} {filename}.tex")
-            p = subprocess.run(comanda,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,shell=True)
+            p = subprocess.run(comanda,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
             if p.returncode != 0:
                 print (f"Hi ha un error en el fitxer {filename}.tex")
                 sys.exit(0)
             if self.options.solucions:
                 comanda = [f"{engine}","-interaction=nonstopmode", f"{filename}-solucio.tex"]
                 print (f"S'està executant {engine} {filename}-solucio.tex")
-                p = subprocess.run(comanda,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,shell=True)
+                p = subprocess.run(comanda,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
                 if p.returncode != 0:
                     print (f"Hi ha un error en el fitxer {filename}-solucio.tex")
                     sys.exit(0)
@@ -233,7 +233,11 @@ class Examen:
     #
     #
     def generar_examens(self):
-        probs = Problemes()
+        try:
+            probs = Problemes()
+        except:
+            print("Error en el fitxer Problemes.py")
+            sys.exit(0)
         dir = self.crea_carpeta_tex()
         js = {}
         for e in self.estudiants:
