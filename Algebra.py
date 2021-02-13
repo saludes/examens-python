@@ -1549,11 +1549,19 @@ class Matriu:
           maxim: tots els elements tindran valor absolut menor que "maxim"
           nuls: la matriu pot contenir coeficients nuls o no
         """
+        values = [-3,-2,-1,1,2,3]
+        c = self.invertible(f,maxim=2,mzeros=2,unitaria=True)
+        d = self.invertible(c,maxim=2,mzeros=2,unitaria=True)
         trobat = False
         while not trobat:
-            m = cls.aleatoria(f,c,maxim,nuls)
-            trobat = m.rank() == r
-        return cls(m.matriu)
+            m = Matrix.zeros(f,c)
+            for k in range(r):
+                m[k,k] = values[random.randint(0,5)]
+            n = c.matriu * m * d.matriu
+            if nuls is False and nzeros(m) > 0:
+                continue
+            trobat = norma_maxim(n) <= maxim
+        return cls(n)
     #
     #
     #
