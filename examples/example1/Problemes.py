@@ -49,7 +49,7 @@ class Problemes:
         return {'SISTEMA' : f"{s}", 'SOLUCIO' : solucio}
 
     def problema4(self):
-        m = Matriu.amb_rang(f=3,c=3,r=3,maxim=5,nuls=False)
+        m = Matriu.amb_rang(f=3,c=3,r=3,maxim=5,mzeros=0)
         p0, v, q0 = m.vectors_columna(m)
         r = RectaAfi(v,p0)
         p = PlaAfi.amb_associat(v,q0)

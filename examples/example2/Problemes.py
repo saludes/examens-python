@@ -26,7 +26,7 @@ class Problemes:
         m = symbols('m')
         trobat = False
         while not trobat:
-            a = Matriu.amb_rang(f=3,c=3,r=2,maxim=4,nuls=False)
+            a = Matriu.amb_rang(f=3,c=3,r=2,maxim=4,mzeros=0)
             v = a.nucli()[0]
             trobat = v.nzeros() == 0 and v.length() < 5
         aa = a.adjunta()
