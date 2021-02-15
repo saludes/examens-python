@@ -1539,7 +1539,7 @@ class Matriu:
     #
     #
     @classmethod
-    def amb_rang(cls,f=3,c=3,r=3,maxim=5,nuls=True):
+    def amb_rang(cls,f=3,c=3,r=3,maxim=5,mzeros=-1):
         """
         Retorna una matriu aleatoria amb rang r.
         Paràmetres:
@@ -1558,7 +1558,7 @@ class Matriu:
             for k in range(r):
                 m[k,k] = values[random.randint(0,5)]
             n = c.matriu * m * d.matriu
-            if nuls is False and nzeros(m) > 0:
+            if mzeros >= 0 and nzeros(m) > mzeros:
                 continue
             trobat = norma_maxim(n) <= maxim
         return cls(n)
