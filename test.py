@@ -96,7 +96,7 @@ def test_matrius():
     print(m1 * m2.transposada())
     print(m2.transposada() * m1)
     print(Matriu.diagonal([1,3,-2,1]))
-    print(Matriu.amb_rang(f=3,c=4,r=2,maxim=3,nuls=False))
+    print(Matriu.amb_rang(f=3,c=4,r=2,maxim=3,mzeros=0))
     m = Matriu.invertible(ordre=3,maxim=5,mzeros=0)
     print(m.inversa())
     m = Matriu.diagonalitzable(ordre=3,maxim=5,mzeros=0,mvaps=3)

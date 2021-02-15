@@ -2670,7 +2670,7 @@ class RectaVectorial(object):
         a = Matriu.from_vectors_fila(l)
         b = Vector.nul(len(l))
         if aleatori:
-            m = Matriu.amb_rang(f=2,c=2,r=2,maxim=3,nuls=False)
+            m = Matriu.amb_rang(f=2,c=2,r=2,maxim=3,mzeros=0)
             a = m * a
         return SistemaEquacions(a,b,prime=prime)
     #
@@ -3094,7 +3094,7 @@ class RectaAfi(object):
         if aleatori:
             trobat = False
             while not trobat:
-                m = Matriu.amb_rang(f=2,c=2,r=2,maxim=3,nuls=False)
+                m = Matriu.amb_rang(f=2,c=2,r=2,maxim=3,mzeros=0)
                 aux = m * a
                 trobat = aux.nzeros() == 0
             a = m * a
