@@ -353,6 +353,9 @@ def test_transformacio_lineal():
 #
 def test_transformacio_afi():
     print ("Test de la classe TransformacioAfi")
+    g1 = TransformacioAfi.gir(30,Punt(2,3))
+    g2 = TransformacioAfi.gir(60,Punt(-3,1))
+    print(g2 * g1)
     u1 = Vector(1,-1,0)
     u2 = Vector(1,0,-1)
     s = SubespaiVectorial([u1,u2])
