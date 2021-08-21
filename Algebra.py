@@ -237,9 +237,9 @@ def matriu_latex(m,format=None,ampliada=False):
     else:
         cols = c
     if format is None:
-        text = "\\begin{pmatrix}{*{%d}r%s} LINES\end{pmatrix}" % (cols,vert)
+        text = "\\begin{pmatrix}{*{%d}r%s} LINES\\end{pmatrix}" % (cols,vert)
     else:
-        text = "\\begin{pmatrix}{%s} LINES\end{pmatrix}" % format
+        text = "\\begin{pmatrix}{%s} LINES\\end{pmatrix}" % format
     lines = []
     for i in range(f):
         line = []
@@ -252,7 +252,7 @@ def matriu_mathematica(m):
     """
     Retorna l'expressió en Mathematica d'una matriu del tipus Matrix del sympy
     """
-    r = re.compile('sqrt\((\d+)\)')
+    r = re.compile(r'sqrt\((\d+)\)')
     f, c = m.shape
     lines = []
     slines = "{LINES}"
@@ -262,7 +262,7 @@ def matriu_mathematica(m):
         for j in range(c):
             line.append(m[i,j])
         sline = sline.replace('LINE',",".join(map(str,line)))
-        sline = r.sub('Sqrt[\g<1>]',sline)
+        sline = r.sub(r'Sqrt[\g<1>]',sline)
         lines.append(sline)
     return (slines.replace('LINES',",".join(lines)))
 
@@ -2008,7 +2008,7 @@ class EquacioLineal:
         Retorna una nova equació amb coeficients de les incògnites el vector "a" i
         terme independent b
         Paràmetres:
-            a: cector amb els coeficients de les incògnites
+            a: Vector amb els coeficients de les incògnites
             b: terme independents
             amp: si és True l'equació s'escriurà amb el &= per al LaTeX
             prime: nombre de primes que s'escriuran a les incògnites
@@ -2139,6 +2139,27 @@ class EquacioLineal:
     #
     #
     __rmul__ = __mul__
+    #
+    #
+    #
+    def to_sistema_equacions(self):
+        x, y, z, t = symbols('x y z t')
+        unknowns = [x,y,z,t]
+        n = -1
+        for u in self.unknowns:
+            m = unknowns.index(u)
+            if m > n:
+                n = m
+        if n >= 0:
+            return SistemaEquacions.from_equacions([self.equacio],n+1,self.prime)
+        x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
+        unknowns = [x1,x2,x3,x4,x5,x6,x7,x8]
+        for u in self.unknowns:
+            m = unknowns.index(u)
+            if m > n:
+                n = m
+        return SistemaEquacions.from_equacions([self.equacio],n+1,self.prime)
+
 
 class SistemaEquacions:
     """
@@ -2179,7 +2200,7 @@ class SistemaEquacions:
         eq = []
         files = a.vectors_fila()
         for k in range(self.A.files):
-            eq.append(EquacioLineal.coeficients(files[k],b[k],amp=True,prime=prime))
+            eq.append(EquacioLineal.coeficients(files[k],b[k],amp=True,prime=0))
         self.equacions = eq
         self.nombre = len(eq)
         if self.A.columnes <= 4:
@@ -2228,8 +2249,8 @@ class SistemaEquacions:
         """
         Retorna l'expressió en latex del sistema d'equacions
         """
-        eqs = list(map(str,self.equacions))
         p = ""
+        eqs = list(map(str,self.equacions))
         if self.prime > 0:
             p = self.prime * "'"
         if len(eqs) == 0:
@@ -3194,13 +3215,26 @@ class SubespaiVectorial(object):
     #
     #
     @classmethod
-    def from_equacions_implicites(cls,eqs):
+    def from_equacions_implicites(cls,eqs,basern=None):
         """
         Retorna el subespai vectorial que té equacions implícites "eqs"
         Paràmetres:
             eqs: equacions implícites (classe SistemaEquacions)
+            basern: Base de R^n
         """
-        return cls(eqs.A.nucli())
+        if basern is None:
+            return cls(eqs.A.nucli())
+        c = [basern.vector_de_components(u) for u in eqs.A.nucli()]
+        s = cls(c)
+        eqs = s.equacions_implicites()
+        return cls.from_equacions_implicites(eqs)
+    #
+    #
+    #
+    @classmethod
+    def from_equacio_implicita(cls,eq,basern=None):
+        s = eq.to_sistema_equacions()
+        return cls.from_equacions_implicites(s,basern)
     #
     #
     #
@@ -3525,6 +3559,21 @@ class TransformacioLineal(object):
     #
     #
     @classmethod
+    def gir(cls,angle,radiants=False):
+        """
+        Retorna el gir d'angle "angle" en dimensió 2
+        Paràmetres:
+            angle: angle de rotació
+            radiants: si l'angle està en radiants, ha de ser True
+        """
+        if not radiants:
+            angle *= pi / 180
+        m = Matriu.from_vectors_columna([Vector(cos(angle),sin(angle)),Vector(-sin(angle),cos(angle))])
+        return cls(m)
+    #
+    #
+    #
+    @classmethod
     def rotacio(cls,eix,angle,radiants=False):
         """
         Retorna la rotació d'angle "angle" al voltant del vector "eix"
@@ -3768,13 +3817,32 @@ class TransformacioAfi:
     #
     #
     @classmethod
+    def gir(cls,angle,origen,radiants=False):
+        """
+        Retorna el gir d'angle "angle" al voltant del punt "origen"
+        Paràmetres:
+            origen: centre del gir (classe Punt)
+            angle: angle de rotació
+            radiants: si és True, l'angle ha d'estar expressat en radiants
+        """
+        if not isinstance(origen,Punt):
+            return None
+        if origen.dimensio != 2:
+            return None
+        t = TransformacioLineal.gir(angle,radiants)
+        p = - t.transforma(origen) + origen
+        return cls(p,t)
+    #
+    #
+    #
+    @classmethod
     def simetria(cls,v):
         """
         Retorna la simetria respecte a la variatat lineal "v"
         Paràmetres:
             v: varietat lineal (classe VarietatLineal)
         """
-        if not isinstance(VarietatLineal):
+        if not isinstance(v,VarietatLineal):
             return None
         t = TransformacioLineal.simetria(v.subespai)
         p = - t.transforma(v.punt) + v.punt
@@ -3914,14 +3982,14 @@ class TransformacioAfi:
             if other.dimensio != self.dimensio:
                 return None
             t = self.translacio + self.transformacio * other.translacio
-            t = Punt(t.components)
+            t = Punt(list(map(simplify,t.components)))
             tr = self.transformacio * other.transformacio
             return TransformacioAfi(t,tr)
         if isinstance(other,Punt):
             if other.dimensio != self.dimensio:
                 return None
             t = self.translacio + self.transformacio * other
-            return Punt(t.components)
+            return Punt(list(map(simplify,t.components)))
         return None
     #
     #
