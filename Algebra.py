@@ -5131,7 +5131,7 @@ class Quadrica(object):
         if r == 1:
             return Quadrica.hiperboloideunafulla(maxim,diagonal)
         if r == 2:
-            return Quadrica.hiperboloideduesfulla(maxim,diagonal)
+            return Quadrica.hiperboloideduesfulles(maxim,diagonal)
         if r == 3:
             return Quadrica.con(maxim,diagonal)
         if r == 4:
