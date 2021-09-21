@@ -44,6 +44,7 @@ class Examen:
         self.parser.add_option("--tex-engine",dest="engine",default=None)
         self.parser.add_option("--no-solucions",action="store_false",dest="solucions",default=True)
         self.parser.add_option("--aleatori",action="store_true",dest="aleatori",default=False)
+        self.parser.add_option("--per-nombre",action="store_true",dest="pernombre",default=False)
         self.parser.add_option("--ajuda",action="store_true",dest="ajuda",default=False)
         (self.options,self.args) = self.parser.parse_args()
         self.estudiants = []
@@ -67,6 +68,7 @@ class Examen:
         print("   --tex-engine=<programa>        : Nom del programa de LaTeX utilitzat")
         print("                                  : Si no s'especifica, no es generen els PDF")
         print("   --aleatori                     : L'ordre dels problemes serà aleatori")
+        print("   --per-nombre                   : Identifica els fitxers numèricament i no per nom i cognoms")
         print("   --no-solucions                 : No es generen els fitxers amb les solucions")
         print("   --ajuda                        : Imprimeix questa ajuda")
         sys.exit(0)
@@ -173,17 +175,20 @@ class Examen:
     #
     #
     #
-    def generar_examen(self,examen,estudiant):
+    def generar_examen(self,examen,estudiant,nombre=None):
         engine = self.options.engine
         if self.options.aleatori:
             random.shuffle(examen)
         enunciats = "\n\n".join(examen)
-        relacio = {'COGNOMS' : estudiant['cognoms'], 'NOM' : estudiant['nom'], 'ENUNCIATS' : enunciats}
+        relacio = {'COGNOMS' : estudiant['cognoms'], 'NOM' : estudiant['nom'], 'ENUNCIATS' : enunciats,'MODEL' : f"{nombre}"}
         examen = self.examen
         for k,v in relacio.items():
             examen = examen.replace(k,v)
         filename = f"{estudiant['cognoms']}-{estudiant['nom']}".lower().replace(' ','-')
         filename = unidecode.unidecode(filename)
+        if self.options.pernombre:
+            filename = f"examen{nombre:4}"
+            filename = filename.replace(" ","0")
         with open(f"{filename}.tex",'w') as f:
             f.write(examen)
             f.close()
@@ -307,6 +312,7 @@ class Examen:
                 sys.exit(0)
 
         dir = self.crea_carpeta_tex()
+        nombre = 1
         for e in self.estudiants:
             examen = []
             dades = js[e['email']]
@@ -318,7 +324,7 @@ class Examen:
                  for k,v in relacio.items():
                      p = p.replace(k,v)
                  examen.append(p)
-            self.generar_examen(examen,e)
+            self.generar_examen(examen,e,nombre)
         self.borra_fitxers()
         os.chdir(dir)
     #
