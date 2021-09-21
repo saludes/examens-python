@@ -187,7 +187,7 @@ class Examen:
         filename = f"{estudiant['cognoms']}-{estudiant['nom']}".lower().replace(' ','-')
         filename = unidecode.unidecode(filename)
         if self.options.pernombre:
-            filename = f"examen{nombre:4}"
+            filename = "examen%04d" % nombre
             filename = filename.replace(" ","0")
         with open(f"{filename}.tex",'w') as f:
             f.write(examen)
@@ -245,6 +245,7 @@ class Examen:
             sys.exit(0)
         dir = self.crea_carpeta_tex()
         js = {}
+        nombre = 1
         for e in self.estudiants:
             js[e['email']] = {}
             examen = []
@@ -265,7 +266,8 @@ class Examen:
                 examen.append(p)
                 v = f"problema{i + 1}"
                 js[e['email']][v] = relacio
-            self.generar_examen(examen,e)
+            self.generar_examen(examen,e,nombre)
+            nombre += 1
         self.borra_fitxers()
         os.chdir(dir)
         jsonfile = self.options.examen.replace('.tex','')
@@ -325,6 +327,7 @@ class Examen:
                      p = p.replace(k,v)
                  examen.append(p)
             self.generar_examen(examen,e,nombre)
+            nombre += 1
         self.borra_fitxers()
         os.chdir(dir)
     #

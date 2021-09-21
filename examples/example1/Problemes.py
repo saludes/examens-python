@@ -51,7 +51,9 @@ class Problemes:
     def problema4(self):
         m = Matriu.amb_rang(f=3,c=3,r=3,maxim=5,mzeros=0)
         p0, v, q0 = m.vectors_columna(m)
-        r = RectaAfi(v,p0)
+        p0 = p0.punt()
+        q0 = q0.punt()
+        r = RectaAfi(p0,v)
         p = PlaAfi.amb_associat(v,q0)
         return {'RECTA' : f"{r.equacio_continua()}", 'PUNT' : f"{q0}", 'SOLUCIO' : f"{p.equacio_implicita()}"}
     #

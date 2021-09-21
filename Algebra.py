@@ -745,7 +745,7 @@ class Vector(object):
             v = u.normalitzat()
         """
         l = self.length()
-        self.components = [k / l for k in self.components]
+        return Vector([k / l for k in self.components])
     #
     #
     #
@@ -912,6 +912,11 @@ class Vector(object):
             if i == 0:
                 n += 1
         return n
+    #
+    #
+    #
+    def punt(self):
+        return Punt(self.components)
 
 class Punt(Vector):
     """
