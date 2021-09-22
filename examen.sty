@@ -104,10 +104,10 @@
  \setboolean{solucions}{true}
  \setboolean{canvipagina}{false}
  \voffset=-0.7in
- \headheight=0.9in
+ \headheight=1.1in
 }
 \voffset=-0.4in
-\headheight=0.7in
+\headheight=0.9in
 \ProcessOptions\relax
 %
 % Apretat
@@ -134,8 +134,8 @@
 \ifthenelse{\boolean{use@stix}}{
  \usepackage{fontspec}
  \usepackage{unicode-math}
- \setmathfont{STIX2Math}
- \setmainfont{STIX2Text}[
+ \setmathfont{STIXTwoMath}
+ \setmainfont{STIXTwoText}[
   UprightFont={*-Regular},
   BoldFont={*-Bold},
   ItalicFont={*-Italic},
@@ -173,7 +173,7 @@
 \footskip=30pt
 \hoffset=-0.3in
 \topmargin=0pt
-\headsep=12pt
+\headsep=8pt
 \marginparwidth=55pt
 \oddsidemargin=0pt
 \evensidemargin=0pt
@@ -238,7 +238,7 @@
 \def\@@cognoms{}
 \def\cognoms#1{\gdef\@@cognoms{#1}}
 \def\dadesalumne{\begin{minipage}[c]{17.75cm}
-\baselineskip=12pt
+\baselineskip=8pt
 \vspace*{3.5cm}
 \begin{center}
 \textbf{Cognoms}: \framebox[9.5cm][l]{\rule[-4pt]{0pt}{18pt}\textsf{\@@cognoms}}

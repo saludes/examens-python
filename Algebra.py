@@ -221,7 +221,7 @@ def nzeros(m):
                 z += 1
     return z
 
-def matriu_latex(m,format=None,ampliada=False):
+def matriu_latex(m,format=None,ampliada=False,tipus="p"):
     """
     Retorna l'expressió en latex d'una matriu del tipus Matrix del sympy
     Parametres:
@@ -237,9 +237,10 @@ def matriu_latex(m,format=None,ampliada=False):
     else:
         cols = c
     if format is None:
-        text = "\\begin{pmatrix}{*{%d}r%s} LINES\\end{pmatrix}" % (cols,vert)
+        text = "\\begin{TIPUSmatrix}{*{%d}r%s} LINES\\end{TIPUSmatrix}" % (cols,vert)
     else:
-        text = "\\begin{pmatrix}{%s} LINES\\end{pmatrix}" % format
+        text = "\\begin{TIPUSmatrix}{%s} LINES\\end{TIPUSmatrix}" % format
+    text = text.replace('TIPUS',tipus)
     lines = []
     for i in range(f):
         line = []
@@ -1262,6 +1263,14 @@ class Matriu:
     #
     #
     #
+    @classmethod
+    def transformacio_elemental(cls,ordre,i,j,s,t):
+        a = eye(ordre)
+        a[i,:] = s * a[i,:] + t * a[j,:]
+        return cls(a)
+    #
+    #
+    #
     def norma_maxim(self):
         """
         Retorna la norma del màxim de la matriu
@@ -1303,11 +1312,37 @@ class Matriu:
     #
     #
     #
+    def rang(self):
+        """
+        Retorna el rang de la matriu
+        """
+        return self.matriu.rank()
+    #
+    #
+    #
     def determinant(self):
         """
         Retorna el determiant de la matriu
         """
         return self.matriu.det()
+    #
+    #
+    #
+    def det(self):
+        """
+        Retorna el determiant de la matriu
+        """
+        return self.matriu.det()
+    #
+    #
+    #
+    def clona(self):
+        return Matriu(self.matriu[:,:])
+    #
+    #
+    #
+    def latex(self,format=None,tipus='p'):
+        return matriu_latex(self.matriu,format,tipus)
     #
     #
     #
@@ -1769,6 +1804,12 @@ class Matriu:
     #
     #
     #
+    @classmethod
+    def identitat(cls,ordre):
+        return cls(eye(ordre))
+    #
+    #
+    #
     def vectors_columna(self,simplificar=False):
         """
         Retorna una llista amb els vectors columna de la matriu
@@ -1966,6 +2007,46 @@ class Matriu:
                 self.matriu[i,j] = m[i,j] // mcd
         if self.matriu[0,0] < 0:
             self.matriu = - self.matriu
+    #
+    #
+    #
+    def submatriu(self,files,columnes):
+        """
+        Retorna la submatriu determinada per les files "files" i les
+        columnes "columnes".
+        Paràmetrers:
+            files: llista de files
+            columnes: llista de columnes
+        """
+        if not (isinstance(files,list) or isinstance(files,tuple)):
+            return None
+        if not (isinstance(columnes,list) or isinstance(columnes,tuple)):
+            return None
+        if max(columnes) >= self.columnes or min(columnes) < 0:
+            return None
+        if max(files) >= self.files or min(files) < 0:
+            return None
+        m = self.matriu[files,columnes]
+        return Matriu(m)
+    #
+    #
+    #
+    def sistema_propi(self):
+        """
+        Retorna el sistema d'equacions en format latex corresponent al
+        càlcul dels valors propis de la matriu
+        """
+        if self.columnes <= 4:
+            x, y, z, t = symbols('x y z t')
+            unknowns = [x,y,z,t]
+        else:
+            x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
+            unknowns = [x1,x2,x3,x4,x5,x6,x7,x8]
+        unknowns = unknowns[0:self.columnes]
+        A = self * Vector(unknowns)
+        eqs = [f"{latex(A[i])} &= \\lambda {unknowns[i]}" for i in range(A.dimensio)]
+        eqs = " \\\\ ".join(eqs)
+        return f"\\left.\\aligned {eqs} \\endaligned\\;\\right\\}}"
 
 class EquacioLineal:
     """
@@ -2181,7 +2262,7 @@ class SistemaEquacions:
     #
     #
     #
-    def __new__(cls,a,b,prime=0):
+    def __new__(cls,a,b,unknowns=None,prime=0):
         """
         Constructor.
         Paràmetres:
@@ -2194,11 +2275,16 @@ class SistemaEquacions:
             return None
         if a.files != b.dimensio:
             return None
+        if unknowns is not None:
+            if not (insinatance(unknowns,list) or insinatance(unknowns,tuple)):
+                return None
+            if len(unknowns) != a.columnes:
+                return None
         return super(SistemaEquacions,cls).__new__(cls)
     #
     #
     #
-    def __init__(self,a,b,prime=0):
+    def __init__(self,a,b,unknowns=None,prime=0):
         self.A = a
         self.B = b
         self.solucio = None
@@ -2208,13 +2294,16 @@ class SistemaEquacions:
             eq.append(EquacioLineal.coeficients(files[k],b[k],amp=True,prime=0))
         self.equacions = eq
         self.nombre = len(eq)
-        if self.A.columnes <= 4:
-            x, y, z, t = symbols('x y z t')
-            unknowns = [x,y,z,t]
+        if unknowns is not None:
+            self.unknowns = unknowns
         else:
-            x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
-            unknowns = [x1,x2,x3,x4,x5,x6,x7,x8]
-        self.unknowns = unknowns[0:self.A.columnes]
+            if self.A.columnes <= 4:
+                x, y, z, t = symbols('x y z t')
+                unknowns = [x,y,z,t]
+            else:
+                x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
+                unknowns = [x1,x2,x3,x4,x5,x6,x7,x8]
+            self.unknowns = unknowns[0:self.A.columnes]
         self.prime = prime
     #
     #
@@ -2290,15 +2379,26 @@ class SistemaEquacions:
     #
     #
     #
-    def resol(self):
+    def resol(self,unknowns=None):
         """
         Resol el sistema d'equacions utilitzant la funció linsolve del sympy.
         El resultat és una llista d'expressions on hi poden aparèixer les
         incògnites del sistema com a paràmetres
         """
         system = (self.A.matriu,Matrix(self.B.dimensio,1,self.B.components))
-        s = linsolve(system,*self.unknowns)
-        self.solucio = [k for k in list(linsolve(system,*self.unknowns))[0]]
+        X = Vector(self.unknowns)
+        system = self.A * X - self.B
+        if unknowns is not None:
+            s = solve(system.components,*unknowns)
+        else:
+            s = solve(system.components,*self.unknowns)
+        self.solucio = []
+        for k in self.unknowns:
+            try:
+                self.solucio.append(s[k])
+            except:
+                self.solucio.append(k)
+        return self.solucio
     #
     #
     #

@@ -86,9 +86,12 @@ class Examen:
         except:
             prob = None
         try:
-            possibles = int(possibles)
+            self.possibles = int(possibles)
         except:
-            possibles = None
+            if isinstance(prob,int):
+                self.possibles = prob
+            else:
+                self.posibles = None
         if prob is None:
             prob = self.options.problemes
             try:
@@ -98,7 +101,7 @@ class Examen:
                 prob = None
         if possibles is None and isinstance(prob,int):
             prob = list(range(prob + 1))
-        regex = re.compile('^\s*#.$',re.IGNORECASE)
+        regex = re.compile('^\s*#.*$',re.IGNORECASE)
         #
         # Comprovacions
         #
@@ -145,7 +148,6 @@ class Examen:
             self.maxproblema = self.problemes
         elif isinstance(self.problemes,list):
             self.maxproblema = max(self.problemes)
-        self.possibles = possibles
         if self.possibles is not None and self.possibles > self.maxproblema:
             self.maxproblema = self.possibles
         for i in range(1,self.maxproblema + 1):
@@ -200,14 +202,14 @@ class Examen:
         if engine is not None:
             comanda = [f"{engine}","-interaction=nonstopmode", f"{filename}.tex"]
             print (f"S'està executant {engine} {filename}.tex")
-            p = subprocess.run(comanda,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+            p = subprocess.run(comanda,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,shell=False)
             if p.returncode != 0:
                 print (f"Hi ha un error en el fitxer {filename}.tex")
                 sys.exit(0)
             if self.options.solucions:
                 comanda = [f"{engine}","-interaction=nonstopmode", f"{filename}-solucio.tex"]
                 print (f"S'està executant {engine} {filename}-solucio.tex")
-                p = subprocess.run(comanda,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+                p = subprocess.run(comanda,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,shell=False)
                 if p.returncode != 0:
                     print (f"Hi ha un error en el fitxer {filename}-solucio.tex")
                     sys.exit(0)
@@ -262,7 +264,8 @@ class Examen:
                 relacio = problemes[i]()
                 p = self.enunciats[i]
                 for k,v in relacio.items():
-                    p = p.replace(k,v)
+                    if v is not None:
+                        p = p.replace(k,v)
                 examen.append(p)
                 v = f"problema{i + 1}"
                 js[e['email']][v] = relacio
