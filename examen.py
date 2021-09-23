@@ -45,6 +45,7 @@ class Examen:
         self.parser.add_option("--no-solucions",action="store_false",dest="solucions",default=True)
         self.parser.add_option("--aleatori",action="store_true",dest="aleatori",default=False)
         self.parser.add_option("--per-nombre",action="store_true",dest="pernombre",default=False)
+        self.parser.add_option("--json",action="store_true",dest="json",default=False)
         self.parser.add_option("--ajuda",action="store_true",dest="ajuda",default=False)
         (self.options,self.args) = self.parser.parse_args()
         self.estudiants = []
@@ -70,6 +71,7 @@ class Examen:
         print("   --aleatori                     : L'ordre dels problemes serà aleatori")
         print("   --per-nombre                   : Identifica els fitxers numèricament i no per nom i cognoms")
         print("   --no-solucions                 : No es generen els fitxers amb les solucions")
+        print("   --json                         : Es guarden la dades dels enunciats en un fitxer json")
         print("   --ajuda                        : Imprimeix questa ajuda")
         sys.exit(0)
     #
@@ -276,9 +278,10 @@ class Examen:
         jsonfile = self.options.examen.replace('.tex','')
         t = ("%3d.json" % self.count).replace(' ','0')
         jsonfile += t
-        with open(jsonfile,'w') as f:
-            json.dump(js,f)
-        f.close()
+        if self.options.json:
+            with open(jsonfile,'w') as f:
+                json.dump(js,f)
+            f.close()
     #
     #
     #
