@@ -44,7 +44,7 @@ class Examen:
         self.parser.add_option("--tex-engine",dest="engine",default=None)
         self.parser.add_option("--no-solucions",action="store_false",dest="solucions",default=True)
         self.parser.add_option("--aleatori",action="store_true",dest="aleatori",default=False)
-        self.parser.add_option("--per-nombre",action="store_true",dest="pernombre",default=False)
+        self.parser.add_option("--nombre-examens",dest="nombreexamens")
         self.parser.add_option("--json",action="store_true",dest="json",default=False)
         self.parser.add_option("--ajuda",action="store_true",dest="ajuda",default=False)
         (self.options,self.args) = self.parser.parse_args()
@@ -69,7 +69,8 @@ class Examen:
         print("   --tex-engine=<programa>        : Nom del programa de LaTeX utilitzat")
         print("                                  : Si no s'especifica, no es generen els PDF")
         print("   --aleatori                     : L'ordre dels problemes serà aleatori")
-        print("   --per-nombre                   : Identifica els fitxers numèricament i no per nom i cognoms")
+        print("   --nombre-examens               : Identifica els fitxers numèricament i no per nom i cognoms")
+        print("                                  : Quantitat d'examens a fer")
         print("   --no-solucions                 : No es generen els fitxers amb les solucions")
         print("   --json                         : Es guarden la dades dels enunciats en un fitxer json")
         print("   --ajuda                        : Imprimeix questa ajuda")
@@ -103,11 +104,15 @@ class Examen:
                 prob = None
         if possibles is None and isinstance(prob,int):
             prob = list(range(prob + 1))
+        try:
+            self.nombreexamens = int(self.options.nombreexamens)
+        except:
+            self.nombreexamens = None
         regex = re.compile('^\s*#.*$',re.IGNORECASE)
         #
         # Comprovacions
         #
-        if ex is None or est is None:
+        if ex is None:
             self.ajuda()
         if prob is not None and dades is not None:
             print ("No es poden especificar les opcions --problemes i --dades simultàniament")
@@ -125,23 +130,27 @@ class Examen:
         #
         # Dades dels estudiants
         #
-        try:
-            with open(est) as f:
-                for line in f:
-                    line = line.rstrip()
-                    if regex.match(line):
-                        continue
-                    try:
-                        data = line.split(':')
-                        self.estudiants.append({'nom' : data[0].strip(),
-                                                'cognoms' : data[1].strip(),
-                                                'email' : data[2].strip()})
-                    except:
-                        continue
+        if est is not None:
+            try:
+                with open(est) as f:
+                    for line in f:
+                        line = line.rstrip()
+                        if regex.match(line):
+                            continue
+                        try:
+                            data = line.split(':')
+                            self.estudiants.append({'nom' : data[0].strip(),
+                                                    'cognoms' : data[1].strip(),
+                                                    'email' : data[2].strip()})
+                        except:
+                            continue
                 f.close()
-        except:
-            print("Error de lectura de l'exàmen")
-            sys.exit(0)
+            except:
+                print("Error de lectura de l'exàmen")
+                sys.exit(0)
+        else:
+            if self.nombreexamens is None:
+                self.ajuda()
         #
         # Enunciats dels problemes
         #
@@ -184,15 +193,17 @@ class Examen:
         if self.options.aleatori:
             random.shuffle(examen)
         enunciats = "\n\n".join(examen)
-        relacio = {'COGNOMS' : estudiant['cognoms'], 'NOM' : estudiant['nom'], 'ENUNCIATS' : enunciats,'MODEL' : f"{nombre}"}
+        if self.nombreexamens is not None:
+            relacio = {'COGNOMS' : 'Cognoms', 'NOM' : 'Nom', 'ENUNCIATS' : enunciats,'MODEL' : f"{nombre}"}
+            filename = "examen%04d" % nombre
+            filename = filename.replace(" ","0")
+        else:
+            relacio = {'COGNOMS' : estudiant['cognoms'], 'NOM' : estudiant['nom'], 'ENUNCIATS' : enunciats,'MODEL' : f"{nombre}"}
+            filename = f"{estudiant['cognoms']}-{estudiant['nom']}".lower().replace(' ','-')
+            filename = unidecode.unidecode(filename)
         examen = self.examen
         for k,v in relacio.items():
             examen = examen.replace(k,v)
-        filename = f"{estudiant['cognoms']}-{estudiant['nom']}".lower().replace(' ','-')
-        filename = unidecode.unidecode(filename)
-        if self.options.pernombre:
-            filename = "examen%04d" % nombre
-            filename = filename.replace(" ","0")
         with open(f"{filename}.tex",'w') as f:
             f.write(examen)
             f.close()
@@ -250,8 +261,15 @@ class Examen:
         dir = self.crea_carpeta_tex()
         js = {}
         nombre = 1
-        for e in self.estudiants:
-            js[e['email']] = {}
+        if self.nombreexamens is None:
+            iterator = self.estudiants
+        else:
+            iterator = range(self.nombreexamens)
+        for e in iterator:
+            if isinstance(e,dict):
+                js[e['email']] = {}
+            else:
+                js[nombre] = {}
             examen = []
             problemes = probs.problemes()
             if isinstance(self.problemes,list):
@@ -270,7 +288,10 @@ class Examen:
                         p = p.replace(k,v)
                 examen.append(p)
                 v = f"problema{i + 1}"
-                js[e['email']][v] = relacio
+                if self.nombreexamens is None:
+                    js[e['email']][v] = relacio
+                else:
+                    js[nombre][v] = relacio
             self.generar_examen(examen,e,nombre)
             nombre += 1
         self.borra_fitxers()
@@ -321,9 +342,16 @@ class Examen:
 
         dir = self.crea_carpeta_tex()
         nombre = 1
-        for e in self.estudiants:
+        if self.nombreexamens is None:
+            iterator = self.estudiants
+        else:
+            iterator = range(self.nombreexamens)
+        for e in iterator:
             examen = []
-            dades = js[e['email']]
+            if isinstance(e,dict):
+                dades = js[e['email']]
+            else:
+                dades = js[nombre]
             probs = [int(x.replace('problema','')) for x in dades.keys()]
             probs.sort()
             for i in probs:
