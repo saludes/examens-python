@@ -94,7 +94,7 @@ class Examen:
             if isinstance(prob,int):
                 self.possibles = prob
             else:
-                self.posibles = None
+                self.possibles = None
         if prob is None:
             prob = self.options.problemes
             try:
@@ -351,7 +351,7 @@ class Examen:
             if isinstance(e,dict):
                 dades = js[e['email']]
             else:
-                dades = js[nombre]
+                dades = js[f"{nombre}"]
             probs = [int(x.replace('problema','')) for x in dades.keys()]
             probs.sort()
             for i in probs:
