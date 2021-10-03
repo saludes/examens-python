@@ -2031,6 +2031,14 @@ class Matriu:
     #
     #
     #
+    def subs(self,l):
+        for i in range(self.columnes):
+            for j in range(self.files):
+                for d in l:
+                    self[i,j] = self[i,j].subs(d)
+    #
+    #
+    #
     def sistema_propi(self):
         """
         Retorna el sistema d'equacions en format latex corresponent al
