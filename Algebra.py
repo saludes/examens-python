@@ -2402,7 +2402,7 @@ class SistemaEquacions:
     #
     #
     #
-    def solucio_latex(self,linia=False):
+    def solucio_latex(self,linia=False,unknowns=None):
         """
         Retorna l'expressió en LaTex de la solució del sistema d'equacions
         Paràmetres:
@@ -2410,7 +2410,7 @@ class SistemaEquacions:
                    ho fa com un sistema d'equacions
         """
         if self.solucio is None:
-            self.resol()
+            self.resol(unknowns)
         if len(self.solucio) == 0:
             return ""
         eqs = []
