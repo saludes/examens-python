@@ -278,13 +278,22 @@ def primer_no_nul(list):
             return i
     return None
 
-def vectors_latex(l):
+def vectors_latex(l,sep=False):
     """
     Retorna la llista de vectors l escrita en latex
     Paràmetres:
         l: llista de vectors o punts
+        sep: Si és False, retorna (1,2,3),(3,5,2),(1,-2,3)
+             Si és True, retorna $(1,2,3)$, $(3,5,2)$ i $(1,-2,3)$
     """
-    return ",".join([str(k) for k in l])
+    if not sep:
+        return ",".join([str(k) for k in l])
+    if len(l) == 1:
+        return f"${l[0]}$"
+    f = l[:-1]
+    txt = ", ".join([f"${k}$" for k in f])
+    txt += f" i ${l[-1]}$"
+    return txt
 
 def vaps_veps_amb_signe(result,signe=1):
     """
