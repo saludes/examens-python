@@ -1026,8 +1026,9 @@ class Base(object):
         """
         Retorna si la base és ortogonal
         """
-        for i in range(self.dimensio):
-            for j in range(i+1,self.dimensio):
+        d = len(self.vecs)
+        for i in range(d):
+            for j in range(i+1,d):
                 if self.vecs[i].dot(self.vecs[j]) != 0:
                     return False
         return True
