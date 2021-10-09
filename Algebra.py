@@ -1147,11 +1147,7 @@ class Base(object):
             return None
         if vec.dimensio != self.dimensio:
             return None
-        if not self.unitaria:
-            c = self.matriu()
-        else:
-            unitaris = [(1 / v.length()) * v for v in self.vecs]
-            c = Matriu.from_vectors_columna(unitaris)
+        c = self.matriu()
         return c * vec
     #
     #
@@ -1172,12 +1168,38 @@ class Base(object):
             uc = base.vector_de_components(vec)
         else:
             uc = vec
-        if not self.unitaria:
-            c = self.matriu()
-        else:
-            unitaris = [(1 / v.length()) * v for v in self.vecs]
-            c = Matriu.from_vectors_columna(unitaris)
+        c = self.matriu()
         return c.inversa() * uc
+    #
+    #
+    #
+    def canvi_de_base_a_la_base(self,B,p1=1,p2=0):
+        if not isinstance(B,Base):
+            return None
+        if self.dimensio != B.dimensio:
+            return None
+        c = self.matriu()
+        d = B.matriu()
+        A = d.inversa() * c
+        if self.dimensio <= 4:
+            x, y, z, t = symbols('x y z t')
+            components = [x,y,z,t]
+        else:
+            x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
+            components = [x1,x2,x3,x4,x5,x6,x7,x8]
+        components = components[0:self.dimensio]
+        ps1 = ""
+        ps2 = ""
+        if p1 > 0:
+            ps1 = p1 * "'"
+        if p2 > 0:
+            ps2 = p2 * "'"
+        cself = " \\\\ ".join([latex(k) + ps1 for k in components])
+        cB = " \\\\ ".join([latex(k) + ps2 for k in components])
+        s = "\\begin{pmatrix}{c} " + cB + "\\end{pmatrix} = \n"
+        s += f"{A} + \n"
+        s += "\\begin{pmatrix}{c} " + cself + "\\end{pmatrix}"
+        return s
     #
     #
     #
