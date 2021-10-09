@@ -1156,6 +1156,31 @@ class Base(object):
     #
     #
     #
+    def components_del_vector(self,vec,base=None):
+        """
+        Retorna un nou vector expressat en aquesta base del vector
+        que en la base "base" té components "vec"
+        Paràmetres:
+            vec: components en la base "base"
+            base: Base
+        """
+        if not isinstance(vec,Vector):
+            return None
+        if base is not None:
+            if vec.dimensio != base.dimensio:
+                return None
+            uc = base.vector_de_components(vec)
+        else:
+            uc = vec
+        if not self.unitaria:
+            c = self.matriu()
+        else:
+            unitaris = [(1 / v.length()) * v for v in self.vecs]
+            c = Matriu.from_vectors_columna(unitaris)
+        return c.inversa() * uc
+    #
+    #
+    #
     @classmethod
     def ortogonal(cls,ordre=3,maxim=5,unitaria=False):
         """
