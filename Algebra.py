@@ -1236,6 +1236,33 @@ class Base(object):
     #
     #
     #
+    @classmethod
+    def aleatoria(cls,dimensio=3,maxim=5,unitaria=False,mzeros=-1):
+        """
+        Retorna una base aleàtoria
+        Paràmetres:
+           dimensio: Dimensió de l'espai corresponent
+           maxim: Nombre màxim de les components dels seus vectors
+           unitaria: Si el determinant ha de ser 1 o -1
+           mzeros: Nombre màxim de zeros entre les components dels seus vectors
+        """
+        C = Matriu.invertible(ordre=ordre,unitaria=unitaria,maxim=maxim,mzeros=mzeros)
+        return cls(C.vectors_columna())
+    #
+    #
+    #
+    @classmethod
+    def canonica(cls,dimensio=3):
+        """
+        Retorna la base canònica
+        Paràmetres:
+           dimensio: Dimensió de l'espai corresponent
+        """
+        C = Matriu(eye(dimensio))
+        return cls(C.vectors_columna())
+    #
+    #
+    #
     def quadrats_longituds(self):
         """
         Retorna els quadrats de les longituds dels vectors de la base sense tenir
@@ -2937,16 +2964,31 @@ class ReferenciaAfi(object):
     #
     #
     @classmethod
-    def aleatoria(cls,dimensio=3,unitaria=False):
+    def aleatoria(cls,dimensio=3,maxim=3,mzeros=0,unitaria=False):
         """
         Retorna una referència aleatòria
         Paràmetres:
             dimensio: dimensió de l'espai corresponent
+            maxim: Màxim nombre que hi apareix
+            mzeros: Màxim nombre de zeros que apareixen a la base
             unitaria: si és True la matriu del canvi de base tindrà determinant 1 o -1
         """
-        origen = Punt.aleatori(l=dimensio,maxim=3,nuls=False)
-        m = Matriu.invertible(ordre=3,maxim=3,mzeros=0,unitaria=unitaria)
+        origen = Punt.aleatori(l=dimensio,maxim=maxim,nuls=False)
+        m = Matriu.invertible(ordre=dimensio,maxim=maxim,mzeros=mzeros,unitaria=unitaria)
         base = Base.from_matriu(m)
+        return cls(origen,base)
+    #
+    #
+    #
+    @classmethod
+    def canonica(cls,dimensio=3):
+        """
+        Retorna la referència canònica
+        Paràmetres:
+            dimensio: dimensió de l'espai corresponent
+        """
+        origen = Punt.nul(dimensio)
+        base = Base.canonica(dimensio)
         return cls(origen,base)
     #
     #
@@ -2969,6 +3011,30 @@ class ReferenciaAfi(object):
             c = Matriu.from_vectors_columna(unitaris)
         p = self.origen + c * punt
         return Punt(p.components)
+    #
+    #
+    #
+    def coordenades_del_punt(self,punt,ref=None):
+        """
+        Retorna un nou punt expressat en aquesta referència del punt
+        que en la referència "ref" té coordenades "punt".
+        Si ref és None, serà la referència canònica
+        Paràmetres:
+            punt: coordenades en la referència "ref"
+            ref: ReferenciaAfi
+        """
+        if not isinstance(punt,Punt):
+            return None
+        if ref is not None:
+            if not isinstance(ref,ReferenciaAfi):
+                return None
+            if ref.dimensio != punt.dimensio:
+                return None
+            pc = ref.punt_de_coordenades(punt)
+        else:
+            pc = punt
+        p = self.base.components_del_vector(pc - self.origen)
+        return Punt(self.base.components_del_vector(pc - self.origen).components)
     #
     #
     #
@@ -3000,6 +3066,46 @@ class ReferenciaAfi(object):
         s += f"{m} + \n"
         s += f"{self.base.matriu()}\n"
         s += "\\begin{pmatrix}{c} " + d + "\\end{pmatrix}"
+        return s
+    #
+    #
+    #
+    def canvi_de_referencia_a_la_referencia(self,R,p1,p2):
+        """
+        Restorna en format latex l'expressió del canvi de coordenades de la referència
+        actual a la referència R
+        Paràmetres:
+            p1: primes que s'escriuran a les coordenades en la referència actual
+            p2: primes que s'escriuran a les coordenades en la referència R
+        """
+        if not isinstance(R,ReferenciaAfi):
+            return None
+        if self.dimensio != R.dimensio:
+            return None
+        if self.dimensio <= 3:
+            x, y, z = symbols('x y z')
+            coords = [x,y,z]
+        else:
+            x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
+            coords = [x1, x2, x3, x4, x5, x6, x7, x8]
+        coords = coords[0:self.dimensio]
+        o = R.coordenades_del_punt(Punt(0,0),self)
+        c = R.base.matriu()
+        d = self.base.matriu()
+        A = c.inversa() * d
+        ps1 = ""
+        ps2 = ""
+        if p1 > 0:
+            ps1 = p1 * "'"
+        if p2 > 0:
+            ps2 = p2 * "'"
+        cs = " \\\\ ".join([latex(k) + ps1 for k in coords])
+        cr = " \\\\ ".join([latex(k) + ps2 for k in coords])
+        m = Matriu.matriu_columna(o)
+        s = "\\begin{pmatrix}{c} " + cr + "\\end{pmatrix} = \n"
+        s += f"{m} + \n"
+        s += f"{A}\n"
+        s += "\\begin{pmatrix}{c} " + cs + "\\end{pmatrix}"
         return s
     #
     #
