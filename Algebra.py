@@ -43,6 +43,7 @@ ddict = collections.OrderedDict([(p**2,1),(q**2,2),(u**2,3),(v**2,4),
                                 ((u,q),8),((v,q),9),((v,u),10),
                                 (p,11),(q,12), (u,13), (v,14)])
 
+
 class Impresora(Printer):
     """
     La funció latex() del sympy té la mania d'escriure les variables x, y, z i t
@@ -334,6 +335,7 @@ def vaps_veps(result):
             veps.append(vep)
     return (vaps,veps)
 
+
 class Radicals(object):
     """
     Classe per treure factor comú en expressions on hi apareixen arrels quadrades
@@ -406,6 +408,7 @@ class Radicals(object):
         if len(self.fraccions) == 0:
             return 1
         return mcm_llista(self.fraccions)
+
 
 class Vector(object):
     """
@@ -483,6 +486,17 @@ class Vector(object):
                 if c[i] == 0:
                     c[i] = values[random.randint(0,m)]
         return cls(c)
+    #
+    #
+    #
+    def tots_enters(self):
+        """
+        Retorna True si totes les components del vector són nombres enters
+        """
+        for k in self.components:
+            if not isinstance(k,Integer):
+                return False
+        return True
     #
     #
     #
@@ -619,14 +633,17 @@ class Vector(object):
         """
         Defineix el producte d'un escalar per un vector i el
         producte d'una vector per una matriu.
+        També el producte escalar de dos vectors
         Paràmetres:
-            other: un escalar o una matriu (classe Matriu)
+            other: un escalar, un vector o una matriu (classe Matriu)
         Exemples:
             u1 = Vector(3,2,1,3)
             u2 = Vector(-2,4,-3,1)
             v = 5 * u1 - 4 * u2
             a = Matriu.aleatoria(f=4,c=2)
             u = v * a
+            w = Vector(3,3,1,2)
+            p = v * w
         """
         types = [Rational,float,int,Float,Pow,Add,Mul]
         for t in types:
@@ -642,6 +659,11 @@ class Vector(object):
             for i in range(c):
                 r.append(v[0,i])
             return Vector(r)
+        if isinstance(other,Vector):
+            if other.dimensio != self.dimensio:
+                return None
+            l = [self[i]*other[i] for i in range(self.dimensio)]
+            return sum(l)
         return None
     #
     #
@@ -928,6 +950,7 @@ class Vector(object):
     def punt(self):
         return Punt(self.components)
 
+
 class Punt(Vector):
     """
     Classe per treballar amb punts.
@@ -970,6 +993,7 @@ class Punt(Vector):
             return None
         op = self - ref.origen
         return Punt(op.components_en_base(ref.base).components)
+
 
 class Base(object):
     """
@@ -1174,6 +1198,13 @@ class Base(object):
     #
     #
     def canvi_de_base_a_la_base(self,B,p1=1,p2=0):
+        """
+        Retorna en format latex l'expressió del canvi de base de la base
+        actual a la base B
+        Paràmetres:
+            p1: primes que s'escriuran a les components en la base actual
+            p2: primes que s'escriuran a les components en la base B
+        """
         if not isinstance(B,Base):
             return None
         if self.dimensio != B.dimensio:
@@ -1246,7 +1277,7 @@ class Base(object):
            unitaria: Si el determinant ha de ser 1 o -1
            mzeros: Nombre màxim de zeros entre les components dels seus vectors
         """
-        C = Matriu.invertible(ordre=ordre,unitaria=unitaria,maxim=maxim,mzeros=mzeros)
+        C = Matriu.invertible(ordre=dimensio,unitaria=unitaria,maxim=maxim,mzeros=mzeros)
         return cls(C.vectors_columna())
     #
     #
@@ -1269,6 +1300,7 @@ class Base(object):
         en compte si la base és unitària
         """
         return [v.length()**2 for v in self.vecs]
+
 
 class Matriu:
     """
@@ -2140,6 +2172,7 @@ class Matriu:
         eqs = " \\\\ ".join(eqs)
         return f"\\left.\\aligned {eqs} \\endaligned\\;\\right\\}}"
 
+
 class EquacioLineal:
     """
     Classe per treballar amb equacions lineals.
@@ -2348,6 +2381,8 @@ class SistemaEquacions:
       equacions: llista de EquacioLineal
       nombre: nombre d'equacions
       solucio: solucio del sistema d'equacions
+      parametrica: solucio paramètrica del sistema d'equacions
+      parametres: paràmetres que apareixen a la solució paramètrica
       unknowns: llista d'incògnites
       prime: nombre de primes que escriurem a l'equació
     """
@@ -2368,7 +2403,7 @@ class SistemaEquacions:
         if a.files != b.dimensio:
             return None
         if unknowns is not None:
-            if not (insinatance(unknowns,list) or insinatance(unknowns,tuple)):
+            if not (isinstance(unknowns,list) or isinstance(unknowns,tuple)):
                 return None
             if len(unknowns) != a.columnes:
                 return None
@@ -2380,6 +2415,8 @@ class SistemaEquacions:
         self.A = a
         self.B = b
         self.solucio = None
+        self.parametrica = None
+        self.parametres = []
         eq = []
         files = a.vectors_fila()
         for k in range(self.A.files):
@@ -2427,7 +2464,7 @@ class SistemaEquacions:
             vecs.append(Vector(c))
         a = Matriu.from_vectors_fila(vecs)
         b = Vector(t)
-        return cls(a,b,prime)
+        return cls(a,b,prime=prime)
     #
     #
     #
@@ -2477,6 +2514,10 @@ class SistemaEquacions:
         El resultat és una llista d'expressions on hi poden aparèixer les
         incògnites del sistema com a paràmetres
         """
+        t1, t2, t3, t4, t5, t6, t7, t8 = symbols('t1 t2 t3 t4 t5 t6 t7 t8')
+        params = [t1,t2,t3,t4,t5,t6,t7,t8]
+        count = 0
+        subs = {}
         system = (self.A.matriu,Matrix(self.B.dimensio,1,self.B.components))
         X = Vector(self.unknowns)
         system = self.A * X - self.B
@@ -2485,11 +2526,20 @@ class SistemaEquacions:
         else:
             s = solve(system.components,*self.unknowns)
         self.solucio = []
+        self.parametres = []
         for k in self.unknowns:
             try:
                 self.solucio.append(s[k])
             except:
                 self.solucio.append(k)
+                subs[k] = params[count]
+                self.parametres.append(subs[k])
+                count += 1
+        self.parametrica = []
+        for k in self.solucio:
+            for u, v in subs.items():
+                k = k.subs(u,v)
+            self.parametrica.append(k)
         return self.solucio
     #
     #
@@ -2539,6 +2589,7 @@ class SistemaEquacions:
         eqs = " $, $".join(eqs)
         eqs = eqs.replace('&','')
         return f"$ {eqs} $"
+
 
 class EquacioParametrica:
     """
@@ -2668,6 +2719,7 @@ class EquacioParametrica:
         s = s.replace('NUMERADOR',f + latex(e))
         return s
 
+
 class EquacionsParametriques(object):
     """
     Classe per treballar amb sistemes d'equacions paramètriques
@@ -2734,6 +2786,7 @@ class EquacionsParametriques(object):
         t = Matrix(self.nombre,1,(v - self.B).components)
         t = (L**(-1) * t)[r:]
         return SistemaEquacions.from_equacions(t,self.A.files,prime)
+
 
 class PlaVectorial(object):
     """
@@ -2840,6 +2893,72 @@ class PlaVectorial(object):
         v2 = v1.dot(v1) * u2 - v1.dot(u2) * v1
         v2.simplificar()
         return Base([v1,v2])
+    #
+    #
+    #
+    def projeccio_ortogonal(self,u):
+        """
+        Retorna la projecció ortogonal del vector u sobre el pla.
+        Paràmetres:
+          u: Vector
+        """
+        if not isinstance(u,Vector):
+            return None
+        if u.dimensio != 3:
+            return None
+        b = self.base_ortogonal()
+        v1, v2 = b.vecs
+        t1 = Rational(u.dot(v1),v1.dot(v1))
+        t2 = Rational(u.dot(v2),v2.dot(v2))
+        return t1 * v1 + t2 * v2
+    #
+    #
+    #
+    def simetric(self,u):
+        """
+        Retorna el simètric del vector u respecte al pla.
+        Paràmetres:
+          u: Vector
+        """
+        if not isinstance(u,Vector):
+            return None
+        if u.dimensio != 3:
+            return None
+        return 2*self.projeccio_ortogonal(u) - u
+    #
+    #
+    #
+    def conte(self,u):
+        """
+        Retorna si el vector u pertany al pla.
+        Paràmetres:
+          u: Vector
+        """
+        if not isinstance(u,Vector):
+            return None
+        if u.dimensio != 3:
+            return None
+        m = Matriu.from_vectors_columna([self.u1,self.u2,u])
+        return m.det() != 0
+    #
+    #
+    #
+    def es_associat(self,u):
+        """
+        Retorna si el vector és perpendicular al pla.
+        Paràmetres:
+          u: Vector
+        """
+        if not isinstance(u,Vector):
+            return None
+        if u.dimensio != 3:
+            return None
+        if u.length() == 0:
+            return False
+        w = self.u1.cross(self.u2)
+        m = Matriu.from_vectors_columna([w,u])
+        return m.rang() == 1
+
 
 class RectaVectorial(object):
     """
@@ -2919,6 +3038,37 @@ class RectaVectorial(object):
             else:
                 eq.append(f"\\frac{{{latex(incg[i]) + p}}}{{{v[i]}}}")
         return " = ".join(eq)
+    #
+    #
+    #
+    def projeccio_ortogonal(self,u):
+        """
+        Retorna la projecció ortogonal del vector u sobre la recta.
+        Paràmetres:
+          u: Vector
+        """
+        if not isinstance(u,Vector):
+            return None
+        if u.dimensio != self.u.dimensio:
+            return None
+        v = self.u
+        t = u.dot(v)/v.dot(vv)
+        return t * v
+    #
+    #
+    #
+    def simetric(self,u):
+        """
+        Retorna el simètric del vector u respecte a la recta.
+        Paràmetres:
+          u: Vector
+        """
+        if not isinstance(u,Vector):
+            return None
+        if u.dimensio != self.u.dimensio:
+            return None
+        return 2*self.projeccio_ortogonal(u) - u
+
 
 class ReferenciaAfi(object):
     """
@@ -3072,7 +3222,7 @@ class ReferenciaAfi(object):
     #
     def canvi_de_referencia_a_la_referencia(self,R,p1,p2):
         """
-        Restorna en format latex l'expressió del canvi de coordenades de la referència
+        Retorna en format latex l'expressió del canvi de coordenades de la referència
         actual a la referència R
         Paràmetres:
             p1: primes que s'escriuran a les coordenades en la referència actual
@@ -3130,6 +3280,7 @@ class ReferenciaAfi(object):
             unitaris: si és True els retorna dividits per la seva longitud
         """
         return self.base.vectors(unitaris)
+
 
 class PlaAfi(object):
     """
@@ -3201,11 +3352,67 @@ class PlaAfi(object):
     #
     #
     #
+    def punt_de_coordenades_enteres(self,p=None,u=None,v=None):
+        """
+        Retorna, si és possible, un punt de coordenades enteres del pla afí
+        que passa pel punt p i té vectors directors u i v
+        """
+        if p is None:
+            p = self.p
+        if u is None:
+            u = self.u1
+        if v is None:
+            v = self.u2
+        if p.tots_enters():
+            return p
+        t, _ = p.factor_comu()
+        for i in range(1,t.q):
+            for j in range(1,t.q):
+                r = (p + Rational(i,t.q) * u + Rational(j,t.q) * v).punt()
+                if r.tots_enters():
+                    return r
+                r = (p + Rational(i,t.q) * u - Rational(j,t.q) * v).punt()
+                if r.tots_enters():
+                    return r
+                r = (p - Rational(i,t.q) * u + Rational(j,t.q) * v).punt()
+                if r.tots_enters():
+                    return r
+                r = (p - Rational(i,t.q) * u - Rational(j,t.q) * v).punt()
+                if r.tots_enters():
+                    return r
+        return p
+    #
+    #
+    #
+    @classmethod
+    def from_equacio_implicita(cls,eq):
+        """
+        Retorna el pla afí que té equació implícita eq
+        Paràmetres:
+            eq: EquacioLineal
+        """
+        if not isinstance(eq,EquacioLineal):
+            return None
+        s = eq.to_sistema_equacions()
+        s.resol()
+        t1, t2 = symbols('t1 t2')
+        p1 = Punt([v.subs(t1,1).subs(t2,1) for v in s.parametrica])
+        p2 = Punt([v.subs(t1,1).subs(t2,0) for v in s.parametrica])
+        p3 = Punt([v.subs(t1,0).subs(t2,1) for v in s.parametrica])
+        u = p2-p1
+        v = p3-p1
+        u.simplificar()
+        v.simplificar()
+        return cls(p1,u,v)
+    #
+    #
+    #
     def __repr__(self):
         """
         Retorna l'equació vectorial del pla en LaTeX
         """
-        return f"(x,y,z)={self.p}+t_1{self.u1}+t_2{self.u2}"
+        q = self.punt_de_coordenades_enteres()
+        return f"(x,y,z)={q}+t_1{self.u1}+t_2{self.u2}"
     #
     #
     #
@@ -3275,6 +3482,32 @@ class PlaAfi(object):
         if isinstance(other,RectaAfi):
             return other.distancia(self)
         return None
+    #
+    #
+    #
+    def projeccio_ortogonal(self,punt):
+        """
+        Retorna la projecció ortogonal del punt "punt" sobre el pla
+        Paràmetres:
+          punt: Punt
+        """
+        P = PlaVectorial(self.u1,self.u2)
+        if not isinstance(punt,Punt):
+            return None
+        if punt.dimensio != 3:
+            return None
+        return (self.p + P.projeccio_ortogonal(punt - self.p)).punt()
+    #
+    #
+    #
+    def simetric(self,punt):
+        """
+        Retorna el simètric del punt "punt" respecte al pla
+        Paràmetres:
+          punt: Punt
+        """
+        return 2*self.projeccio_ortogonal(punt) - punt
+
 
 class RectaAfi(object):
     """
@@ -3325,10 +3558,56 @@ class RectaAfi(object):
         """
         Retorna l'equació vectorial de la recta en LaTeX
         """
+        q = self.punt_de_coordenades_enteres()
         if self.u.dimensio == 2:
-            return f"(x,y)={self.p}+t{self.u}"
+            return f"(x,y)={q}+t{self.u}"
         else:
-            return f"(x,y,z)={self.p}+t{self.u}"
+            return f"(x,y,z)={q}+t{self.u}"
+    #
+    #
+    #
+    @classmethod
+    def from_equacions_implicites(cls,s):
+        """
+        Retorna la recta afí que té equacions implícites s
+        Paràmetres:
+            s: SistemaEquacions
+        """
+        if not isinstance(s,SistemaEquacions):
+            return None
+        if s.A.files != 2 or s.A.columnes != 3 or s.A.rang() != 2:
+            return None
+        s.resol()
+        t1 = symbols('t1')
+        p1 = Punt([v.subs(t1,0) for v in s.parametrica])
+        p2 = Punt([v.subs(t1,1) for v in s.parametrica])
+        u = p2-p1
+        u.simplificar()
+        q = self.punt_de_coordenades_enteres(p1,u)
+        return cls(q,u)
+    #
+    #
+    #
+    def punt_de_coordenades_enteres(self,p=None,u=None):
+        """
+        Retorna, si és possible, un punt de coordenades enteres de la recta
+        que passa pel punt p i té vector director u
+        """
+        if p is None:
+            p = self.p
+        if u is None:
+            u = self.u
+        if p.tots_enters():
+            return p
+        t, _ = p.factor_comu()
+        for i in range(1,t.q):
+            r = (p + Rational(i,t.q) * u).punt()
+            if r.tots_enters():
+                return r
+            r = (p - Rational(i,t.q) * u).punt()
+            if r.tots_enters():
+                return r
+        return p
     #
     #
     #
@@ -3347,6 +3626,7 @@ class RectaAfi(object):
             v = self.u.components_en_base(ref.base)
             q = self.p.coordenades_en_referencia(ref)
         v.simplificar()
+        q = self.punt_de_coordenades_enteres(q,v)
         x, y, z = symbols('x y z')
         incg = [x,y,z]
         eq = []
@@ -3434,6 +3714,47 @@ class RectaAfi(object):
         """
         q = self.p + t * self.u
         return Punt(q.components)
+    #
+    #
+    #
+    def projeccio_ortogonal(self,punt):
+        """
+        Retorna la projecció ortogonal del punt "punt" sobre la recta
+        Paràmetres:
+          punt: Punt
+        """
+        P = RectaVectorial(self.u)
+        if not isinstance(punt,Punt):
+            return None
+        if punt.dimensio != self.u.dimensio:
+            return None
+        return (self.p + P.projeccio_ortogonal(punt - self.p)).punt()
+    #
+    #
+    #
+    def simetric(self,punt):
+        """
+        Retorna el simètric del punt "punt" respecte a la recta
+        Paràmetres:
+          punt: Punt
+        """
+        return 2*self.projeccio_ortogonal(punt) - punt
+    #
+    #
+    #
+    def conte(self,punt):
+        """
+        Retorna si el punt "punt" pertany a la recta
+        Paràmetres:
+          punt: Punt
+        """
+        if not isinstance(punt,Punt):
+            return None
+        if punt.dimensio != self.u.dimensio:
+            return None
+        m = Matriu.from_vectors_columna([self.u,punt - self.p])
+        return m.rang() == 1
+
 
 class SubespaiVectorial(object):
     """
@@ -3501,9 +3822,7 @@ class SubespaiVectorial(object):
         if basern is None:
             return cls(eqs.A.nucli())
         c = [basern.vector_de_components(u) for u in eqs.A.nucli()]
-        s = cls(c)
-        eqs = s.equacions_implicites()
-        return cls.from_equacions_implicites(eqs)
+        return cls(c)
     #
     #
     #
@@ -3610,8 +3929,51 @@ class SubespaiVectorial(object):
         b = Base(h.base_ortogonal() + self.base_ortogonal(),unitaria)
         b.orientacio_positiva()
         return b
+    #
+    #
+    #
+    def projeccio_ortogonal(self,u):
+        """
+        Retorna la projeccio ortogonal del vector u sobre el subespai
+        Parametres:
+          u: Vector
+        """
+        if not isinstance(u,Vector):
+            return None
+        if u.dimensio != self.espai:
+            return None
+        base = self.base_ortogonal()
+        ts = [Rational(u.dot(v),v.dot(v)) for v in base]
+        p = Vector.nul(self.espai)
+        for i in range(len(base)):
+            p += ts[i]*base[i]
+        return p
+    #
+    #
+    #
+    def simetric(self,u):
+        """
+        Retorna el simètric del vector u sobre respecte al subespai
+        Parametres:
+          u: Vector
+        """
+        if not isinstance(u,Vector):
+            return None
+        if u.dimensio != self.espai:
+            return None
+        return 2*self.projeccio_ortogonal(u) - u
+    #
+    #
+    #
+    def __repr__(self):
+        """
+        Retorna l'expressió en latex del subespai
+        """
+        base = ",".join([v.latex(False) for v in self.base])
+        return f"<{base}>"
 
-class VarietatLineal(object):
+
+class VarietatAfi(object):
     """
     Classe per treballar amb varietats lineal
     Atributs:
@@ -3641,7 +4003,7 @@ class VarietatLineal(object):
                 return None
             if ref.dimensio != p.dimensio:
                 return None
-        return super(VarietatLineal,cls).__new__(cls)
+        return super(VarietatAfi,cls).__new__(cls)
     #
     #
     #
@@ -3691,6 +4053,33 @@ class VarietatLineal(object):
     #
     #
     #
+    @classmethod
+    def from_equacions_implicites(cls,eqs,ref=None):
+        """
+        Retorna la varietat afí que té equacions implícites "eqs"
+        en la referència afí "ref"
+        Paràmetres:
+            eqs: equacions implícites (classe SistemaEquacions)
+            ref: Referència de P^n
+        """
+        s = SubespaiVectorial(eqs.A.nucli())
+        eqs.resol()
+        sol = list(eqs.parametrica)
+        for p in eqs.parametres:
+            sol = [k.subs(p,0) for k in sol]
+        p = Punt(sol)
+        print(p)
+        return cls(p,s,ref)
+    #
+    #
+    #
+    @classmethod
+    def from_equacio_implicita(cls,eq,ref=None):
+        s = eq.to_sistema_equacions()
+        return cls.from_equacions_implicites(s,ref)
+    #
+    #
+    #
     def base_ortogonal(self):
         """
         Retorna una base ortogonal del subespai director de la varietat lineal
@@ -3708,7 +4097,41 @@ class VarietatLineal(object):
         if p.dimensio != self.subespai.espai:
             return None
         s = self.subespai.suplementari_ortogonal()
-        return VarietatLineal(p,s)
+        return VarietatAfi(p,s)
+    #
+    #
+    #
+    def projeccio_ortogonal(self,punt):
+        """
+        Retorna la projecció ortogonal del punt "punt" sobre la
+        varietat afi
+        Paràmetres:
+          punt: Punt
+        """
+        if not isinstance(punt,Punt):
+            return None
+        if punt.dimensio != self.subespai.espai:
+            return None
+        return (self.punt + self.subespai.projeccio_ortogonal(punt - self.punt)).punt()
+    #
+    #
+    #
+    def simetric(self,punt):
+        """
+        Retorna el simètric del punt "punt" respecte a la varietat afí
+        Paràmetres:
+          punt: Punt
+        """
+        return 2*self.projeccio_ortogonal(punt) - punt
+    #
+    #
+    #
+    def __repr__(self):
+        """
+        Retorna l'expressió en latex de la varietat afi
+        """
+        return f"{self.punt}+{self.subespai}"
+
 
 class TransformacioLineal(object):
     """
@@ -4054,6 +4477,7 @@ class TransformacioLineal(object):
         """
         return self.canonica.polinomi_caracteristic()
 
+
 class TransformacioAfi:
     """
     Classe per treballar amb transformacions afins T:P^n ----> P^n, on
@@ -4289,6 +4713,7 @@ class TransformacioAfi:
         p = Punt(self.transforma(q).components)
         return p.coordenades_en_referencia(ref)
 
+
 class FormaQuadratica(object):
     """
     Classe per treballar amb formes quadràtiques
@@ -4479,6 +4904,7 @@ class FormaQuadratica(object):
             prime: nombre de primes que s'escriuran a les variables
         """
         return self.latex(self.base,prime=prime)
+
 
 class Conica(object):
     """
@@ -4725,6 +5151,7 @@ class Conica(object):
         """
         return self.ref.vectors(unitaris)
 
+
 class Ellipse(Conica):
     """
     Classe per treballar amb el·lipses
@@ -4881,6 +5308,7 @@ class Ellipse(Conica):
         centre = self.centre()
         vector = self.vectors()[0]
         return f"Ellipse({centre},{vector},{a2},{b2},x={x},y={y})"
+
 
 class Hiperbola(Conica):
     """
@@ -5071,6 +5499,7 @@ class Hiperbola(Conica):
         vector = self.vectors()[0]
         return f"Hiperbola({centre},{vector},{a2},{b2},x={x},y={y})"
 
+
 class Parabola(Conica):
     """
     Classe per treballar amb paràboles
@@ -5169,6 +5598,7 @@ class Parabola(Conica):
             de límits (-x,x) i (-y,y)
         """
         return f"Parabola({self.vertex()},{self.focus()},x={x},y={y})"
+
 
 class Quadrica(object):
     """
@@ -5691,6 +6121,7 @@ class Quadrica(object):
             a2 =  -2 * ep / t1
             return CilindreParabolic(a2/2,v,v1,v2)
 
+
 class Ellipsoide(Quadrica):
     """
     Classe per treballar amb el·lipsoides
@@ -5834,6 +6265,7 @@ class Ellipsoide(Quadrica):
             str += f" + \\frac{{z'^2}}{{ {latex(c2)} }} = 1"
         return str
 
+
 class HiperboloideUnaFulla(Quadrica):
     """
     Classe per treballar amb hiperboloides d'una fulla
@@ -5976,6 +6408,7 @@ class HiperboloideUnaFulla(Quadrica):
         else:
             str += f" - \\frac{{z'^2}}{{ {latex(c2)} }} = 1"
         return str
+
 
 class HiperboloideDuesFulles(Quadrica):
     """
@@ -6121,6 +6554,7 @@ class HiperboloideDuesFulles(Quadrica):
             str += f" - \\frac{{z'^2}}{{ {latex(c2)} }} = -1"
         return str
 
+
 class Con(Quadrica):
     """
     Classe per treballar amb cons
@@ -6264,6 +6698,7 @@ class Con(Quadrica):
             str += f" - \\frac{{z'^2}}{{ {latex(c2)} }} = 0"
         return str
 
+
 class CilindreElliptic(Quadrica):
     """
     Classe per treballar amb cilindres el·líptics
@@ -6404,6 +6839,7 @@ class CilindreElliptic(Quadrica):
             str += f" + \\frac{{y'^2}}{{ {latex(b2)} }} = 1"
         return str
 
+
 class CilindreHiperbolic(Quadrica):
     """
     Classe per treballar amb cilindres hiperbòlic
@@ -6543,6 +6979,7 @@ class CilindreHiperbolic(Quadrica):
             str += f" - \\frac{{y'^2}}{{ {latex(b2)} }} = 1"
         return str
 
+
 class ParaboloideElliptic(Quadrica):
     """
     Classe per treballar amb paraboloides el·líptics
@@ -6681,6 +7118,7 @@ class ParaboloideElliptic(Quadrica):
         else:
             str += f" + \\frac{{y'^2}}{{ {latex(b2)} }}"
         return str
+
 
 class ParaboloideHiperbolic(Quadrica):
     """
@@ -6824,6 +7262,7 @@ class ParaboloideHiperbolic(Quadrica):
             str += f" - \\frac{{y'^2}}{{ {latex(b2)} }}"
         return str
 
+
 class CilindreParabolic(Quadrica):
     """
     Classe per treballar amb cilindres parabòlics
@@ -6928,6 +7367,7 @@ class CilindreParabolic(Quadrica):
         if p > 0:
             return f"z' = \\frac{{x'^2}}{{ {latex(2 * p)} }}"
         return f"z' = -\\frac{{x'^2}}{{ {latex(-2 * p)} }}"
+
 
 class RectaRegressio(object):
     """
