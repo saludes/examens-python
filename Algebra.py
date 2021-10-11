@@ -5253,6 +5253,14 @@ class Ellipse(Conica):
     #
     #
     #
+    def maxim_origen(self):
+        """
+        Retorna el màxim dels valors absoluts de les coordenades del centre
+        """
+        return self.ref.origen.maxim()
+    #
+    #
+    #
     def semieix_major(self):
         """
         Retorna el semieix major
@@ -5409,6 +5417,14 @@ class Hiperbola(Conica):
         Retorna el centre de la el·lipse
         """
         return (self.ref.origen)
+    #
+    #
+    #
+    def maxim_origen(self):
+        """
+        Retorna el màxim dels valors absoluts de les coordenades del centre
+        """
+        return self.ref.origen.maxim()
     #
     #
     #
@@ -5603,6 +5619,14 @@ class Parabola(Conica):
         Retorna el vèrtex de la paràbola
         """
         return (self.ref.origen)
+    #
+    #
+    #
+    def maxim_origen(self):
+        """
+        Retorna el màxim dels valors absoluts de les coordenades del vèrtex
+        """
+        return self.ref.origen.maxim()
     #
     #
     #

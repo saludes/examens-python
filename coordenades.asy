@@ -207,13 +207,13 @@ transform Base(pair u1=(1,0),
 
 transform TransformacioLineal(real[][] A)
 {
-  transform tr = (0,0,A[0,0],A[0,1],A[1,0],A[1,1]);
+  transform tr = (0,0,A[0][0],A[0][1],A[1][0],A[1][1]);
   return tr;
 }
 
 transform TransformacioAfi(real[] B,real[][] A)
 {
-  transform tr = (B[0],B[1],A[0,0],A[0,1],A[1,0],A[1,1]);
+  transform tr = (B[0],B[1],A[0][0],A[0][1],A[1][0],A[1][1]);
   return tr;
 }
 
