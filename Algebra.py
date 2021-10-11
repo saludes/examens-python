@@ -5594,8 +5594,10 @@ class Parabola(Conica):
                 base = [Vector(1,0),Vector(0,1)]
                 random.shuffle(base)
                 eix = base[0]
-                vertex = Punt.aleatori(l=2,maxim=5,nuls=False)
-                p = random.randint(-4,4)
+                vertex = Punt.aleatori(l=2,maxim=4,nuls=False)
+                p = random.randint(-3,3)
+                if p == 0:
+                    p = 2
                 focus = (vertex + p * eix).punt()
                 trobat = True
             else:
