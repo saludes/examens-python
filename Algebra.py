@@ -3828,6 +3828,14 @@ class SubespaiVectorial(object):
     #
     @classmethod
     def from_equacio_implicita(cls,eq,basern=None):
+        """
+        Retorna el subespai vectorial que té equació implícita "eq"
+        Paràmetres:
+            eqs: equació implícita (classe EquacioLineal)
+            basern: Base de R^n
+        """
+        if not isinstance(eq,EquacioLineal):
+            return None
         s = eq.to_sistema_equacions()
         return cls.from_equacions_implicites(s,basern)
     #
@@ -4075,6 +4083,15 @@ class VarietatAfi(object):
     #
     @classmethod
     def from_equacio_implicita(cls,eq,ref=None):
+        """
+        Retorna la varietat afí que té equació implícita "eq"
+        en la referència afí "ref"
+        Paràmetres:
+            eq: equació implícita (classe EquacioLineal)
+            ref: Referència de P^n
+        """
+        if not isinstance(eq,EquacioLineal):
+            return None
         s = eq.to_sistema_equacions()
         return cls.from_equacions_implicites(s,ref)
     #
@@ -5061,7 +5078,7 @@ class Conica(object):
     #
     #
     @classmethod
-    def ellipse(cls,maxim=30):
+    def ellipse(cls,maxim=30,canonica=False):
         """
         Retorna una el·lipse aleatòria
         Paràmetres:
@@ -5069,14 +5086,14 @@ class Conica(object):
         """
         trobat = False
         while not trobat:
-            e = Ellipse.aleatoria()
-            trobat = e.canonica.norma_maxim() <= maxim
+            e = Ellipse.aleatoria(canonica=canonica)
+            trobat = canonica or e.canonica.norma_maxim() <= maxim
         return e
     #
     #
     #
     @classmethod
-    def hiperbola(cls,maxim=30):
+    def hiperbola(cls,maxim=30,canonica=False):
         """
         Retorna una hipèrbola aleatòria
         Paràmetres:
@@ -5084,14 +5101,14 @@ class Conica(object):
         """
         trobat = False
         while not trobat:
-            h = Hiperbola.aleatoria()
-            trobat = h.canonica.norma_maxim() <= maxim
+            h = Hiperbola.aleatoria(canonica=canonica)
+            trobat = canonica or h.canonica.norma_maxim() <= maxim
         return h
     #
     #
     #
     @classmethod
-    def parabola(cls,maxim=30):
+    def parabola(cls,maxim=30,canonica=False):
         """
         Retorna una paràbola aleatòria
         Paràmetres:
@@ -5099,14 +5116,14 @@ class Conica(object):
         """
         trobat = False
         while not trobat:
-            p = Parabola.aleatoria()
-            trobat = p.canonica.norma_maxim() <= maxim
+            p = Parabola.aleatoria(canonica=canonica)
+            trobat = canonica or p.canonica.norma_maxim() <= maxim
         return p
     #
     #
     #
     @classmethod
-    def aleatoria(cls,maxim=30):
+    def aleatoria(cls,maxim=30,canonica=False):
         """
         Retorna una el·lipse, hipèrbola o paràbola aleatòries
         Paràmetres:
@@ -5114,10 +5131,10 @@ class Conica(object):
         """
         r = random.randint(0,2)
         if r == 0:
-            return Conica.ellipse(maxim)
+            return Conica.ellipse(maxim,canonica=canonica)
         if r == 1:
-            return Conica.hiperbola(maxim)
-        return Conica.parabola(maxim)
+            return Conica.hiperbola(maxim,canonica=canonica)
+        return Conica.parabola(maxim,canonica=canonica)
     #
     #
     #
@@ -5203,11 +5220,16 @@ class Ellipse(Conica):
     #
     #
     @classmethod
-    def aleatoria(cls):
+    def aleatoria(cls,canonica=False):
         """
         Retorna una el·lipse aleatòria
         """
-        eix = Vector.aleatori(l=2,maxim=3,nuls=False)
+        if canonica:
+            base = [Vector(1,0),Vector(0,1)]
+            random.shuffle(base)
+            eix = base[0]
+        else:
+            eix = Vector.aleatori(l=2,maxim=3,nuls=False)
         centre = Punt.aleatori(l=2,maxim=3,nuls=False)
         c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
         trobat = False
@@ -5359,11 +5381,16 @@ class Hiperbola(Conica):
     #
     #
     @classmethod
-    def aleatoria(cls):
+    def aleatoria(cls,canonica=False):
         """
         Retorna una hipèrbola aleatòria
         """
-        eix = Vector.aleatori(l=2,maxim=3,nuls=False)
+        if canonica:
+            base = [Vector(1,0),Vector(0,1)]
+            random.shuffle(base)
+            eix = base[0]
+        else:
+            eix = Vector.aleatori(l=2,maxim=3,nuls=False)
         centre = Punt.aleatori(l=2,maxim=3,nuls=False)
         c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
         trobat = False
@@ -5541,15 +5568,24 @@ class Parabola(Conica):
     #
     #
     @classmethod
-    def aleatoria(cls):
+    def aleatoria(cls,canonica=False):
         """
         Retorna una paràbola aleatòria
         """
         trobat = False
         while not trobat:
-            vertex = Punt.aleatori(l=2,maxim=5,nuls=False)
-            focus = Punt.aleatori(l=2,maxim=5)
-            trobat = vertex[0] != focus[0] and vertex[1] != focus[1]
+            if canonica:
+                base = [Vector(1,0),Vector(0,1)]
+                random.shuffle(base)
+                eix = base[0]
+                vertex = Punt.aleatori(l=2,maxim=5,nuls=False)
+                p = random.randint(-4,4)
+                focus = (vertex + p * eix).punt()
+                trobat = True
+            else:
+                vertex = Punt.aleatori(l=2,maxim=5,nuls=False)
+                focus = Punt.aleatori(l=2,maxim=5)
+                trobat = vertex[0] != focus[0] and vertex[1] != focus[1]
         return cls(vertex,focus)
     #
     #
@@ -5675,156 +5711,200 @@ class Quadrica(object):
         m = Matriu.matriu_columna(Vector([x,y,z,1]))
         r = m.transposada() * self.canonica * m
         return r[0,0].expand()
-
     #
     #
     #
     @classmethod
-    def ellipsoide(cls,maxim=30,diagonal=15):
+    def ellipsoide(cls,maxim=30,diagonal=15,canonica=False):
         """
         Retorna un el·lipsoide de manera aleatòria
         Paràmetres:
             maxim: valor màxim de la matriu projectiva de la quàdrica
             diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+            canonica: si és True, els eixos principals seran paral·lels
+                      als de la referència canònica
         """
         trobat = False
         while not trobat:
-            e = Ellipsoide.aleatoria()
-            trobat = e.canonica.norma_maxim() <= maxim and e.canonica.nzeros() < 3 and e.canonica.max_diagonal() < diagonal
+            e = Ellipsoide.aleatoria(canonica=canonica)
+            if canonica:
+                trobat = True
+            else:
+                trobat = e.canonica.norma_maxim() <= maxim and e.canonica.nzeros() < 3 and e.canonica.max_diagonal() < diagonal
         return e
     #
     #
     #
     @classmethod
-    def hiperboloideunafulla(cls,maxim=30,diagonal=15):
+    def hiperboloideunafulla(cls,maxim=30,diagonal=15,canonica=False):
         """
         Retorna un hiperboloide d'una fulla de manera aleatòria
         Paràmetres:
             maxim: valor màxim de la matriu projectiva de la quàdrica
             diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+            canonica: si és True, els eixos principals seran paral·lels
+                      als de la referència canònica
         """
         trobat = False
         while not trobat:
-            h = HiperboloideUnaFulla.aleatoria()
-            trobat = h.canonica.norma_maxim() <= maxim and h.canonica.nzeros() < 3 and h.canonica.max_diagonal() < diagonal
+            h = HiperboloideUnaFulla.aleatoria(canonica=canonica)
+            if canonica:
+                trobat = True
+            else:
+                trobat = h.canonica.norma_maxim() <= maxim and h.canonica.nzeros() < 3 and h.canonica.max_diagonal() < diagonal
         return h
     #
     #
     #
     @classmethod
-    def hiperboloideduesfulles(cls,maxim=30,diagonal=15):
+    def hiperboloideduesfulles(cls,maxim=30,diagonal=15,canonica=False):
         """
         Retorna un hiperboloide de dues fulles de manera aleatòria
         Paràmetres:
             maxim: valor màxim de la matriu projectiva de la quàdrica
             diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+            canonica: si és True, els eixos principals seran paral·lels
+                      als de la referència canònica
         """
         trobat = False
         while not trobat:
-            h = HiperboloideDuesFulles.aleatoria()
-            trobat = h.canonica.norma_maxim() <= maxim and h.canonica.nzeros() < 3 and h.canonica.max_diagonal() < diagonal
+            h = HiperboloideDuesFulles.aleatoria(canonica=canonica)
+            if canonica:
+                trobat = True
+            else:
+                trobat = h.canonica.norma_maxim() <= maxim and h.canonica.nzeros() < 3 and h.canonica.max_diagonal() < diagonal
         return h
     #
     #
     #
     @classmethod
-    def con(cls,maxim=30,diagonal=15):
+    def con(cls,maxim=30,diagonal=15,canonica=False):
         """
         Retorna un con de manera aleatòria
         Paràmetres:
             maxim: valor màxim de la matriu projectiva de la quàdrica
             diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+            canonica: si és True, els eixos principals seran paral·lels
+                      als de la referència canònica
         """
         trobat = False
         while not trobat:
-            c = Con.aleatoria()
-            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 3 and c.canonica.max_diagonal() < diagonal
+            c = Con.aleatoria(canonica=canonica)
+            if canonica:
+                trobat = True
+            else:
+                trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 3 and c.canonica.max_diagonal() < diagonal
         return c
     #
     #
     #
     @classmethod
-    def cilindreelliptic(cls,maxim=30,diagonal=15):
+    def cilindreelliptic(cls,maxim=30,diagonal=15,canonica=False):
         """
         Retorna un cilindre el·líptic de manera aleatòria
         Paràmetres:
             maxim: valor màxim de la matriu projectiva de la quàdrica
             diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
-        """
+            canonica: si és True, els eixos principals seran paral·lels
+                      als de la referència canònica
+          """
         trobat = False
         while not trobat:
-            c = CilindreElliptic.aleatoria()
-            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 3 and c.canonica.max_diagonal() < diagonal
+            c = CilindreElliptic.aleatoria(canonica=canonica)
+            if canonica:
+                trobat = True
+            else:
+                trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 3 and c.canonica.max_diagonal() < diagonal
         return c
     #
     #
     #
     @classmethod
-    def cilindrehiperbolic(cls,maxim=30,diagonal=15):
+    def cilindrehiperbolic(cls,maxim=30,diagonal=15,canonica=False):
         """
         Retorna un cilindre hiperbòlic de manera aleatòria
         Paràmetres:
             maxim: valor màxim de la matriu projectiva de la quàdrica
             diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+            canonica: si és True, els eixos principals seran paral·lels
+                      als de la referència canònica
         """
         trobat = False
         while not trobat:
-            c = CilindreHiperbolic.aleatoria()
-            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 3 and c.canonica.max_diagonal() < diagonal
+            c = CilindreHiperbolic.aleatoria(canonica=canonica)
+            if canonica:
+                trobat = True
+            else:
+                trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 3 and c.canonica.max_diagonal() < diagonal
         return c
     #
     #
     #
     @classmethod
-    def paraboloideelliptic(cls,maxim=30,diagonal=15):
+    def paraboloideelliptic(cls,maxim=30,diagonal=15,canonica=False):
         """
         Retorna un paraboloide el·líptic de manera aleatòria
         Paràmetres:
             maxim: valor màxim de la matriu projectiva de la quàdrica
             diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+            canonica: si és True, els eixos principals seran paral·lels
+                      als de la referència canònica
         """
         trobat = False
         while not trobat:
-            p = ParaboloideElliptic.aleatoria()
-            trobat = p.canonica.norma_maxim() <= maxim and p.canonica.nzeros() < 3 and p.canonica.max_diagonal() < diagonal
+            p = ParaboloideElliptic.aleatoria(canonica=canonica)
+            if canonica:
+                trobat = True
+            else:
+                trobat = p.canonica.norma_maxim() <= maxim and p.canonica.nzeros() < 3 and p.canonica.max_diagonal() < diagonal
         return p
     #
     #
     #
     @classmethod
-    def paraboloidehiperbolic(cls,maxim=30,diagonal=15):
+    def paraboloidehiperbolic(cls,maxim=30,diagonal=15,canonica=False):
         """
         Retorna un paraboloide hiperbòlic de manera aleatòria
         Paràmetres:
             maxim: valor màxim de la matriu projectiva de la quàdrica
             diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+            canonica: si és True, els eixos principals seran paral·lels
+                      als de la referència canònica
         """
         trobat = False
         while not trobat:
-            p = ParaboloideHiperbolic.aleatoria()
-            trobat = p.canonica.norma_maxim() <= maxim and p.canonica.nzeros() < 3 and p.canonica.max_diagonal() < diagonal
+            p = ParaboloideHiperbolic.aleatoria(canonica=canonica)
+            if canonica:
+                trobat = True
+            else:
+                trobat = p.canonica.norma_maxim() <= maxim and p.canonica.nzeros() < 3 and p.canonica.max_diagonal() < diagonal
         return p
     #
     #
     #
     @classmethod
-    def cilindreparabolic(cls,maxim=30,diagonal=15):
+    def cilindreparabolic(cls,maxim=30,diagonal=15,canonica=False):
         """
         Retorna un cilindre parabòlic de manera aleatòria
         Paràmetres:
             maxim: valor màxim de la matriu projectiva de la quàdrica
             diagonal: valor màxim de la diagonal de la matriu projectiva de la quàdrica
+            canonica: si és True, els eixos principals seran paral·lels
+                      als de la referència canònica
         """
         trobat = False
         while not trobat:
-            c = CilindreParabolic.aleatoria()
-            trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 3 and c.canonica.max_diagonal() < diagonal
+            c = CilindreParabolic.aleatoria(canonica=canonica)
+            if canonica:
+                trobat = True
+            else:
+                trobat = c.canonica.norma_maxim() <= maxim and c.canonica.nzeros() < 3 and c.canonica.max_diagonal() < diagonal
         return c
     #
     #
     #
     @classmethod
-    def aleatoria(cls,maxim=30,diagonal=15):
+    def aleatoria(cls,maxim=30,diagonal=15,canonica=False):
         """
         Retorna una quàdrica de manera aleatòria
         Paràmetres:
@@ -5833,22 +5913,22 @@ class Quadrica(object):
         """
         r = random.randint(0,9)
         if r == 0:
-            return Quadrica.ellipsoide(maxim,diagonal)
+            return Quadrica.ellipsoide(maxim,diagonal,canonica)
         if r == 1:
-            return Quadrica.hiperboloideunafulla(maxim,diagonal)
+            return Quadrica.hiperboloideunafulla(maxim,diagonal,canonica)
         if r == 2:
-            return Quadrica.hiperboloideduesfulles(maxim,diagonal)
+            return Quadrica.hiperboloideduesfulles(maxim,diagonal,canonica)
         if r == 3:
-            return Quadrica.con(maxim,diagonal)
+            return Quadrica.con(maxim,diagonal,canonica)
         if r == 4:
-            return Quadrica.cilindreelliptic(maxim,diagonal)
+            return Quadrica.cilindreelliptic(maxim,diagonal,canonica)
         if r == 5:
-            return Quadrica.cilindrehiperbolic(maxim,diagonal)
+            return Quadrica.cilindrehiperbolic(maxim,diagonal,canonica)
         if r == 6:
-            return Quadrica.paraboloideelliptic(maxim,diagonal)
+            return Quadrica.paraboloideelliptic(maxim,diagonal,canonica)
         if r == 7:
-            return Quadrica.paraboloidehiperbolic(maxim,diagonal)
-        return Quadrica.cilindreparabolic(maxim,diagonal)
+            return Quadrica.paraboloidehiperbolic(maxim,diagonal,canonica)
+        return Quadrica.cilindreparabolic(maxim,diagonal,canonica)
     #
     #
     #
@@ -6184,20 +6264,25 @@ class Ellipsoide(Quadrica):
     #
     #
     @classmethod
-    def aleatoria(cls):
+    def aleatoria(cls,canonica=False):
         """
         Retorna un el·lipsoide de manera aleatòria aleatòria
         """
+        if canonica:
+            v = [Vector(1,0,0),Vector(0,1,0),Vector(0,0,1)]
+            random.shuffle(v)
+            eix1, eix2, _ = v
+        else:
+            trobat = False
+            while not trobat:
+                eix1 = Vector.aleatori(l=3,maxim=3)
+                eix2 = Vector.aleatori(l=3,maxim=3)
+                if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                    continue
+                trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
         trobat = False
         while not trobat:
-            eix1 = Vector.aleatori(l=3,maxim=3)
-            eix2 = Vector.aleatori(l=3,maxim=3)
-            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
-                continue
-            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
-        trobat = False
-        while not trobat:
-            centre = Punt.aleatori(l=3,maxim=4)
+            centre = Punt.aleatori(l=3,maxim=4,nuls=False)
             trobat = centre.length() > 0
         c = [1,2,3,4,5,8,10,12,16,18,20,25,36]
         trobat = False
@@ -6328,20 +6413,25 @@ class HiperboloideUnaFulla(Quadrica):
     #
     #
     @classmethod
-    def aleatoria(cls):
+    def aleatoria(cls,canonica=False):
         """
         Retorna un hiperboloide d'una fulla de manera aleatòria
         """
+        if canonica:
+            v = [Vector(1,0,0),Vector(0,1,0),Vector(0,0,1)]
+            random.shuffle(v)
+            eix1, eix2, _ = v
+        else:
+            trobat = False
+            while not trobat:
+                eix1 = Vector.aleatori(l=3,maxim=3)
+                eix2 = Vector.aleatori(l=3,maxim=3)
+                if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                    continue
+                trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
         trobat = False
         while not trobat:
-            eix1 = Vector.aleatori(l=3,maxim=3)
-            eix2 = Vector.aleatori(l=3,maxim=3)
-            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
-                continue
-            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
-        trobat = False
-        while not trobat:
-            centre = Punt.aleatori(l=3,maxim=4)
+            centre = Punt.aleatori(l=3,maxim=4,nuls=False)
             trobat = centre.length() > 0
         c = [1,2,3,4,5,8,10,12,16,18,20,25,36]
         trobat = False
@@ -6472,20 +6562,25 @@ class HiperboloideDuesFulles(Quadrica):
     #
     #
     @classmethod
-    def aleatoria(cls):
+    def aleatoria(cls,canonica=False):
         """
         Retorna un hiperboloide de dues fulles de manera aleatòria aleatòria
         """
+        if canonica:
+            v = [Vector(1,0,0),Vector(0,1,0),Vector(0,0,1)]
+            random.shuffle(v)
+            eix1, eix2, _ = v
+        else:
+            trobat = False
+            while not trobat:
+                eix1 = Vector.aleatori(l=3,maxim=3)
+                eix2 = Vector.aleatori(l=3,maxim=3)
+                if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                    continue
+                trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
         trobat = False
         while not trobat:
-            eix1 = Vector.aleatori(l=3,maxim=3)
-            eix2 = Vector.aleatori(l=3,maxim=3)
-            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
-                continue
-            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
-        trobat = False
-        while not trobat:
-            centre = Punt.aleatori(l=3,maxim=4)
+            centre = Punt.aleatori(l=3,maxim=4,nuls=False)
             trobat = centre.length() > 0
         c = [1,2,3,4,5,8,10,12,16,18,20,25,36]
         trobat = False
@@ -6617,20 +6712,25 @@ class Con(Quadrica):
     #
     #
     @classmethod
-    def aleatoria(cls):
+    def aleatoria(cls,canonica=False):
         """
         Retorna un hiperboloide de dues fulles de manera aleatòria aleatòria
         """
+        if canonica:
+            v = [Vector(1,0,0),Vector(0,1,0),Vector(0,0,1)]
+            random.shuffle(v)
+            eix1, eix2, _ = v
+        else:
+            trobat = False
+            while not trobat:
+                eix1 = Vector.aleatori(l=3,maxim=3)
+                eix2 = Vector.aleatori(l=3,maxim=3)
+                if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                    continue
+                trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
         trobat = False
         while not trobat:
-            eix1 = Vector.aleatori(l=3,maxim=3)
-            eix2 = Vector.aleatori(l=3,maxim=3)
-            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
-                continue
-            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
-        trobat = False
-        while not trobat:
-            centre = Punt.aleatori(l=3,maxim=4)
+            centre = Punt.aleatori(l=3,maxim=4,nuls=False)
             trobat = centre.length() > 0
         c = [1,2,3,4,5,8,10,12,16,18,20,25,36]
         trobat = False
@@ -6758,20 +6858,25 @@ class CilindreElliptic(Quadrica):
     #
     #
     @classmethod
-    def aleatoria(cls):
+    def aleatoria(cls,canonica=False):
         """
         Retorna un cilindre el·líptic de manera aleatòria
         """
+        if canonica:
+            v = [Vector(1,0,0),Vector(0,1,0),Vector(0,0,1)]
+            random.shuffle(v)
+            eix1, eix2, _ = v
+        else:
+            trobat = False
+            while not trobat:
+                eix1 = Vector.aleatori(l=3,maxim=3)
+                eix2 = Vector.aleatori(l=3,maxim=3)
+                if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                    continue
+                trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
         trobat = False
         while not trobat:
-            eix1 = Vector.aleatori(l=3,maxim=3)
-            eix2 = Vector.aleatori(l=3,maxim=3)
-            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
-                continue
-            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
-        trobat = False
-        while not trobat:
-            centre = Punt.aleatori(l=3,maxim=4)
+            centre = Punt.aleatori(l=3,maxim=4,nuls=False)
             trobat = centre.length() > 0
         c = [1,2,3,4,5,8,10,12,16,18,20,25,36]
         trobat = False
@@ -6899,20 +7004,25 @@ class CilindreHiperbolic(Quadrica):
     #
     #
     @classmethod
-    def aleatoria(cls):
+    def aleatoria(cls,canonica=False):
         """
         Retorna un cilindre hiperbòlic de manera aleatòria
         """
+        if canonica:
+            v = [Vector(1,0,0),Vector(0,1,0),Vector(0,0,1)]
+            random.shuffle(v)
+            eix1, eix2, _ = v
+        else:
+            trobat = False
+            while not trobat:
+                eix1 = Vector.aleatori(l=3,maxim=3)
+                eix2 = Vector.aleatori(l=3,maxim=3)
+                if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                    continue
+                trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
         trobat = False
         while not trobat:
-            eix1 = Vector.aleatori(l=3,maxim=3)
-            eix2 = Vector.aleatori(l=3,maxim=3)
-            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
-                continue
-            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
-        trobat = False
-        while not trobat:
-            centre = Punt.aleatori(l=3,maxim=4)
+            centre = Punt.aleatori(l=3,maxim=4,nuls=False)
             trobat = centre.length() > 0
         c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60]
         trobat = False
@@ -7046,20 +7156,25 @@ class ParaboloideElliptic(Quadrica):
     #
     #
     @classmethod
-    def aleatoria(cls):
+    def aleatoria(cls,canonica=False):
         """
         Retorna un paraboloide el·líptic de manera aleatòria
         """
+        if canonica:
+            v = [Vector(1,0,0),Vector(0,1,0),Vector(0,0,1)]
+            random.shuffle(v)
+            eix1, eix2, _ = v
+        else:
+            trobat = False
+            while not trobat:
+                eix1 = Vector.aleatori(l=3,maxim=3)
+                eix2 = Vector.aleatori(l=3,maxim=3)
+                if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                    continue
+                trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
         trobat = False
         while not trobat:
-            eix1 = Vector.aleatori(l=3,maxim=3)
-            eix2 = Vector.aleatori(l=3,maxim=3)
-            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
-                continue
-            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
-        trobat = False
-        while not trobat:
-            vertex = Punt.aleatori(l=3,maxim=4)
+            vertex = Punt.aleatori(l=3,maxim=4,nuls=False)
             trobat = vertex.length() > 0
         c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60]
         trobat = False
@@ -7190,20 +7305,25 @@ class ParaboloideHiperbolic(Quadrica):
     #
     #
     @classmethod
-    def aleatoria(cls):
+    def aleatoria(cls,canonica=False):
         """
         Retorna un paraboloide hiperbòlic de manera aleatòria
         """
+        if canonica:
+            v = [Vector(1,0,0),Vector(0,1,0),Vector(0,0,1)]
+            random.shuffle(v)
+            eix1, eix2, _ = v
+        else:
+            trobat = False
+            while not trobat:
+                eix1 = Vector.aleatori(l=3,maxim=3)
+                eix2 = Vector.aleatori(l=3,maxim=3)
+                if eix1.nzeros() > 1 or eix2.nzeros() > 1:
+                    continue
+                trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
         trobat = False
         while not trobat:
-            eix1 = Vector.aleatori(l=3,maxim=3)
-            eix2 = Vector.aleatori(l=3,maxim=3)
-            if eix1.nzeros() > 1 or eix2.nzeros() > 1:
-                continue
-            trobat = Matriu.from_vectors_columna([eix1,eix2]).rank() == 2
-        trobat = False
-        while not trobat:
-            vertex = Punt.aleatori(l=3,maxim=4)
+            vertex = Punt.aleatori(l=3,maxim=4,nuls=False)
             trobat = vertex.length() > 0
         c = [1,2,3,4,5,8,10,12,16]
         trobat = False
@@ -7319,7 +7439,7 @@ class CilindreParabolic(Quadrica):
     #
     #
     @classmethod
-    def aleatoria(cls):
+    def aleatoria(cls,canonica=False):
         """
         Retorna un cilindre parabòlic de manera aleatòria
         """
@@ -7330,6 +7450,10 @@ class CilindreParabolic(Quadrica):
             trobat = eix.nzeros() < 2 and eix.length() < 12
         s = SubespaiVectorial([eix])
         base = s.amplia_base(unitaria=True)
+        if canonica:
+            v = [Vector(1,0,0),Vector(0,1,0),Vector(0,0,1)]
+            random.shuffle(v)
+            base = Base(v)
         q = base.quadrats_longituds()
         c = [k for k in range(1,3)] + [-k for k in range(1,3)]
         c += [Rational(1,k) for k in range(1,4)] + [-Rational(1,k) for k in range(1,4)]
