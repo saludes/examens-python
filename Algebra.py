@@ -2456,7 +2456,10 @@ class SistemaEquacions:
         t = []
         vecs = []
         for e in eqs:
-            d = e.as_coefficients_dict()
+            if isinstance(e,EquacioLineal):
+                d = e.equacio.as_coefficients_dict()
+            else:
+                d = e.as_coefficients_dict()
             c = []
             for k in unknowns:
                 c.append(d[k])
@@ -3335,6 +3338,15 @@ class PlaAfi(object):
     #
     #
     @classmethod
+    def aleatori(cls):
+        m = Matriu.amb_rang(f=2,c=3,r=2,maxim=4,mzeros=0)
+        v = m.vectors_fila()
+        p = Punt.aleatori(l=3,maxim=3,nuls=False)
+        return cls(p,v[0],v[1])
+    #
+    #
+    #
+    @classmethod
     def amb_associat(cls,w,p):
         """
         Genera el pla afí que té vector perpendicular "w" i passa pel punt p
@@ -3461,6 +3473,29 @@ class PlaAfi(object):
     #
     #
     #
+    def interseccio(self,other):
+        """
+        Retorna la intersecció del pla amb una altre pla o una recta.
+        El resultat pot ser None, una recta o un pla.
+        Paràmetes:
+          other. PlaAfi o RectaAfi
+        """
+        if isinstance(other,PlaAfi):
+            m = Matriu.from_vectors_columna([self.associat(),other.associat()])
+            if m.rang() == 1:
+                if other.conte(self.p):
+                    return self
+                return None
+            e1 = self.equacio_implicita()
+            e2 = other.equacio_implicita()
+            s = SistemaEquacions.from_equacions([e1,e2],3)
+            return RectaAfi.from_equacions_implicites(s)
+        if isinstance(other,RectaAfi):
+            return other.interseccio(self)
+        return None
+    #
+    #
+    #
     def distancia(self,other):
         """
         Retorna la distància entre el pla actual i un punt, una recta o un altre pla
@@ -3507,6 +3542,21 @@ class PlaAfi(object):
           punt: Punt
         """
         return 2*self.projeccio_ortogonal(punt) - punt
+    #
+    #
+    #
+    def conte(self,punt):
+        """
+        Retorna si el punt "punt" pertany al pla
+        Paràmetres:
+          punt: Punt
+        """
+        if not isinstance(punt,Punt):
+            return None
+        if punt.dimensio != self.p.dimensio:
+            return None
+        m = Matriu.from_vectors_columna([self.u1,self.u2,self.p - punt])
+        return m.rang() == 2
 
 
 class RectaAfi(object):
@@ -3567,6 +3617,14 @@ class RectaAfi(object):
     #
     #
     @classmethod
+    def aleatoria(cls):
+        v = Vector.aleatori(l=3,maxim=3,nuls=False)
+        p = Punt.aleatori(l=3,maxim=4,nuls=False)
+        return cls(p,v)
+    #
+    #
+    #
+    @classmethod
     def from_equacions_implicites(cls,s):
         """
         Retorna la recta afí que té equacions implícites s
@@ -3583,8 +3641,7 @@ class RectaAfi(object):
         p2 = Punt([v.subs(t1,1) for v in s.parametrica])
         u = p2-p1
         u.simplificar()
-        q = self.punt_de_coordenades_enteres(p1,u)
-        return cls(q,u)
+        return cls(p1,u)
     #
     #
     #
@@ -3729,6 +3786,40 @@ class RectaAfi(object):
         if punt.dimensio != self.u.dimensio:
             return None
         return (self.p + P.projeccio_ortogonal(punt - self.p)).punt()
+    #
+    #
+    #
+    def interseccio(self,other):
+        """
+        Retorna la intersecció de la recta amb una altra recta o un pla.
+        El resultat pot ser None, un punt o una recta.
+        Paràmetes:
+          other. PlaAfi o RectaAfi
+        """
+        if isinstance(other,RectaAfi):
+            m = Matriu.from_vectors_columna([self.u,other.u])
+            if m.rang() == 1:
+                if self.conte(other.p):
+                    return self
+                return None
+            m = Matriu.from_vectors_columna([self.u,other.u,self.p - other.p])
+            if m.det() != 0:
+                return None
+            m = Matriu.from_vectors_columna([self.u,- other.u])
+            b = other.p - self.p
+            s = SistemaEquacions(m,b)
+            s.resol()
+            return (self.p + s.solucio[0] * self.u).punt()
+        if isinstance(other,PlaAfi):
+            m = Matriu.from_vectors_columna([other.u1,other.u2,-self.u])
+            if m.det() != 0:
+                b = self.p - other.p
+                s = SistemaEquacions(m,b)
+                s.resol()
+                return (self.p + s.solucio[2] * self.u).punt()
+            if other.conte(self.p):
+                return self
+        return None
     #
     #
     #
