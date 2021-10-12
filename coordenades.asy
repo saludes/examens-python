@@ -294,7 +294,7 @@ void Elipse(pair o,
   transform tr = (o.x,o.y,u.x/l,-u.y/l,u.y/l,u.x/l);
   path cl = (-x,-y)--(x,-y)--(x,y)--(-x,y)--cycle;
   clip(rp,cl);
-  add(tr * rp);
+  add(scale(scaled) * tr * rp);
 }
 
 void HiperbolaSimple(pair o,
@@ -379,7 +379,7 @@ void Hiperbola(pair o,
 		l = y;
   path cl = circle((0,0),l);
   clip(rp,cl);
-  add(tr * rp);
+  add(scale(scaled) * tr * rp);
 }
 
 void ParabolaSimple(pair v,
@@ -413,7 +413,7 @@ void ParabolaSimple(pair v,
   }
   path cl = (-x,-y)--(x,-y)--(x,y)--(-x,y)--cycle;
   clip(rp,cl);
-  add(t * rp);
+  add(scale(scaled) * t * rp);
 }
 
 void Parabola(pair v,
@@ -447,5 +447,5 @@ void Parabola(pair v,
   transform tr = (v.x,v.y,u.x/l,-u.y/l,u.y/l,u.x/l);
   path cl = (-x,-y)--(x,-y)--(x,y)--(-x,y)--cycle;
   clip(rp,cl);
-  add(tr * rp);
+  add(scale(scaled) * tr * rp);
 }

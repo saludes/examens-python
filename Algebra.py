@@ -5326,10 +5326,12 @@ class Ellipse(Conica):
     #
     #
     #
-    def to_asy(self,x=13,y=10):
+    def to_asy(self,scaled=1.0,canonica=10,x=8,y=8):
         """
         Retorna una expressió per fer servir amb el programa Asymtote
         Paràmetres:
+            scaled: factor d'escalat
+            canonica = valors de partida dels eixos de la referència canònica
             x, y: nombres enters. El gràfic es representarà en una quadricula
             de límits (-x,x) i (-y,y)
         """
@@ -5337,7 +5339,12 @@ class Ellipse(Conica):
         b2 = self.semieix_menor()**2
         centre = self.centre()
         vector = self.vectors()[0]
-        return f"Ellipse({centre},{vector},{a2},{b2},x={x},y={y})"
+        mx, Mx  = -canonica + centre[0],canonica + centre[0]
+        my, My  = -canonica + centre[1],canonica + centre[1]
+        str = f"Canonica({mx},{Mx},{my},{My},scaled={scaled});"
+        clip = f"path cl = ({mx},{my})--({Mx},{my})--({Mx},{My})--({mx},{My})--cycle;\n"
+        clip += f"cl = scale({scaled}) * cl;\nclip(cl);"
+        return f"{str}\nEllipse({centre},{vector},{a2},{b2},x={x},y={y},scaled={scaled});\n{clip}"
 
 
 class Hiperbola(Conica):
@@ -5529,10 +5536,12 @@ class Hiperbola(Conica):
     #
     #
     #
-    def to_asy(self,x=10,y=10):
+    def to_asy(self,scaled=1.0,canonica=10,x=8,y=8):
         """
         Retorna una expressió per fer servir amb el programa Asymtote
         Paràmetres:
+            scaled: factor d'escalat
+            canonica = valors de partida dels eixos de la referència canònica
             x, y: nombres enters. El gràfic es representarà en una quadricula
             de límits (-x,x) i (-y,y)
         """
@@ -5540,7 +5549,12 @@ class Hiperbola(Conica):
         b2 = self.semieix_imaginari()**2
         centre = self.centre()
         vector = self.vectors()[0]
-        return f"Hiperbola({centre},{vector},{a2},{b2},x={x},y={y})"
+        mx, Mx  = -canonica + centre[0],canonica + centre[0]
+        my, My  = -canonica + centre[1],canonica + centre[1]
+        str = f"Canonica({mx},{Mx},{my},{My},scaled={scaled});"
+        clip = f"path cl = ({mx},{my})--({Mx},{my})--({Mx},{My})--({mx},{My})--cycle;\n"
+        clip += f"cl = scale({scaled}) * cl;\nclip(cl);"
+        return f"{str}\nHiperbola({centre},{vector},{a2},{b2},x={x},y={y},scaled={scaled});\n{clip}"
 
 
 class Parabola(Conica):
@@ -5652,14 +5666,21 @@ class Parabola(Conica):
     #
     #
     #
-    def to_asy(self,x=10,y=10):
+    def to_asy(self,scaled=1.0,canonica=10,x=8,y=8):
         """
         Retorna una expressió per fer servir amb el programa Asymtote
         Paràmetres:
+            scaled: factor d'escalat
+            canonica = valors de partida dels eixos de la referència canònica
             x, y: nombres enters. El gràfic es representarà en una quadricula
             de límits (-x,x) i (-y,y)
         """
-        return f"Parabola({self.vertex()},{self.focus()},x={x},y={y})"
+        mx, Mx  = -canonica + self.vertex()[0],canonica + self.vertex()[0]
+        my, My  = -canonica + self.vertex()[1],canonica + self.vertex()[1]
+        str = f"Canonica({mx},{Mx},{my},{My},scaled={scaled});"
+        clip = f"path cl = ({mx},{my})--({Mx},{my})--({Mx},{My})--({mx},{My})--cycle;\n"
+        clip += f"cl = scale({scaled}) * cl;\nclip(cl);"
+        return f"{str}\nParabola({self.vertex()},{self.focus()},x={x},y={y},scaled={scaled});\n{clip}"
 
 
 class Quadrica(object):
