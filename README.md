@@ -34,21 +34,24 @@ NOM:COGNOMS:CORREU ELECTRÒNIC
 Les opcions que tenim són
 ```
 Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<enter> [--no-solucions] [--tex-engine=pdflatex]
-   --examen=<fitxer>                 : Fitxer LaTeX amb el model d'examen
-   --estudiants=<fitxer>             : Fitxer amb nom:cognoms dels estudiants
-   --problemes=<nombre o llista>     : Nombre de problemes o llista de problemes
-   --possibles-problemes=<nombre>    : Nombre de possibles problemes
-                                     : Si problemes és menor que possibles-problemes, s'escullen a l'atzar per a
-                                     : cada estudiants
-   --dades=<fitxer>                  : Fitxer amb les dades generades anteriorment                                  
-   --tex-engine=<programa>           : Nom del programa de LaTeX utilitzat
-                                     : Si no s'especifica, no es generen els PDF
-   --aleatori                        : L'ordre dels problemes serà aleatori
-   --no-solucions                    : No es generen els fitxers amb les solucions
-   --ajuda                           : Imprimeix questa ajuda
+    --examen=<fitxer>              : Fitxer LaTeX amb el model d'examen
+    --estudiants=<fitxer>          : Fitxer amb nom:cognoms dels estudiants
+    --problemes=<nombre|llista>    : Nombre de problemes o llista de problemes
+    --possibles-problemes=<nombre> : Nombre de possibles problemes
+                                   : S'escullen aleatòriament d'entre aquest nombre de problemes
+    --dades=<fitxer>               : Fitxer amb les dades generades anteriorment
+    --tex-engine=<programa>        : Nom del programa de LaTeX utilitzat
+                                   : Si no s'especifica, no es generen els PDF
+    --aleatori                     : L'ordre dels problemes serà aleatori
+    --nombre-examens=<nombre>      : Identifica els fitxers numèricament i no per nom i cognoms
+                                   : Quantitat d'exàmens a fer
+    --no-solucions                 : No es generen els fitxers amb les solucions")
+    --json                         : Es guarden la dades dels enunciats en un fitxer json")
+    --ajuda                        : Imprimeix aquesta ajuda")
+
 ```
 
-Cada vegada que es fa una col·lecció d'exàmens aleatoris, es guarden les dades aleatòries en un fitxer JSON, que en el cas anterior seria _examen001.json_. Si volem tornar a generar els exàmens amb les mateixes dades, haurem d'executar
+Cada vegada que es fa una col·lecció d'exàmens aleatoris i s'especifica l'opció --json, es guarden les dades aleatòries en un fitxer JSON, que en el cas anterior seria _examen001.json_. Si volem tornar a generar els exàmens amb les mateixes dades, haurem d'executar
 ```
 ~$ examen.py --examen=examen.tex --estudiants=estudiants.csv --dades=examen001.json
 ```
