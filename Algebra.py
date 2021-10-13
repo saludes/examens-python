@@ -530,6 +530,19 @@ class Vector(object):
     #
     #
     #
+    def es_proporcional(self,other):
+        """
+        Retorna si és proporcional al vector "other"
+        Paràmetres:
+          other: un altre vector
+        """
+        if not isinstance(other,Vector):
+            return None
+        m = Matriu.from_vectors_columna([self,other])
+        return m.rang() == 1
+    #
+    #
+    #
     def __repr__(self):
         """
         Retorna l'expressió en latex del vector
@@ -2240,14 +2253,22 @@ class EquacioLineal:
     #
     #
     #
-    def set_coeficient_positiu(self,k):
+    def set_coeficient_positiu(self,incogs):
         """
-        Si el coeficient de "k" és negatiu, canvia de signe tota l'equació, de
+        Busca el primer coeficient no nul d'entre les incògnites "incogs", si el primer
+        que troba és negatiu, canvia l'equació de signe
+
+        canvia de signe tota l'equació, de
         manera que el coeficients de "k" passa a ser positiu
         """
         d = self.equacio.as_coefficients_dict()
-        if d[k] < 0:
-            self.equacio *= -1
+        for k in incogs:
+            if d[k] == 0:
+                continue
+            if d[k] < 0:
+                self.equacio *= -1
+                return
+            return
     #
     #
     #
@@ -2961,6 +2982,28 @@ class PlaVectorial(object):
         w = self.u1.cross(self.u2)
         m = Matriu.from_vectors_columna([w,u])
         return m.rang() == 1
+    #
+    #
+    #
+    def ortogonal(self):
+        """
+        Retorna el suplementari ortogonal
+        """
+        a = Matriu.from_vectors_fila([self.u1,self.u2])
+        return RectaVectorial(a.nucli()[0])
+    #
+    #
+    #
+    def associat(self,base=None):
+        w = self.u1.cross(self.u2)
+        w.simplificar()
+        if base is None:
+            return w
+        if not isinstance(base,Base):
+            return None
+        w = base.components_del_vector(w)
+        w.simplificar()
+        return w
 
 
 class RectaVectorial(object):
@@ -2991,7 +3034,7 @@ class RectaVectorial(object):
     #
     #
     #
-    def equacions_implicites(self,base=None,prime=0,aleatori=False):
+    def equacions_implicites(self,base=None,prime=0,aleatori=True):
         """
         Retorna l'equació implícita (dimensió 2) o el sistema d'equacions implícites
         (dimensió 3) en la base "base".
@@ -3055,7 +3098,7 @@ class RectaVectorial(object):
         if u.dimensio != self.u.dimensio:
             return None
         v = self.u
-        t = u.dot(v)/v.dot(vv)
+        t = u.dot(v)/v.dot(v)
         return t * v
     #
     #
@@ -3071,6 +3114,18 @@ class RectaVectorial(object):
         if u.dimensio != self.u.dimensio:
             return None
         return 2*self.projeccio_ortogonal(u) - u
+    #
+    #
+    #
+    def ortogonal(self):
+        """
+        Retorna el suplementari ortogonal
+        """
+        a = Matriu.from_vectors_fila([self.u])
+        n = a.nucli()
+        if len(n) == 1:
+            return RectaVectorial(n[0])
+        return PlaVectorial(n)
 
 
 class ReferenciaAfi(object):
@@ -3702,7 +3757,7 @@ class RectaAfi(object):
     #
     #
     #
-    def equacions_implicites(self,ref=None,prime=0,aleatori=False):
+    def equacions_implicites(self,ref=None,prime=0,aleatori=True):
         """
         Retorna l'equació implícita (dimensió 2) o el sistema d'equacions implícites
         (dimensió 3) de la recta afí en la referència "ref".
@@ -3797,14 +3852,17 @@ class RectaAfi(object):
           other. PlaAfi o RectaAfi
         """
         if isinstance(other,RectaAfi):
+            if self.u.dimensio != other.u.dimensio:
+                return None
             m = Matriu.from_vectors_columna([self.u,other.u])
             if m.rang() == 1:
                 if self.conte(other.p):
                     return self
                 return None
-            m = Matriu.from_vectors_columna([self.u,other.u,self.p - other.p])
-            if m.det() != 0:
-                return None
+            if self.u.dimensio == 3:
+                m = Matriu.from_vectors_columna([self.u,other.u,self.p - other.p])
+                if m.det() != 0:
+                    return None
             m = Matriu.from_vectors_columna([self.u,- other.u])
             b = other.p - self.p
             s = SistemaEquacions(m,b)
@@ -5435,7 +5493,7 @@ class Ellipse(Conica):
         str = f"Canonica({mx},{Mx},{my},{My},scaled={scaled});"
         clip = f"path cl = ({mx},{my})--({Mx},{my})--({Mx},{My})--({mx},{My})--cycle;\n"
         clip += f"cl = scale({scaled}) * cl;\nclip(cl);"
-        return f"{str}\nEllipse({centre},{vector},{a2},{b2},x={x},y={y},scaled={scaled});\n{clip}"
+        return f"{str}\nElipse({centre},{vector},{a2},{b2},x={x},y={y},scaled={scaled});\n{clip}"
 
 
 class Hiperbola(Conica):

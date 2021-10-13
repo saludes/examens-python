@@ -213,14 +213,16 @@ class Examen:
                 f.write(examen)
                 f.close()
         if engine is not None:
-            comanda = [f"{engine}","-interaction=nonstopmode", f"{filename}.tex"]
+            comanda = engine.split(' ')
+            comanda.extend(["-interaction=nonstopmode", f"{filename}.tex"])
             print (f"S'està executant {engine} {filename}.tex")
             p = subprocess.run(comanda,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,shell=False)
             if p.returncode != 0:
                 print (f"Hi ha un error en el fitxer {filename}.tex")
                 sys.exit(0)
             if self.options.solucions:
-                comanda = [f"{engine}","-interaction=nonstopmode", f"{filename}-solucio.tex"]
+                comanda = engine.split(' ')
+                comanda.extend(["-interaction=nonstopmode", f"{filename}-solucio.tex"])
                 print (f"S'està executant {engine} {filename}-solucio.tex")
                 p = subprocess.run(comanda,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,shell=False)
                 if p.returncode != 0:

@@ -583,6 +583,19 @@ class Vector(object):
     #
     #
     #
+    def es_proporcional(self,other):
+        &#34;&#34;&#34;
+        Retorna si és proporcional al vector &#34;other&#34;
+        Paràmetres:
+          other: un altre vector
+        &#34;&#34;&#34;
+        if not isinstance(other,Vector):
+            return None
+        m = Matriu.from_vectors_columna([self,other])
+        return m.rang() == 1
+    #
+    #
+    #
     def __repr__(self):
         &#34;&#34;&#34;
         Retorna l&#39;expressió en latex del vector
@@ -2293,14 +2306,22 @@ class EquacioLineal:
     #
     #
     #
-    def set_coeficient_positiu(self,k):
+    def set_coeficient_positiu(self,incogs):
         &#34;&#34;&#34;
-        Si el coeficient de &#34;k&#34; és negatiu, canvia de signe tota l&#39;equació, de
+        Busca el primer coeficient no nul d&#39;entre les incògnites &#34;incogs&#34;, si el primer
+        que troba és negatiu, canvia l&#39;equació de signe
+
+        canvia de signe tota l&#39;equació, de
         manera que el coeficients de &#34;k&#34; passa a ser positiu
         &#34;&#34;&#34;
         d = self.equacio.as_coefficients_dict()
-        if d[k] &lt; 0:
-            self.equacio *= -1
+        for k in incogs:
+            if d[k] == 0:
+                continue
+            if d[k] &lt; 0:
+                self.equacio *= -1
+                return
+            return
     #
     #
     #
@@ -3014,6 +3035,28 @@ class PlaVectorial(object):
         w = self.u1.cross(self.u2)
         m = Matriu.from_vectors_columna([w,u])
         return m.rang() == 1
+    #
+    #
+    #
+    def ortogonal(self):
+        &#34;&#34;&#34;
+        Retorna el suplementari ortogonal
+        &#34;&#34;&#34;
+        a = Matriu.from_vectors_fila([self.u1,self.u2])
+        return RectaVectorial(a.nucli()[0])
+    #
+    #
+    #
+    def associat(self,base=None):
+        w = self.u1.cross(self.u2)
+        w.simplificar()
+        if base is None:
+            return w
+        if not isinstance(base,Base):
+            return None
+        w = base.components_del_vector(w)
+        w.simplificar()
+        return w
 
 
 class RectaVectorial(object):
@@ -3044,7 +3087,7 @@ class RectaVectorial(object):
     #
     #
     #
-    def equacions_implicites(self,base=None,prime=0,aleatori=False):
+    def equacions_implicites(self,base=None,prime=0,aleatori=True):
         &#34;&#34;&#34;
         Retorna l&#39;equació implícita (dimensió 2) o el sistema d&#39;equacions implícites
         (dimensió 3) en la base &#34;base&#34;.
@@ -3108,7 +3151,7 @@ class RectaVectorial(object):
         if u.dimensio != self.u.dimensio:
             return None
         v = self.u
-        t = u.dot(v)/v.dot(vv)
+        t = u.dot(v)/v.dot(v)
         return t * v
     #
     #
@@ -3124,6 +3167,18 @@ class RectaVectorial(object):
         if u.dimensio != self.u.dimensio:
             return None
         return 2*self.projeccio_ortogonal(u) - u
+    #
+    #
+    #
+    def ortogonal(self):
+        &#34;&#34;&#34;
+        Retorna el suplementari ortogonal
+        &#34;&#34;&#34;
+        a = Matriu.from_vectors_fila([self.u])
+        n = a.nucli()
+        if len(n) == 1:
+            return RectaVectorial(n[0])
+        return PlaVectorial(n)
 
 
 class ReferenciaAfi(object):
@@ -3755,7 +3810,7 @@ class RectaAfi(object):
     #
     #
     #
-    def equacions_implicites(self,ref=None,prime=0,aleatori=False):
+    def equacions_implicites(self,ref=None,prime=0,aleatori=True):
         &#34;&#34;&#34;
         Retorna l&#39;equació implícita (dimensió 2) o el sistema d&#39;equacions implícites
         (dimensió 3) de la recta afí en la referència &#34;ref&#34;.
@@ -3850,14 +3905,17 @@ class RectaAfi(object):
           other. PlaAfi o RectaAfi
         &#34;&#34;&#34;
         if isinstance(other,RectaAfi):
+            if self.u.dimensio != other.u.dimensio:
+                return None
             m = Matriu.from_vectors_columna([self.u,other.u])
             if m.rang() == 1:
                 if self.conte(other.p):
                     return self
                 return None
-            m = Matriu.from_vectors_columna([self.u,other.u,self.p - other.p])
-            if m.det() != 0:
-                return None
+            if self.u.dimensio == 3:
+                m = Matriu.from_vectors_columna([self.u,other.u,self.p - other.p])
+                if m.det() != 0:
+                    return None
             m = Matriu.from_vectors_columna([self.u,- other.u])
             b = other.p - self.p
             s = SistemaEquacions(m,b)
@@ -5488,7 +5546,7 @@ class Ellipse(Conica):
         str = f&#34;Canonica({mx},{Mx},{my},{My},scaled={scaled});&#34;
         clip = f&#34;path cl = ({mx},{my})--({Mx},{my})--({Mx},{My})--({mx},{My})--cycle;\n&#34;
         clip += f&#34;cl = scale({scaled}) * cl;\nclip(cl);&#34;
-        return f&#34;{str}\nEllipse({centre},{vector},{a2},{b2},x={x},y={y},scaled={scaled});\n{clip}&#34;
+        return f&#34;{str}\nElipse({centre},{vector},{a2},{b2},x={x},y={y},scaled={scaled});\n{clip}&#34;
 
 
 class Hiperbola(Conica):
@@ -10813,7 +10871,7 @@ def parabola(cls,maxim=30,canonica=False):
         str = f&#34;Canonica({mx},{Mx},{my},{My},scaled={scaled});&#34;
         clip = f&#34;path cl = ({mx},{my})--({Mx},{my})--({Mx},{My})--({mx},{My})--cycle;\n&#34;
         clip += f&#34;cl = scale({scaled}) * cl;\nclip(cl);&#34;
-        return f&#34;{str}\nEllipse({centre},{vector},{a2},{b2},x={x},y={y},scaled={scaled});\n{clip}&#34;</code></pre>
+        return f&#34;{str}\nElipse({centre},{vector},{a2},{b2},x={x},y={y},scaled={scaled});\n{clip}&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -11016,7 +11074,7 @@ de límits (-x,x) i (-y,y)</p></div>
     str = f&#34;Canonica({mx},{Mx},{my},{My},scaled={scaled});&#34;
     clip = f&#34;path cl = ({mx},{my})--({Mx},{my})--({Mx},{My})--({mx},{My})--cycle;\n&#34;
     clip += f&#34;cl = scale({scaled}) * cl;\nclip(cl);&#34;
-    return f&#34;{str}\nEllipse({centre},{vector},{a2},{b2},x={x},y={y},scaled={scaled});\n{clip}&#34;</code></pre>
+    return f&#34;{str}\nElipse({centre},{vector},{a2},{b2},x={x},y={y},scaled={scaled});\n{clip}&#34;</code></pre>
 </details>
 </dd>
 <dt id="Algebra.Ellipse.vertexs"><code class="name flex">
@@ -11466,14 +11524,22 @@ e = EquacioLineal(eq)</p></div>
     #
     #
     #
-    def set_coeficient_positiu(self,k):
+    def set_coeficient_positiu(self,incogs):
         &#34;&#34;&#34;
-        Si el coeficient de &#34;k&#34; és negatiu, canvia de signe tota l&#39;equació, de
+        Busca el primer coeficient no nul d&#39;entre les incògnites &#34;incogs&#34;, si el primer
+        que troba és negatiu, canvia l&#39;equació de signe
+
+        canvia de signe tota l&#39;equació, de
         manera que el coeficients de &#34;k&#34; passa a ser positiu
         &#34;&#34;&#34;
         d = self.equacio.as_coefficients_dict()
-        if d[k] &lt; 0:
-            self.equacio *= -1
+        for k in incogs:
+            if d[k] == 0:
+                continue
+            if d[k] &lt; 0:
+                self.equacio *= -1
+                return
+            return
     #
     #
     #
@@ -11644,23 +11710,33 @@ def coeficients(cls,a,b,amp=False,prime=0):
 <h3>Methods</h3>
 <dl>
 <dt id="Algebra.EquacioLineal.set_coeficient_positiu"><code class="name flex">
-<span>def <span class="ident">set_coeficient_positiu</span></span>(<span>self, k)</span>
+<span>def <span class="ident">set_coeficient_positiu</span></span>(<span>self, incogs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Si el coeficient de "k" és negatiu, canvia de signe tota l'equació, de
+<div class="desc"><p>Busca el primer coeficient no nul d'entre les incògnites "incogs", si el primer
+que troba és negatiu, canvia l'equació de signe</p>
+<p>canvia de signe tota l'equació, de
 manera que el coeficients de "k" passa a ser positiu</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_coeficient_positiu(self,k):
+<pre><code class="python">def set_coeficient_positiu(self,incogs):
     &#34;&#34;&#34;
-    Si el coeficient de &#34;k&#34; és negatiu, canvia de signe tota l&#39;equació, de
+    Busca el primer coeficient no nul d&#39;entre les incògnites &#34;incogs&#34;, si el primer
+    que troba és negatiu, canvia l&#39;equació de signe
+
+    canvia de signe tota l&#39;equació, de
     manera que el coeficients de &#34;k&#34; passa a ser positiu
     &#34;&#34;&#34;
     d = self.equacio.as_coefficients_dict()
-    if d[k] &lt; 0:
-        self.equacio *= -1</code></pre>
+    for k in incogs:
+        if d[k] == 0:
+            continue
+        if d[k] &lt; 0:
+            self.equacio *= -1
+            return
+        return</code></pre>
 </details>
 </dd>
 <dt id="Algebra.EquacioLineal.to_sistema_equacions"><code class="name flex">
@@ -17374,7 +17450,29 @@ que passa pel punt p i té vectors directors u i v</p></div>
             return False
         w = self.u1.cross(self.u2)
         m = Matriu.from_vectors_columna([w,u])
-        return m.rang() == 1</code></pre>
+        return m.rang() == 1
+    #
+    #
+    #
+    def ortogonal(self):
+        &#34;&#34;&#34;
+        Retorna el suplementari ortogonal
+        &#34;&#34;&#34;
+        a = Matriu.from_vectors_fila([self.u1,self.u2])
+        return RectaVectorial(a.nucli()[0])
+    #
+    #
+    #
+    def associat(self,base=None):
+        w = self.u1.cross(self.u2)
+        w.simplificar()
+        if base is None:
+            return w
+        if not isinstance(base,Base):
+            return None
+        w = base.components_del_vector(w)
+        w.simplificar()
+        return w</code></pre>
 </details>
 <h3>Static methods</h3>
 <dl>
@@ -17436,6 +17534,27 @@ def from_matriu(cls,m):
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="Algebra.PlaVectorial.associat"><code class="name flex">
+<span>def <span class="ident">associat</span></span>(<span>self, base=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def associat(self,base=None):
+    w = self.u1.cross(self.u2)
+    w.simplificar()
+    if base is None:
+        return w
+    if not isinstance(base,Base):
+        return None
+    w = base.components_del_vector(w)
+    w.simplificar()
+    return w</code></pre>
+</details>
+</dd>
 <dt id="Algebra.PlaVectorial.base_ortogonal"><code class="name flex">
 <span>def <span class="ident">base_ortogonal</span></span>(<span>self)</span>
 </code></dt>
@@ -17541,6 +17660,23 @@ prime: nombre de primes que s'escriuran a les incògnites</p></div>
     w = self.u1.cross(self.u2)
     m = Matriu.from_vectors_columna([w,u])
     return m.rang() == 1</code></pre>
+</details>
+</dd>
+<dt id="Algebra.PlaVectorial.ortogonal"><code class="name flex">
+<span>def <span class="ident">ortogonal</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retorna el suplementari ortogonal</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ortogonal(self):
+    &#34;&#34;&#34;
+    Retorna el suplementari ortogonal
+    &#34;&#34;&#34;
+    a = Matriu.from_vectors_fila([self.u1,self.u2])
+    return RectaVectorial(a.nucli()[0])</code></pre>
 </details>
 </dd>
 <dt id="Algebra.PlaVectorial.projeccio_ortogonal"><code class="name flex">
@@ -17698,6 +17834,7 @@ v = Vector(3,1,-2)</p></div>
 <li><code><a title="Algebra.Vector.components_en_base" href="#Algebra.Vector.components_en_base">components_en_base</a></code></li>
 <li><code><a title="Algebra.Vector.cross" href="#Algebra.Vector.cross">cross</a></code></li>
 <li><code><a title="Algebra.Vector.dot" href="#Algebra.Vector.dot">dot</a></code></li>
+<li><code><a title="Algebra.Vector.es_proporcional" href="#Algebra.Vector.es_proporcional">es_proporcional</a></code></li>
 <li><code><a title="Algebra.Vector.factor_comu" href="#Algebra.Vector.factor_comu">factor_comu</a></code></li>
 <li><code><a title="Algebra.Vector.latex" href="#Algebra.Vector.latex">latex</a></code></li>
 <li><code><a title="Algebra.Vector.length" href="#Algebra.Vector.length">length</a></code></li>
@@ -19329,7 +19466,7 @@ p: punt de pas</p></div>
     #
     #
     #
-    def equacions_implicites(self,ref=None,prime=0,aleatori=False):
+    def equacions_implicites(self,ref=None,prime=0,aleatori=True):
         &#34;&#34;&#34;
         Retorna l&#39;equació implícita (dimensió 2) o el sistema d&#39;equacions implícites
         (dimensió 3) de la recta afí en la referència &#34;ref&#34;.
@@ -19424,14 +19561,17 @@ p: punt de pas</p></div>
           other. PlaAfi o RectaAfi
         &#34;&#34;&#34;
         if isinstance(other,RectaAfi):
+            if self.u.dimensio != other.u.dimensio:
+                return None
             m = Matriu.from_vectors_columna([self.u,other.u])
             if m.rang() == 1:
                 if self.conte(other.p):
                     return self
                 return None
-            m = Matriu.from_vectors_columna([self.u,other.u,self.p - other.p])
-            if m.det() != 0:
-                return None
+            if self.u.dimensio == 3:
+                m = Matriu.from_vectors_columna([self.u,other.u,self.p - other.p])
+                if m.det() != 0:
+                    return None
             m = Matriu.from_vectors_columna([self.u,- other.u])
             b = other.p - self.p
             s = SistemaEquacions(m,b)
@@ -19634,7 +19774,7 @@ prime: nombre de primes que s'escriuran a les incògnites</p></div>
 </details>
 </dd>
 <dt id="Algebra.RectaAfi.equacions_implicites"><code class="name flex">
-<span>def <span class="ident">equacions_implicites</span></span>(<span>self, ref=None, prime=0, aleatori=False)</span>
+<span>def <span class="ident">equacions_implicites</span></span>(<span>self, ref=None, prime=0, aleatori=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Retorna l'equació implícita (dimensió 2) o el sistema d'equacions implícites
@@ -19648,7 +19788,7 @@ amb tots els coeficients de les incògnites no nuls</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def equacions_implicites(self,ref=None,prime=0,aleatori=False):
+<pre><code class="python">def equacions_implicites(self,ref=None,prime=0,aleatori=True):
     &#34;&#34;&#34;
     Retorna l&#39;equació implícita (dimensió 2) o el sistema d&#39;equacions implícites
     (dimensió 3) de la recta afí en la referència &#34;ref&#34;.
@@ -19702,14 +19842,17 @@ El resultat pot ser None, un punt o una recta.</p>
       other. PlaAfi o RectaAfi
     &#34;&#34;&#34;
     if isinstance(other,RectaAfi):
+        if self.u.dimensio != other.u.dimensio:
+            return None
         m = Matriu.from_vectors_columna([self.u,other.u])
         if m.rang() == 1:
             if self.conte(other.p):
                 return self
             return None
-        m = Matriu.from_vectors_columna([self.u,other.u,self.p - other.p])
-        if m.det() != 0:
-            return None
+        if self.u.dimensio == 3:
+            m = Matriu.from_vectors_columna([self.u,other.u,self.p - other.p])
+            if m.det() != 0:
+                return None
         m = Matriu.from_vectors_columna([self.u,- other.u])
         b = other.p - self.p
         s = SistemaEquacions(m,b)
@@ -20105,7 +20248,7 @@ def aleatoria(cls,l=4,max=4):
     #
     #
     #
-    def equacions_implicites(self,base=None,prime=0,aleatori=False):
+    def equacions_implicites(self,base=None,prime=0,aleatori=True):
         &#34;&#34;&#34;
         Retorna l&#39;equació implícita (dimensió 2) o el sistema d&#39;equacions implícites
         (dimensió 3) en la base &#34;base&#34;.
@@ -20169,7 +20312,7 @@ def aleatoria(cls,l=4,max=4):
         if u.dimensio != self.u.dimensio:
             return None
         v = self.u
-        t = u.dot(v)/v.dot(vv)
+        t = u.dot(v)/v.dot(v)
         return t * v
     #
     #
@@ -20184,7 +20327,19 @@ def aleatoria(cls,l=4,max=4):
             return None
         if u.dimensio != self.u.dimensio:
             return None
-        return 2*self.projeccio_ortogonal(u) - u</code></pre>
+        return 2*self.projeccio_ortogonal(u) - u
+    #
+    #
+    #
+    def ortogonal(self):
+        &#34;&#34;&#34;
+        Retorna el suplementari ortogonal
+        &#34;&#34;&#34;
+        a = Matriu.from_vectors_fila([self.u])
+        n = a.nucli()
+        if len(n) == 1:
+            return RectaVectorial(n[0])
+        return PlaVectorial(n)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -20229,7 +20384,7 @@ prime: nombre de primes amb el que s'escriuran les incògnites</p></div>
 </details>
 </dd>
 <dt id="Algebra.RectaVectorial.equacions_implicites"><code class="name flex">
-<span>def <span class="ident">equacions_implicites</span></span>(<span>self, base=None, prime=0, aleatori=False)</span>
+<span>def <span class="ident">equacions_implicites</span></span>(<span>self, base=None, prime=0, aleatori=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Retorna l'equació implícita (dimensió 2) o el sistema d'equacions implícites
@@ -20242,7 +20397,7 @@ aleatori: només s'aplica a dimensió 3 i genera unes equacions implícites no t
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def equacions_implicites(self,base=None,prime=0,aleatori=False):
+<pre><code class="python">def equacions_implicites(self,base=None,prime=0,aleatori=True):
     &#34;&#34;&#34;
     Retorna l&#39;equació implícita (dimensió 2) o el sistema d&#39;equacions implícites
     (dimensió 3) en la base &#34;base&#34;.
@@ -20264,6 +20419,26 @@ aleatori: només s'aplica a dimensió 3 i genera unes equacions implícites no t
         m = Matriu.amb_rang(f=2,c=2,r=2,maxim=3,mzeros=0)
         a = m * a
     return SistemaEquacions(a,b,prime=prime)</code></pre>
+</details>
+</dd>
+<dt id="Algebra.RectaVectorial.ortogonal"><code class="name flex">
+<span>def <span class="ident">ortogonal</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retorna el suplementari ortogonal</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ortogonal(self):
+    &#34;&#34;&#34;
+    Retorna el suplementari ortogonal
+    &#34;&#34;&#34;
+    a = Matriu.from_vectors_fila([self.u])
+    n = a.nucli()
+    if len(n) == 1:
+        return RectaVectorial(n[0])
+    return PlaVectorial(n)</code></pre>
 </details>
 </dd>
 <dt id="Algebra.RectaVectorial.projeccio_ortogonal"><code class="name flex">
@@ -20288,7 +20463,7 @@ aleatori: només s'aplica a dimensió 3 i genera unes equacions implícites no t
     if u.dimensio != self.u.dimensio:
         return None
     v = self.u
-    t = u.dot(v)/v.dot(vv)
+    t = u.dot(v)/v.dot(v)
     return t * v</code></pre>
 </details>
 </dd>
@@ -23529,6 +23704,19 @@ v = Vector(3,1,-2)</p></div>
     #
     #
     #
+    def es_proporcional(self,other):
+        &#34;&#34;&#34;
+        Retorna si és proporcional al vector &#34;other&#34;
+        Paràmetres:
+          other: un altre vector
+        &#34;&#34;&#34;
+        if not isinstance(other,Vector):
+            return None
+        m = Matriu.from_vectors_columna([self,other])
+        return m.rang() == 1
+    #
+    #
+    #
     def __repr__(self):
         &#34;&#34;&#34;
         Retorna l&#39;expressió en latex del vector
@@ -24119,6 +24307,29 @@ p = u.dot(v)</p></div>
     for i in range(self.dimensio):
         s += self.components[i] * other.components[i]
     return s</code></pre>
+</details>
+</dd>
+<dt id="Algebra.Vector.es_proporcional"><code class="name flex">
+<span>def <span class="ident">es_proporcional</span></span>(<span>self, other)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retorna si és proporcional al vector "other"</p>
+<h2 id="parametres">Paràmetres</h2>
+<p>other: un altre vector</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def es_proporcional(self,other):
+    &#34;&#34;&#34;
+    Retorna si és proporcional al vector &#34;other&#34;
+    Paràmetres:
+      other: un altre vector
+    &#34;&#34;&#34;
+    if not isinstance(other,Vector):
+        return None
+    m = Matriu.from_vectors_columna([self,other])
+    return m.rang() == 1</code></pre>
 </details>
 </dd>
 <dt id="Algebra.Vector.factor_comu"><code class="name flex">
@@ -24749,11 +24960,13 @@ u.simplificar()</p></div>
 <h4><code><a title="Algebra.PlaVectorial" href="#Algebra.PlaVectorial">PlaVectorial</a></code></h4>
 <ul class="two-column">
 <li><code><a title="Algebra.PlaVectorial.amb_associat" href="#Algebra.PlaVectorial.amb_associat">amb_associat</a></code></li>
+<li><code><a title="Algebra.PlaVectorial.associat" href="#Algebra.PlaVectorial.associat">associat</a></code></li>
 <li><code><a title="Algebra.PlaVectorial.base_ortogonal" href="#Algebra.PlaVectorial.base_ortogonal">base_ortogonal</a></code></li>
 <li><code><a title="Algebra.PlaVectorial.conte" href="#Algebra.PlaVectorial.conte">conte</a></code></li>
 <li><code><a title="Algebra.PlaVectorial.equacio_implicita" href="#Algebra.PlaVectorial.equacio_implicita">equacio_implicita</a></code></li>
 <li><code><a title="Algebra.PlaVectorial.es_associat" href="#Algebra.PlaVectorial.es_associat">es_associat</a></code></li>
 <li><code><a title="Algebra.PlaVectorial.from_matriu" href="#Algebra.PlaVectorial.from_matriu">from_matriu</a></code></li>
+<li><code><a title="Algebra.PlaVectorial.ortogonal" href="#Algebra.PlaVectorial.ortogonal">ortogonal</a></code></li>
 <li><code><a title="Algebra.PlaVectorial.projeccio_ortogonal" href="#Algebra.PlaVectorial.projeccio_ortogonal">projeccio_ortogonal</a></code></li>
 <li><code><a title="Algebra.PlaVectorial.simetric" href="#Algebra.PlaVectorial.simetric">simetric</a></code></li>
 </ul>
@@ -24824,6 +25037,7 @@ u.simplificar()</p></div>
 <ul class="">
 <li><code><a title="Algebra.RectaVectorial.equacio_continua" href="#Algebra.RectaVectorial.equacio_continua">equacio_continua</a></code></li>
 <li><code><a title="Algebra.RectaVectorial.equacions_implicites" href="#Algebra.RectaVectorial.equacions_implicites">equacions_implicites</a></code></li>
+<li><code><a title="Algebra.RectaVectorial.ortogonal" href="#Algebra.RectaVectorial.ortogonal">ortogonal</a></code></li>
 <li><code><a title="Algebra.RectaVectorial.projeccio_ortogonal" href="#Algebra.RectaVectorial.projeccio_ortogonal">projeccio_ortogonal</a></code></li>
 <li><code><a title="Algebra.RectaVectorial.simetric" href="#Algebra.RectaVectorial.simetric">simetric</a></code></li>
 </ul>
@@ -24918,6 +25132,7 @@ u.simplificar()</p></div>
 <li><code><a title="Algebra.Vector.components_en_base" href="#Algebra.Vector.components_en_base">components_en_base</a></code></li>
 <li><code><a title="Algebra.Vector.cross" href="#Algebra.Vector.cross">cross</a></code></li>
 <li><code><a title="Algebra.Vector.dot" href="#Algebra.Vector.dot">dot</a></code></li>
+<li><code><a title="Algebra.Vector.es_proporcional" href="#Algebra.Vector.es_proporcional">es_proporcional</a></code></li>
 <li><code><a title="Algebra.Vector.factor_comu" href="#Algebra.Vector.factor_comu">factor_comu</a></code></li>
 <li><code><a title="Algebra.Vector.latex" href="#Algebra.Vector.latex">latex</a></code></li>
 <li><code><a title="Algebra.Vector.length" href="#Algebra.Vector.length">length</a></code></li>
