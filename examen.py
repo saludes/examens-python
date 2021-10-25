@@ -40,6 +40,7 @@ class Examen:
         self.parser.add_option("--estudiants",dest="estudiants",default=None)
         self.parser.add_option("--problemes",dest="problemes",default=None)
         self.parser.add_option("--possibles-problemes",dest="possibles",default=None)
+        self.parser.add_option("--incompatibles",dest="incompatibles",default=None)
         self.parser.add_option("--dades",dest="fitxerdades",default=None)
         self.parser.add_option("--tex-engine",dest="engine",default=None)
         self.parser.add_option("--no-solucions",action="store_false",dest="solucions",default=True)
@@ -60,20 +61,21 @@ class Examen:
     def ajuda(self):
         print("Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> [--problemes=<enter>] [--dades=<fitxer>] [--no-solucions] [--tex-engine=pdflatex]\n")
         print("Opcions:")
-        print("   --examen=<fitxer>              : Fitxer LaTeX amb el model d'examen")
-        print("   --estudiants=<fitxer>          : Fitxer amb nom:cognoms dels estudiants")
-        print("   --problemes=<nombre|llista>    : Nombre de problemes o llista de problemes")
-        print("   --possibles-problemes=<nombre> : Nombre de possibles problemes")
-        print("                                  : S'escullen aleatòriament \"nombre\" problemes")
-        print("   --dades=<fitxer>               : Fitxer amb les dades JSON generades anteriorment")
-        print("   --tex-engine=<programa>        : Nom del programa de LaTeX utilitzat")
-        print("                                  : Si no s'especifica, no es generen els PDF")
-        print("   --aleatori                     : L'ordre dels problemes serà aleatori")
-        print("   --nombre-examens=>nombre>      : Identifica els fitxers numèricament i no per nom i cognoms")
-        print("                                  : Quantitat d'exàmens a fer")
-        print("   --no-solucions                 : No es generen els fitxers amb les solucions")
-        print("   --json                         : Es guarden la dades dels enunciats en un fitxer json")
-        print("   --ajuda                        : Imprimeix aquesta ajuda")
+        print("   --examen=<fitxer>                   : Fitxer LaTeX amb el model d'examen")
+        print("   --estudiants=<fitxer>               : Fitxer amb nom:cognoms dels estudiants")
+        print("   --problemes=<nombre|llista>         : Nombre de problemes o llista de problemes")
+        print("   --possibles-problemes=<nombre>      : Nombre de possibles problemes")
+        print("                                       : S'escullen aleatòriament \"nombre\" problemes")
+        print("   --incompatibles=<incompatibilitats> : Llista d'incompatibiliats")
+        print("   --dades=<fitxer>                    : Fitxer amb les dades JSON generades anteriorment")
+        print("   --tex-engine=<programa>             : Nom del programa de LaTeX utilitzat")
+        print("                                       : Si no s'especifica, no es generen els PDF")
+        print("   --aleatori                          : L'ordre dels problemes serà aleatori")
+        print("   --nombre-examens=>nombre>           : Identifica els fitxers numèricament i no per nom i cognoms")
+        print("                                       : Quantitat d'exàmens a fer")
+        print("   --no-solucions                      : No es generen els fitxers amb les solucions")
+        print("   --json                              : Es guarden la dades dels enunciats en un fitxer json")
+        print("   --ajuda                             : Imprimeix aquesta ajuda")
         sys.exit(0)
     #
     #
@@ -117,6 +119,22 @@ class Examen:
         if prob is not None and dades is not None:
             print ("No es poden especificar les opcions --problemes i --dades simultàniament")
             sys.exit(0)
+        #
+        # Incompatibilitats
+        #
+        self.incompatibles = None
+        if self.options.incompatibles is not None:
+            try:
+                self.incompatibles = self.options.incompatibles.split(':')
+            except:
+                print ("Incompatibilitats no vàlides")
+                sys.exit(0)
+            self.incompatibles = [p.split(',') for p in self.incompatibles]
+            try:
+                self.incompatibles = [list(map(int,p)) for p in self.incompatibles]
+            except:
+                print ("Incompatibilitats no vàlides")
+                sys.exit(0)
         #
         # Enunciat de l'examen
         #
@@ -277,9 +295,10 @@ class Examen:
             if isinstance(self.problemes,list):
                 llista = list(self.problemes)
             else:
-                llista = random.sample(range(self.possibles),self.problemes)
-                llista.sort()
+                llista = list(range(self.possibles))
+                random.shuffle(llista)
                 llista = [x+1 for x in llista]
+                llista = self.comprova_incompatibilitats(llista)
             for i in range(self.maxproblema):
                 if i + 1 not in llista:
                     continue
@@ -305,6 +324,33 @@ class Examen:
             with open(jsonfile,'w') as f:
                 json.dump(js,f)
             f.close()
+    #
+    #
+    #
+    def comprova_incompatibilitats(self,l):
+        if self.incompatibles is None:
+            return l[0:self.problemes]
+        finalitzat = False
+        actual = l[0:self.problemes]
+        others = l[self.problemes:]
+        changes = 0
+        while not finalitzat:
+            finalitzat = True
+            for p in self.incompatibles:
+                common = list(set(p) & set(actual))
+                if len(common) > 1:
+                    for x in common[1:]:
+                        for i, n in enumerate(actual):
+                            if n == x:
+                                try:
+                                    actual[i] = others[changes]
+                                except:
+                                    print("Impossible complir les incompatibilitats")
+                                    sys.exit(0)
+                                changes += 1
+                    finalitzat = False
+                    break
+        return actual
     #
     #
     #
