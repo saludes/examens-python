@@ -194,10 +194,11 @@ void Canonica(int x0,
 
 transform Referencia(pair origen=(0,0),
                      pair u1=(1,0),
-                     pair u2=(0,1)
+                     pair u2=(0,1),
+                     real scaled=1.0
                     )
 {
-  transform tr = (origen.x,origen.y,u1.x,u2.x,u1.y,u2.y);
+  transform tr = (scaled*origen.x,scaled*origen.y,u1.x,u2.x,u1.y,u2.y);
   return tr;
 }
 
@@ -448,4 +449,14 @@ void Parabola(pair v,
   path cl = (-x,-y)--(x,-y)--(x,y)--(-x,y)--cycle;
   clip(rp,cl);
   add(scale(scaled) * tr * rp);
+}
+
+void Clip(int x0,
+          int x1,
+          int y0,
+          int y1,
+          real scaled=1.0)
+{
+  path cl = (x0,y0)--(x1,y0)--(x1,y1)--(x0,y1)--cycle;
+  clip(scale(scaled)*cl);
 }

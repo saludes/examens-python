@@ -3672,9 +3672,9 @@ class RectaAfi(object):
     #
     #
     @classmethod
-    def aleatoria(cls):
-        v = Vector.aleatori(l=3,maxim=3,nuls=False)
-        p = Punt.aleatori(l=3,maxim=4,nuls=False)
+    def aleatoria(cls,dim=3):
+        v = Vector.aleatori(l=dim,maxim=3,nuls=False)
+        p = Punt.aleatori(l=dim,maxim=4,nuls=False)
         return cls(p,v)
     #
     #
