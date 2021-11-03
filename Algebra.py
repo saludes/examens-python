@@ -1241,7 +1241,7 @@ class Base(object):
         cself = " \\\\ ".join([latex(k) + ps1 for k in components])
         cB = " \\\\ ".join([latex(k) + ps2 for k in components])
         s = "\\begin{pmatrix}{c} " + cB + "\\end{pmatrix} = \n"
-        s += f"{A} + \n"
+        s += f"{A}\n"
         s += "\\begin{pmatrix}{c} " + cself + "\\end{pmatrix}"
         return s
     #
@@ -2963,7 +2963,7 @@ class PlaVectorial(object):
         if u.dimensio != 3:
             return None
         m = Matriu.from_vectors_columna([self.u1,self.u2,u])
-        return m.det() != 0
+        return m.det() == 0
     #
     #
     #
