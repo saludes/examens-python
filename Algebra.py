@@ -988,11 +988,17 @@ class Vector(object):
     #
     #
     def punt(self):
+        """
+        Retorna el Punt corresponent a aquest vector
+        """
         return Punt(self.components)
     #
     #
     #
     def perpendicular(self):
+        """
+        Retorna una llista de vectors perpendiculars linealment independents
+        """
         A = Matriu.from_vectors_fila([self])
         return A.nucli()
 
@@ -1428,6 +1434,10 @@ class Matriu:
     #
     @classmethod
     def transformacio_elemental(cls,ordre,i,j,s,t):
+        """
+        Retorna la matriu corresponent a la transformació elemental
+        F_i \sim s F_i + t F_j
+        """
         a = eye(ordre)
         a[i,:] = s * a[i,:] + t * a[j,:]
         return cls(a)
@@ -1500,16 +1510,25 @@ class Matriu:
     #
     #
     def clona(self):
+        """
+        Retorma una còpia de la matriu
+        """
         return Matriu(self.matriu[:,:])
     #
     #
     #
     def set_format(self,format):
+        """
+        Estableix el format LaTeX amb que s'escriurà la matriu
+        """
         self.format = format
     #
     #
     #
     def latex(self,format=None,tipus='p'):
+        """
+        Retorna la representació en LaTeX de la matriu
+        """
         if format is None:
             format = self.format
         return matriu_latex(self.matriu,format,tipus)
@@ -1666,7 +1685,7 @@ class Matriu:
     #
     def __repr__(self):
         """
-        Retorna l'expressió en latex de la matriu
+        Retorna l'expressió en LaTeX de la matriu
         """
         l = []
         s = []
@@ -1989,6 +2008,11 @@ class Matriu:
     #
     @classmethod
     def identitat(cls,ordre):
+        """
+        Retorna la matriu identitat
+        Paràmetres:
+            ordre: ordre de la matriu identitat
+        """
         return cls(eye(ordre))
     #
     #
@@ -2215,6 +2239,11 @@ class Matriu:
     #
     #
     def subs(self,l):
+        """
+        Aplica una llista de substitucions
+        Paràmetres:
+            l: llista de substitucions
+        """
         for i in range(self.columnes):
             for j in range(self.files):
                 for d in l:
@@ -2429,6 +2458,10 @@ class EquacioLineal:
     #
     #
     def to_sistema_equacions(self):
+        """
+        Retorna un sistema d'equacions (class SistemaEquacions) que té com a única
+        equació l'actual
+        """
         x, y, z, t = symbols('x y z t')
         unknowns = [x,y,z,t]
         n = -1
@@ -3049,6 +3082,11 @@ class PlaVectorial(object):
     #
     #
     def associat(self,base=None):
+        """
+        Retorna les components del vector associat en la base "base"
+        Paràmetres:
+            base: element de la clase Base
+        """
         w = self.u1.cross(self.u2)
         w.simplificar()
         if base is None:
@@ -3727,6 +3765,11 @@ class RectaAfi(object):
     #
     @classmethod
     def aleatoria(cls,dim=3):
+        """
+        Retorna una recta afí aleatòria
+        Paràmetres:
+             dim: dimensió
+        """
         v = Vector.aleatori(l=dim,maxim=3,nuls=False)
         p = Punt.aleatori(l=dim,maxim=4,nuls=False)
         return cls(p,v)
@@ -4572,6 +4615,11 @@ class TransformacioLineal(object):
     #
     @classmethod
     def rotacio_amb_quaternio(cls,q):
+        """
+        Retorna la rotació definida pel quaternio "q"
+        Paràmetres:
+             q: element de la classe Quaternio
+        """
         if not isinstance(q,Quaternion):
             return None
         n = (q.norm()**2).expand()

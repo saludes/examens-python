@@ -43,6 +43,7 @@ parser.add_option("--estudiants",dest="estudiants",default=None)
 parser.add_option("--subject",dest="subject",default=None)
 parser.add_option("--message",dest="message",default=None)
 parser.add_option("--sender",dest="sender",default=None)
+parser.add_option("--carpeta",dest="carpeta",default="tex")
 parser.add_option("--ajuda",action="store_true",dest="ajuda",default=False)
 parser.add_option("--solucions",action="store_true",dest="solucions",default=False)
 (options,args) = parser.parse_args()
@@ -99,18 +100,10 @@ def send_message(service, user_id, message):
     except HttpError as error:
         print ('An error occurred: %s' % error)
 
-parser = OptionParser()
-parser.add_option("--estudiants",dest="estudiants",default=None)
-parser.add_option("--subject",dest="subject",default=None)
-parser.add_option("--message",dest="message",default=None)
-parser.add_option("--sender",dest="sender",default=None)
-parser.add_option("--ajuda",action="store_true",dest="ajuda",default=False)
-parser.add_option("--solucions",action="store_true",dest="solucions",default=False)
-(options,args) = parser.parse_args()
-
 HOME = os.path.expanduser('~')
 est = options.estudiants
 fitxer = options.message
+carpeta = options.carpeta
 regex = re.compile('^\s*#.$',re.IGNORECASE)
 estudiants = []
 sender, subject = options.sender,options.subject
@@ -162,11 +155,11 @@ if not creds or not creds.valid:
 service = build('gmail', 'v1', credentials=creds)
 
 for e in estudiants:
-    relacio = relacio = {'COGNOMS' : e['cognoms'], 'NOM' : e['nom']}
+    relacio = {'COGNOMS' : e['cognoms'], 'NOM' : e['nom']}
     m = message
     for k,v in relacio.items():
         m = m.replace(k,v)
-    filename = os.path.join("tex",f"{e['cognoms']}-{e['nom']}".lower().replace(' ','-'))
+    filename = os.path.join(carpeta,f"{e['cognoms']}-{e['nom']}".lower().replace(' ','-'))
     filename = unidecode.unidecode(filename)
     if options.solucions:
         filename += "-solucio.pdf"
