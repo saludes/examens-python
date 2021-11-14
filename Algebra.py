@@ -514,6 +514,15 @@ class Vector(object):
                 d.append(k.q)
             elif (isinstance(k,int) or isinstance(k,Integer)):
                 pass
+            elif isinstance(k,Add):
+                for a in k.args:
+                    if isinstance(a,Rational):
+                        d.append(a.q)
+                    elif isinstance(a,int) or isinstance(a,Integer):
+                        pass
+                    elif isinstance(a**2,Rational):
+                        a2 = a**2
+                        l.append(sqrt(a2.q))
             else:
                 other = True
         if other:
@@ -563,6 +572,24 @@ class Vector(object):
                 k2 = k**2
                 l.append(k2.q)
                 s.append(True)
+            elif isinstance(k,Add):
+                for a in k.args:
+                    if isinstance(a,Rational):
+                        l.append(a.q)
+                        s.append(False)
+                    elif isinstance(a,int) or isinstance(a,Integer):
+                        l.append(1)
+                        s.append(False)
+                    elif isinstance(a**2,Rational):
+                        square = True
+                        a2 = a**2
+                        l.append(a2.q)
+                        s.append(True)
+            elif isinstance(k,Mul):
+                for a in k.args:
+                    if isinstance(a,Rational):
+                        l.append(a.q)
+                        s.append(False)
             else:
                 other = True
         if other:
@@ -580,7 +607,7 @@ class Vector(object):
         if m != 1:
             s = f"\\deufrac{{1}}{{{latex(m)}}}"
         r = ",".join([latex(k) for k in l])
-        return f"{s}({r})"
+        return f"{s}\\left({r}\\right)"
     #
     #
     #
@@ -962,7 +989,12 @@ class Vector(object):
     #
     def punt(self):
         return Punt(self.components)
-
+    #
+    #
+    #
+    def perpendicular(self):
+        A = Matriu.from_vectors_fila([self])
+        return A.nucli()
 
 class Punt(Vector):
     """
@@ -1325,6 +1357,7 @@ class Matriu:
         dimensio: nombre de files de la matriu
         columnes: nombre de columnes de la matriu
         matriu: matriu de la classe Matrix del sympy
+        format: format LateX per a la matriu
 
         Només s'utilitzen quan generem una matriu diagonalitzble
           vaps: llista de vectors propis de la matriu
@@ -1346,6 +1379,7 @@ class Matriu:
         self.matriu = matrix
         self.vaps = None
         self.veps = None
+        self.format = None
     #
     #
     #
@@ -1470,7 +1504,14 @@ class Matriu:
     #
     #
     #
+    def set_format(self,format):
+        self.format = format
+    #
+    #
+    #
     def latex(self,format=None,tipus='p'):
+        if format is None:
+            format = self.format
         return matriu_latex(self.matriu,format,tipus)
     #
     #
@@ -1644,6 +1685,19 @@ class Matriu:
                     k2 = k**2
                     l.append(k2.q)
                     s.append(True)
+                elif isinstance(k,Add):
+                    for a in k.args:
+                        if isinstance(a,Rational):
+                            l.append(a.q)
+                            s.append(False)
+                        elif isinstance(a,int) or isinstance(a,Integer):
+                            l.append(1)
+                            s.append(False)
+                        elif isinstance(a**2,Rational):
+                            square = True
+                            a2 = a**2
+                            l.append(a2.q)
+                            s.append(True)
                 else:
                     return matriu_latex(self.matriu)
         if square:
@@ -1661,7 +1715,7 @@ class Matriu:
         if m != 1:
             s = f"\\deufrac{{1}}{{{latex(m)}}}"
         m = Matrix(self.files,self.columnes,l)
-        return s + matriu_latex(m)
+        return s + matriu_latex(m,format=self.format)
     #
     #
     #
@@ -4305,6 +4359,7 @@ class TransformacioLineal(object):
     Atributs:
        dimensio: n
        canonica: matriu de la transformació en la base canònica
+       format: format LaTeX per a la matriu
     """
     #
     #
@@ -4338,6 +4393,15 @@ class TransformacioLineal(object):
             c = base.matriu()
             m = c.matriu * matriu.matriu * c.matriu**(-1)
             self.canonica = Matriu(m)
+        self.format = None
+    #
+    #
+    #
+    def set_format(self,format):
+        """
+        Estableix el format LaTeX per a la matriu
+        """
+        self.format = format
     #
     #
     #
@@ -4381,25 +4445,37 @@ class TransformacioLineal(object):
             return None
         m = self.canonica - Matriu()
         e = m.nucli()[0]
-        e = Vector([simplify(k.expand()) for k in e.components])
-        q = Quaternion.from_rotation_matrix(self.canonica.matriu)
-        v, alpha = q.to_axis_angle()
-        alpha = alpha.expand()
-        v = [simplify(k.expand()) for k in v]
-        u = Vector(v)
-        l = e.length()
-        u = l * u
-        if e[0] != u[0]:
-            alpha = 2 * pi - alpha
+        e = Vector([radsimp(k.expand()) for k in e.components])
+        t = radsimp(self.canonica.matriu.trace().expand())
+        t = (t - 1)/2
+        alpha = acos(t)
+        u = e.perpendicular()[0]
+        v = self.transforma(u)
+        A = Matriu.from_vectors_columna([e,u,v])
+        if A.det() <= 0:
+            alpha = 2*pi - alpha
         if not radiants:
             alpha = alpha * 180/pi
         return (e,alpha)
     #
     #
     #
+    def quaternio(self):
+        """
+        Retorna un dels quaternions que definieix una rotació. Recordem
+        que l'altre és l'oposat
+        """
+        w, angle = self.eix_angle_rotacio(radiants=True)
+        w.normalitzar()
+        w *= sin(angle/2)
+        w = Vector([radsimp(x.expand()) for x in w.components])
+        return Vector(radsimp(radsimp(cos(angle/2).expand())),w[0],w[1],w[2])
+    #
+    #
+    #
     def angles_euler(self,radiants=False):
         """
-        Retorna els angles d'Euler de la rotació
+        Retorna els angles d'Euler de la rotació corresponents a l'ordre 'ZXZ'
         Paràmetres:
             radiants: si és True retorna els angles en radiants, en cas contrari,
             ho fa en graus
@@ -4415,6 +4491,12 @@ class TransformacioLineal(object):
             phi = 0
             theta = acos(m[2,2])
             psi = atan2(m[2,2] * m[1,0],m[0,0])
+        if psi < 0:
+            psi += 2*pi
+        if theta < 0:
+            theta += 2*pi
+        if phi < 0:
+            phi += 2*pi
         if not radiants:
             theta *= 180 / pi
             psi *= 180 / pi
@@ -4455,7 +4537,50 @@ class TransformacioLineal(object):
         m = Matriu(q.to_rotation_matrix())
         for i in range(m.files):
             for j in range(m.columnes):
-                m[(i,j)] = simplify(m[(i,j)].expand())
+                m[(i,j)] = radsimp(m[(i,j)].expand())
+        return cls(m)
+    #
+    #
+    #
+    @classmethod
+    def rotacio_amb_angles_euler(cls,psi,theta,phi,ordre='ZXZ',radiants=False):
+        """
+        Retorna la rotació amb angles d'Euler psi, theta i phi al voltant dels
+        dels eixos determinats pel paràmetre ordre
+        Paràmetres:
+            psi, theta i phi: angles d'Euler
+            ordre: eixos al voltant dels que fem les rotacions
+            radiants: si l'angle està en radiants, ha de ser True
+        """
+        ordres = ['XYZ','XZY','YXZ','YZX','ZXY','ZYX',
+                  'XZX','XYX','YXY','YZY','ZXZ','ZYZ']
+        vectors = {'X' : Vector(1,0,0),
+                   'Y' : Vector(0,1,0),
+                   'Z' : Vector(0,0,1)}
+        ordre = ordre.upper()
+        angles = [psi,theta,phi]
+        if ordre not in ordres:
+            return None
+        m = []
+        for i, s in enumerate(ordre):
+            r = cls.rotacio(vectors[s],angles[i],radiants)
+            m.append(r)
+        A = m[2].canonica * m[1].canonica * m[0].canonica
+        return cls(A)
+    #
+    #
+    #
+    @classmethod
+    def rotacio_amb_quaternio(cls,q):
+        if not isinstance(q,Quaternion):
+            return None
+        n = (q.norm()**2).expand()
+        if n != 1 and abs(N(sqrt(n)) - 1.0) > 10**(-12):
+            return None
+        m = Matriu(q.to_rotation_matrix())
+        for i in range(m.files):
+            for j in range(m.columnes):
+                m[(i,j)] = radsimp(m[(i,j)].expand())
         return cls(m)
     #
     #
@@ -4539,12 +4664,14 @@ class TransformacioLineal(object):
         d = " \\\\ ".join([latex(x)+p for x in d])
         if base is None:
              m = self.canonica
+             m.set_format(self.format)
         else:
             if not isinstance(base,Base):
                 return None
             c = base.matriu()
             m = c.matriu**(-1) * self.canonica.matriu * c.matriu
             m = Matriu(m)
+            m.set_format(self.format)
         s = "\\begin{pmatrix}{c} " + d + "\\end{pmatrix} = \n"
         s += f"{m}\n"
         s += "\\begin{pmatrix}{c} " + o + "\\end{pmatrix}"
@@ -4612,7 +4739,7 @@ class TransformacioLineal(object):
     #
     def transforma(self,vec,base=None):
         """
-        Calcula el transformat (image) del vector "vec".
+        Calcula el transformat (imatge) del vector "vec".
         Paràmetres:
             vec: vector
             base: si no és None, vec seran les compoents del vectors en aquesta
