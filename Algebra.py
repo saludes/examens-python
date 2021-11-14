@@ -4456,6 +4456,20 @@ class TransformacioLineal(object):
     #
     #
     #
+    @classmethod
+    def aleatoria(cls,ordre=3,maxim=4):
+        """
+        Retorna una transformació lineal aleatòria
+        Paràmetres:
+            ordre: ordre de la matriu corresponent
+            maxim: Nombre màqxim que apareix a la matriu en la base
+                   canònica de la transformació
+        """
+        A = Matriu.aleatoria(f=ordre,c=ordre,maxim=maxim,nuls=False)
+        return cls(A)
+    #
+    #
+    #
     def es_rotacio(self):
         """
         Ens diu si és una rotació tridimensional o no
@@ -4508,6 +4522,8 @@ class TransformacioLineal(object):
         Retorna un dels quaternions que definieix una rotació. Recordem
         que l'altre és l'oposat
         """
+        if not self.es_rotacio():
+            return None
         w, angle = self.eix_angle_rotacio(radiants=True)
         w.normalitzar()
         w *= sin(angle/2)
@@ -4732,6 +4748,26 @@ class TransformacioLineal(object):
         Retorna el latex de l'expressió en la base canònica de la transformació lineal
         """
         return self.latex()
+    #
+    #
+    #
+    def imatges_una_base(self,base):
+        """
+        Retorna l'expressió en LaTeX de les imatges dels vectors de la base "base"
+        Paràmetres:
+            base: element de la classe Base
+        """
+        if not isinstance(base,Base):
+            return None
+        if self.dimensio != base.dimensio:
+            return None
+        ts = []
+        for x in base.vecs:
+            y = self.transforma(x)
+            ts.append(f"T{x} &= {y}")
+        ts = " \\\\ \n".join(ts)
+        str = "\\left.\\begin{aligned}\nIMATGES\n\\end{aligned}\\,\\right\\}"
+        return str.replace('IMATGES',ts)
     #
     #
     #
