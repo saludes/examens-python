@@ -507,55 +507,6 @@ class Vector(object):
         Si hi ha components que no són ni enteres ni racionals, torna 1 i el mateix
         vector
         """
-        d = []
-        other = False
-        for k in self.components:
-            if isinstance(k,Rational):
-                d.append(k.q)
-            elif (isinstance(k,int) or isinstance(k,Integer)):
-                pass
-            elif isinstance(k,Add):
-                for a in k.args:
-                    if isinstance(a,Rational):
-                        d.append(a.q)
-                    elif isinstance(a,int) or isinstance(a,Integer):
-                        pass
-                    elif isinstance(a**2,Rational):
-                        a2 = a**2
-                        l.append(sqrt(a2.q))
-            else:
-                other = True
-        if other:
-            return (1,Vector(self.components))
-        mcm = mcm_llista(d)
-        v = [mcm * k for k in self.components]
-        mcd = mcd_llista(v)
-        v = [k // mcd for k in v]
-        f = Rational(mcd,mcm)
-        if f < 0:
-            f *= -1
-            v = [-k for k in v]
-        return (f,Vector(v))
-    #
-    #
-    #
-    def es_proporcional(self,other):
-        """
-        Retorna si és proporcional al vector "other"
-        Paràmetres:
-          other: un altre vector
-        """
-        if not isinstance(other,Vector):
-            return None
-        m = Matriu.from_vectors_columna([self,other])
-        return m.rang() == 1
-    #
-    #
-    #
-    def __repr__(self):
-        """
-        Retorna l'expressió en latex del vector
-        """
         l = []
         s = []
         square = False
@@ -585,11 +536,93 @@ class Vector(object):
                         a2 = a**2
                         l.append(a2.q)
                         s.append(True)
+                    elif isinstance(a,Mul):
+                        for b in a.args:
+                            if isinstance(b,Rational):
+                                l.append(b.q)
+                                s.append(False)
             elif isinstance(k,Mul):
                 for a in k.args:
                     if isinstance(a,Rational):
                         l.append(a.q)
                         s.append(False)
+            elif k in incognites:
+                pass
+            else:
+                other = True
+        if other:
+            return 1
+        if square:
+            for k in range(len(l)):
+                if not s[k]:
+                    l[k] = l[k]**2
+        m = mcm_llista(l)
+        if square:
+            m = sqrt(m)
+        return m, Vector([m*k for k in self.components])
+    #
+    #
+    #
+    def es_proporcional(self,other):
+        """
+        Retorna si és proporcional al vector "other"
+        Paràmetres:
+          other: un altre vector
+        """
+        if not isinstance(other,Vector):
+            return None
+        return m.rang() == 1
+    #
+    #
+    #
+    def __repr__(self):
+        """
+        Retorna l'expressió en latex del vector
+        """
+        x, y, z, t = symbols('x y z t')
+        x1, x2, x3, x4, x5, x6, x7, x8 = symbols('x1 x2 x3 x4 x5 x6 x7 x8')
+        incognites = [x,y,z,t,x1,x2,x3,x4,x5,x6,x7,x8]
+        l = []
+        s = []
+        square = False
+        other = False
+        for k in self.components:
+            if isinstance(k,Rational):
+                l.append(k.q)
+                s.append(False)
+            elif isinstance(k,int) or isinstance(k,Integer):
+                l.append(1)
+                s.append(False)
+            elif isinstance(k**2,Rational):
+                square = True
+                k2 = k**2
+                l.append(k2.q)
+                s.append(True)
+            elif isinstance(k,Add):
+                for a in k.args:
+                    if isinstance(a,Rational):
+                        l.append(a.q)
+                        s.append(False)
+                    elif isinstance(a,int) or isinstance(a,Integer):
+                        l.append(1)
+                        s.append(False)
+                    elif isinstance(a**2,Rational):
+                        square = True
+                        a2 = a**2
+                        l.append(a2.q)
+                        s.append(True)
+                    elif isinstance(a,Mul):
+                        for b in a.args:
+                            if isinstance(b,Rational):
+                                l.append(b.q)
+                                s.append(False)
+            elif isinstance(k,Mul):
+                for a in k.args:
+                    if isinstance(a,Rational):
+                        l.append(a.q)
+                        s.append(False)
+            elif k in incognites:
+                pass
             else:
                 other = True
         if other:
@@ -1001,6 +1034,25 @@ class Vector(object):
         """
         A = Matriu.from_vectors_fila([self])
         return A.nucli()
+    #
+    #
+    #
+    def as_quaternio(self):
+        """
+        Retorna l'expressió en LaTeX d'un vector de dimensió 4 en format
+        quaternió
+        """
+        i, j, k = symbols("i j k")
+        if self.dimensio != 4:
+            return None
+        f, v = self.factor_comu()
+        s = ""
+        if f != 1:
+            s = f"\\deufrac{{1}}{{{latex(f)}}}"
+        r = latex(v[1]*i + v[2]*j + v[3]*k)
+        if v[0] != 0:
+            return f"{s}\\left({latex(v[0])} + {r}\\right)"
+        return f"{s}\\left({r}\\right)"
 
 class Punt(Vector):
     """
@@ -2489,6 +2541,7 @@ class SistemaEquacions:
       equacions: llista de EquacioLineal
       nombre: nombre d'equacions
       solucio: solucio del sistema d'equacions
+      secundaries: incògnites secundàries a la solució
       parametrica: solucio paramètrica del sistema d'equacions
       parametres: paràmetres que apareixen a la solució paramètrica
       unknowns: llista d'incògnites
@@ -2525,6 +2578,7 @@ class SistemaEquacions:
         self.solucio = None
         self.parametrica = None
         self.parametres = []
+        self.secundaries = []
         eq = []
         files = a.vectors_fila()
         for k in range(self.A.files):
@@ -2638,6 +2692,7 @@ class SistemaEquacions:
             s = solve(system.components,*self.unknowns)
         self.solucio = []
         self.parametres = []
+        self.secundaries = []
         for k in self.unknowns:
             try:
                 self.solucio.append(s[k])
@@ -2645,6 +2700,7 @@ class SistemaEquacions:
                 self.solucio.append(k)
                 subs[k] = params[count]
                 self.parametres.append(subs[k])
+                self.secundaries.append(k)
                 count += 1
         self.parametrica = []
         for k in self.solucio:
@@ -3809,13 +3865,14 @@ class RectaAfi(object):
         if p.tots_enters():
             return p
         t, _ = p.factor_comu()
-        for i in range(1,t.q):
-            r = (p + Rational(i,t.q) * u).punt()
-            if r.tots_enters():
-                return r
-            r = (p - Rational(i,t.q) * u).punt()
-            if r.tots_enters():
-                return r
+        if isinstance(t,Rational):
+            for i in range(1,t.q):
+                r = (p + Rational(i,t.q) * u).punt()
+                if r.tots_enters():
+                    return r
+                r = (p - Rational(i,t.q) * u).punt()
+                if r.tots_enters():
+                    return r
         return p
     #
     #
@@ -4650,6 +4707,24 @@ class TransformacioLineal(object):
     #
     #
     @classmethod
+    def escalat(cls,factors,base=None):
+        """
+        Retorna la transformació lineal que consisteix en escalats de factors
+        "factor" en les direccions de la base "base"
+        Paràmetres:
+            factors: llista de nombres
+            base: element de la classe Base
+        """
+        if base is None:
+            base = Base.canonica(dimensio=len(factors))
+        if len(factors) != base.dimensio:
+            return None
+        A = Matriu.diagonal(factors)
+        return cls(A,base)
+    #
+    #
+    #
+    @classmethod
     def projeccio_ortogonal(cls,s):
         """
         Retorna la projecció ortogonal sobre el subespai "s"
@@ -4700,6 +4775,20 @@ class TransformacioLineal(object):
         c = base.matriu()
         m = c.matriu**(-1) * self.canonica.matriu * c.matriu
         return Matriu(m)
+    #
+    #
+    #
+    def antiimatges(self,v):
+        """
+        Retorna les antiimages del vector v
+        Paràmetres:
+            v: element de la classe Vector
+        """
+        if self.dimensio != v.dimensio:
+            return None
+        s = SistemaEquacions(self.canonica,v)
+        s.resol()
+        return Vector(s.solucio), s.secundaries
     #
     #
     #
@@ -4768,6 +4857,22 @@ class TransformacioLineal(object):
         ts = " \\\\ \n".join(ts)
         str = "\\left.\\begin{aligned}\nIMATGES\n\\end{aligned}\\,\\right\\}"
         return str.replace('IMATGES',ts)
+    #
+    #
+    #
+    def rang(self):
+        """
+        Retorna el rang de la transfoprmació afí
+        """
+        return self.canonica.rang()
+    #
+    #
+    #
+    def rank(self):
+        """
+        Retorna el rang de la transfoprmació afí
+        """
+        return self.canonica.rang()
     #
     #
     #
@@ -4863,6 +4968,7 @@ class TransformacioAfi:
         transformacio: Transformació lineal donada per la matriu A
         translacio: translació de la transformació afí en la referència canònica
         dimensio: n
+        formats: formats LaTeX en que s'escriuen les matrius de la transfornació
     """
     #
     #
@@ -4890,6 +4996,22 @@ class TransformacioAfi:
         self.translacio = p
         self.transformacio = t
         self.dimensio = self.transformacio.dimensio
+        self.formats = None
+    #
+    #
+    #
+    @classmethod
+    def aleatoria(cls,ordre=3,maxim=4):
+        """
+        Retorna una transformació afí aleatòria
+        Paràmetres:
+            ordre: ordre de la matriu corresponent
+            maxim: Nombre màqxim que apareix a la matriu en la base
+                   canònica de la transformació i en la translació
+        """
+        T = TransformacioLineal.aleatoria(ordre=ordre,maxim=maxim)
+        t = Vector.aleatori(l=ordre,maxim=maxim,nuls=False)
+        return cls(t,T)
     #
     #
     #
@@ -4977,6 +5099,27 @@ class TransformacioAfi:
     #
     #
     #
+    def set_formats(self,f1,f2):
+        self.formats = [f1,f2]
+    #
+    #
+    #
+    def rang(self):
+        """
+        Retorna el rang de la transfoprmació afí
+        """
+        return self.transformacio.rang()
+    #
+    #
+    #
+    def rank(self):
+        """
+        Retorna el rang de la transfoprmació afí
+        """
+        return self.transformacio.rang()
+    #
+    #
+    #
     def __repr__(self):
         """
         Restorna en format latex l'expressió de la transformació afí en la
@@ -5017,7 +5160,12 @@ class TransformacioAfi:
             m = self.transformacio.matriu_en_base(ref.base)
         s = "\\begin{pmatrix}{c} " + d + "\\end{pmatrix} = \n"
         if tz.length() > 0:
-            s += f"{Matriu.matriu_columna(tz)} + \n"
+            tz = Matriu.matriu_columna(tz)
+            if self.formats is not None:
+                tz.set_format(self.formats[0])
+            s += f"{tz} + \n"
+        if self.formats is not None:
+            m.set_format(self.formats[1])
         s += f"{m}\n"
         s += "\\begin{pmatrix}{c} " + o + "\\end{pmatrix}"
         return s
