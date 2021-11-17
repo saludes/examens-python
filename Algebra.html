@@ -624,6 +624,7 @@ class Vector(object):
         &#34;&#34;&#34;
         if not isinstance(other,Vector):
             return None
+        m = Matriu.from_vectors_columna([self,other])
         return m.rang() == 1
     #
     #
@@ -4432,7 +4433,6 @@ class VarietatAfi(object):
         for p in eqs.parametres:
             sol = [k.subs(p,0) for k in sol]
         p = Punt(sol)
-        print(p)
         return cls(p,s,ref)
     #
     #
@@ -5011,6 +5011,21 @@ class TransformacioLineal(object):
         Retorna el polinomi característic de la transformació lineal
         &#34;&#34;&#34;
         return self.canonica.polinomi_caracteristic()
+    #
+    #
+    #
+    def es_vector_propi(self,u):
+        &#34;&#34;&#34;
+        Retorna si el vector &#34;u&#34; és o no un vector propi
+        Paràmetres:
+            u: element de la class Vector
+        &#34;&#34;&#34;
+        if not isinstance(u,Vector):
+            return None
+        if self.dimensio != u.dimensio:
+            return None
+        v = self.transforma(u)
+        return v.es_proporcional(u)
 
 
 class TransformacioAfi:
@@ -23552,7 +23567,22 @@ format: format LaTeX per a la matriu</p></div>
         &#34;&#34;&#34;
         Retorna el polinomi característic de la transformació lineal
         &#34;&#34;&#34;
-        return self.canonica.polinomi_caracteristic()</code></pre>
+        return self.canonica.polinomi_caracteristic()
+    #
+    #
+    #
+    def es_vector_propi(self,u):
+        &#34;&#34;&#34;
+        Retorna si el vector &#34;u&#34; és o no un vector propi
+        Paràmetres:
+            u: element de la class Vector
+        &#34;&#34;&#34;
+        if not isinstance(u,Vector):
+            return None
+        if self.dimensio != u.dimensio:
+            return None
+        v = self.transforma(u)
+        return v.es_proporcional(u)</code></pre>
 </details>
 <h3>Static methods</h3>
 <dl>
@@ -23971,6 +24001,31 @@ ho fa en graus</p></div>
     return self.canonica == self.canonica.transposada()</code></pre>
 </details>
 </dd>
+<dt id="Algebra.TransformacioLineal.es_vector_propi"><code class="name flex">
+<span>def <span class="ident">es_vector_propi</span></span>(<span>self, u)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retorna si el vector "u" és o no un vector propi</p>
+<h2 id="parametres">Paràmetres</h2>
+<p>u: element de la class Vector</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def es_vector_propi(self,u):
+    &#34;&#34;&#34;
+    Retorna si el vector &#34;u&#34; és o no un vector propi
+    Paràmetres:
+        u: element de la class Vector
+    &#34;&#34;&#34;
+    if not isinstance(u,Vector):
+        return None
+    if self.dimensio != u.dimensio:
+        return None
+    v = self.transforma(u)
+    return v.es_proporcional(u)</code></pre>
+</details>
+</dd>
 <dt id="Algebra.TransformacioLineal.imatges_una_base"><code class="name flex">
 <span>def <span class="ident">imatges_una_base</span></span>(<span>self, base)</span>
 </code></dt>
@@ -24314,7 +24369,6 @@ subespai: SubespaiVectorial</p></div>
         for p in eqs.parametres:
             sol = [k.subs(p,0) for k in sol]
         p = Punt(sol)
-        print(p)
         return cls(p,s,ref)
     #
     #
@@ -24445,7 +24499,6 @@ def from_equacions_implicites(cls,eqs,ref=None):
     for p in eqs.parametres:
         sol = [k.subs(p,0) for k in sol]
     p = Punt(sol)
-    print(p)
     return cls(p,s,ref)</code></pre>
 </details>
 </dd>
@@ -24782,6 +24835,7 @@ v = Vector(3,1,-2)</p></div>
         &#34;&#34;&#34;
         if not isinstance(other,Vector):
             return None
+        m = Matriu.from_vectors_columna([self,other])
         return m.rang() == 1
     #
     #
@@ -25484,6 +25538,7 @@ p = u.dot(v)</p></div>
     &#34;&#34;&#34;
     if not isinstance(other,Vector):
         return None
+    m = Matriu.from_vectors_columna([self,other])
     return m.rang() == 1</code></pre>
 </details>
 </dd>
@@ -26316,6 +26371,7 @@ u.simplificar()</p></div>
 <li><code><a title="Algebra.TransformacioLineal.eix_angle_rotacio" href="#Algebra.TransformacioLineal.eix_angle_rotacio">eix_angle_rotacio</a></code></li>
 <li><code><a title="Algebra.TransformacioLineal.es_rotacio" href="#Algebra.TransformacioLineal.es_rotacio">es_rotacio</a></code></li>
 <li><code><a title="Algebra.TransformacioLineal.es_simetrica" href="#Algebra.TransformacioLineal.es_simetrica">es_simetrica</a></code></li>
+<li><code><a title="Algebra.TransformacioLineal.es_vector_propi" href="#Algebra.TransformacioLineal.es_vector_propi">es_vector_propi</a></code></li>
 <li><code><a title="Algebra.TransformacioLineal.escalat" href="#Algebra.TransformacioLineal.escalat">escalat</a></code></li>
 <li><code><a title="Algebra.TransformacioLineal.gir" href="#Algebra.TransformacioLineal.gir">gir</a></code></li>
 <li><code><a title="Algebra.TransformacioLineal.imatges_una_base" href="#Algebra.TransformacioLineal.imatges_una_base">imatges_una_base</a></code></li>

@@ -571,6 +571,7 @@ class Vector(object):
         """
         if not isinstance(other,Vector):
             return None
+        m = Matriu.from_vectors_columna([self,other])
         return m.rang() == 1
     #
     #
@@ -4379,7 +4380,6 @@ class VarietatAfi(object):
         for p in eqs.parametres:
             sol = [k.subs(p,0) for k in sol]
         p = Punt(sol)
-        print(p)
         return cls(p,s,ref)
     #
     #
@@ -4958,6 +4958,21 @@ class TransformacioLineal(object):
         Retorna el polinomi característic de la transformació lineal
         """
         return self.canonica.polinomi_caracteristic()
+    #
+    #
+    #
+    def es_vector_propi(self,u):
+        """
+        Retorna si el vector "u" és o no un vector propi
+        Paràmetres:
+            u: element de la class Vector
+        """
+        if not isinstance(u,Vector):
+            return None
+        if self.dimensio != u.dimensio:
+            return None
+        v = self.transforma(u)
+        return v.es_proporcional(u)
 
 
 class TransformacioAfi:
