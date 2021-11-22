@@ -3,7 +3,7 @@
 """
 Filename:   examen.py
 Author:     Rafel Amer (rafel.amer AT upc.edu)
-Copyright:  Rafel Amer 2020
+Copyright:  Rafel Amer 2020-2021
 Disclaimer: This program is provided "as is", without warranty of any kind,
             either expressed or implied, including, but not linmited to, the
             implied warranties of merchantability and fitness for a particular
@@ -41,6 +41,7 @@ class Examen:
         self.parser.add_option("--problemes",dest="problemes",default=None)
         self.parser.add_option("--possibles-problemes",dest="possibles",default=None)
         self.parser.add_option("--incompatibles",dest="incompatibles",default=None)
+        self.parser.add_option("--grups",dest="grups",default=None)
         self.parser.add_option("--dades",dest="fitxerdades",default=None)
         self.parser.add_option("--tex-engine",dest="engine",default=None)
         self.parser.add_option("--no-solucions",action="store_false",dest="solucions",default=True)
@@ -67,6 +68,8 @@ class Examen:
         print("   --possibles-problemes=<nombre>      : Nombre de possibles problemes")
         print("                                       : S'escullen aleatòriament \"nombre\" problemes")
         print("   --incompatibles=<incompatibilitats> : Llista d'incompatibiliats")
+        print("   --grups=<llista>                    : Llista de grups de problemes")
+        print("                                       : Si és possible, sortirà un problema de cad grup")
         print("   --dades=<fitxer>                    : Fitxer amb les dades JSON generades anteriorment")
         print("   --tex-engine=<programa>             : Nom del programa de LaTeX utilitzat")
         print("                                       : Si no s'especifica, no es generen els PDF")
@@ -111,6 +114,7 @@ class Examen:
         except:
             self.nombreexamens = None
         regex = re.compile('^\s*#.*$',re.IGNORECASE)
+        self.problemes = prob
         #
         # Comprovacions
         #
@@ -135,6 +139,26 @@ class Examen:
             except:
                 print ("Incompatibilitats no vàlides")
                 sys.exit(0)
+        #
+        # Grups
+        #
+        self.grups = None
+        if self.options.grups is not None:
+            try:
+                self.grups = self.options.grups.split(':')
+            except:
+                print ("Grups no vàlide")
+                sys.exit(0)
+            self.grups = [p.split(',') for p in self.grups]
+            try:
+                self.grups = [list(map(int,p)) for p in self.grups]
+                random.shuffle(self.grups)
+            except:
+                print ("Grups no vàlids")
+                sys.exit(0)
+        if self.grups is not None and isinstance(self.problemes,list):
+            print ("No es poden especificar llista de problemes i grups de problemes")
+            sys.exit(0)
         #
         # Enunciat de l'examen
         #
@@ -164,7 +188,7 @@ class Examen:
                             continue
                 f.close()
             except:
-                print("Error de lectura de l'exàmen")
+                print("Error de lectura del fitxer d'estudiants")
                 sys.exit(0)
         else:
             if self.nombreexamens is None:
@@ -172,7 +196,6 @@ class Examen:
         #
         # Enunciats dels problemes
         #
-        self.problemes = prob
         if isinstance(self.problemes,int):
             self.maxproblema = self.problemes
         elif isinstance(self.problemes,list):
@@ -294,11 +317,18 @@ class Examen:
             problemes = probs.problemes()
             if isinstance(self.problemes,list):
                 llista = list(self.problemes)
+                random.shuffle(llista)
             else:
                 llista = list(range(self.possibles))
                 random.shuffle(llista)
-                llista = [x+1 for x in llista]
-                llista = self.comprova_incompatibilitats(llista)
+                if self.grups is None:
+                    llista = [x+1 for x in llista]
+                    llista = self.comprova_incompatibilitats(llista)
+                else:
+                    llista = self.llista_per_grups()
+                    if llista is None:
+                        print("Impossible generar la llista de problemes")
+                        sys.exit(0)
             for i in range(self.maxproblema):
                 if i + 1 not in llista:
                     continue
@@ -327,6 +357,18 @@ class Examen:
     #
     #
     #
+    def es_compatible(self,p,llista):
+        if self.incompatibles is None:
+            return True
+        t = set(llista)
+        t |= {p}
+        for x in self.incompatibles:
+            if len(set(x) & t) > 1:
+                return False
+        return True
+    #
+    #
+    #
     def comprova_incompatibilitats(self,l):
         if self.incompatibles is None:
             return l[0:self.problemes]
@@ -351,6 +393,36 @@ class Examen:
                     finalitzat = False
                     break
         return actual
+    #
+    #
+    #
+    def llista_per_grups(self):
+        ng = len(self.grups)
+        #
+        # Hem especificat els grups --grups=1,2,3:4,5,6,7:8,9,10,11:12,13:14,15,16,17
+        # i els nombre de problemes --problemes=7
+        #
+        llista = []
+        k = 0
+        count = 0
+        while len(llista) < self.problemes:
+            if count > ng:
+                return None
+            k += 1
+            g = list(self.grups[k % ng])
+            lg = len(g)
+            if len(set(g) & set(llista)) == lg:
+                count += 1
+                continue
+            d = list(set(g) - set(llista))
+            random.shuffle(d)
+            p = [x for x in d if self.es_compatible(x,llista)]
+            if len(p) == 0:
+                count = +1
+            else:
+                llista.append(p[0])
+                count == 0
+        return llista
     #
     #
     #

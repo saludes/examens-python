@@ -39,7 +39,9 @@ Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<ent
     --problemes=<nombre|llista>         : Nombre de problemes o llista de problemes
     --possibles-problemes=<nombre>      : Nombre de possibles problemes
                                         : S'escullen aleatòriament d'entre aquest nombre de problemes
-    --incompatibles=<incompatibilitats> : Llista d'incompatibiliats                               
+    --incompatibles=<incompatibilitats> : Llista d'incompatibiliats
+    --grups=<llista>                    : Llista de grups de problemes     
+                                        : Si és possible, sortirà un problema de cad grup                        
     --dades=<fitxer>                    : Fitxer amb les dades generades anteriorment
     --tex-engine=<programa>             : Nom del programa de LaTeX utilitzat
                                         : Si no s'especifica, no es generen els PDF
