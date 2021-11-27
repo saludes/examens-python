@@ -1417,6 +1417,7 @@ class Matriu:
         columnes: nombre de columnes de la matriu
         matriu: matriu de la classe Matrix del sympy
         format: format LateX per a la matriu
+        diagonalitzable: si és o no diagonalitzable
 
         Només s'utilitzen quan generem una matriu diagonalitzble
           vaps: llista de vectors propis de la matriu
@@ -1439,6 +1440,7 @@ class Matriu:
         self.vaps = None
         self.veps = None
         self.format = None
+        self.diagonalitzable = None
     #
     #
     #
@@ -1938,6 +1940,8 @@ class Matriu:
                 continue
             if not vapsrepetits and len(set(vaps)) != ordre:
                 continue
+            if vapsrepetits and len(set(vaps)) == ordre:
+                continue
             vaps.sort()
             d = diag(*vaps)
             a = c.matriu * d * c.matriu**(-1)
@@ -1949,7 +1953,24 @@ class Matriu:
         m = cls(a)
         m.set_vaps(vaps)
         m.set_veps(c.vectors_columna())
+        m.diagonalitzable = True
         return m
+    #
+    #
+    #
+    def diagonalitza(self):
+        """
+           Calcula els valors propis i els vectors propis de la matriu i els
+           guarda a les variables self.vaps i self.veps. Actualitza el camp
+           self.diagonalitzable
+        """
+        if self.files != self.columnes:
+            return
+        e = self.matriu.eigenvects()
+        self.vaps, self.veps = vaps_veps(e)
+        self.diagonalitzable = False
+        if len(self.vaps) == self.files:
+            self.diagonalitzable = True
     #
     #
     #
