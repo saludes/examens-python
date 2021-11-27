@@ -318,7 +318,7 @@ def vaps_veps_amb_signe(result,signe=1):
             veps.append(vep)
     return (vaps,veps)
 
-def vaps_veps(result):
+def vaps_veps(result,ortogonals=False):
     """
     Retorna la llista valors propis i els seus vectors propis.
     Paràmetres:
@@ -327,12 +327,18 @@ def vaps_veps(result):
     vaps = []
     veps = []
     for l, m, us in result:
-        for k in range(m):
-            vaps.append(l)
-            n1 = Matriu(us[k])
-            vep = n1.vectors_columna()[0]
-            vep.simplificar()
-            veps.append(vep)
+        if ortogonals and m > 1:
+            vs = [Matriu(us[k]).vectors_columna()[0] for k in range(m)]
+            b = SubespaiVectorial(vs).base_ortogonal()
+            veps.extend(b)
+            vaps.extend(m*[l])
+        else:
+            for k in range(m):
+                vaps.append(l)
+                n1 = Matriu(us[k])
+                vep = n1.vectors_columna()[0]
+                vep.simplificar()
+                veps.append(vep)
     return (vaps,veps)
 
 
@@ -1958,7 +1964,7 @@ class Matriu:
     #
     #
     #
-    def diagonalitza(self):
+    def diagonalitza(self,ortogonals=False):
         """
            Calcula els valors propis i els vectors propis de la matriu i els
            guarda a les variables self.vaps i self.veps. Actualitza el camp
@@ -1967,7 +1973,7 @@ class Matriu:
         if self.files != self.columnes:
             return
         e = self.matriu.eigenvects()
-        self.vaps, self.veps = vaps_veps(e)
+        self.vaps, self.veps = vaps_veps(e,ortogonals=ortogonals)
         self.diagonalitzable = False
         if len(self.vaps) == self.files:
             self.diagonalitzable = True
@@ -4994,6 +5000,14 @@ class TransformacioLineal(object):
             return None
         v = self.transforma(u)
         return v.es_proporcional(u)
+    #
+    #
+    #
+    def diagonalitza(self,ortogonals=False):
+        """
+            Diagonalitza la matriu de la transformació lineal en la base canònica
+        """
+        self.canonica.diagonalitza(ortogonals)
 
 
 class TransformacioAfi:
