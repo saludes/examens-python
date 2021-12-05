@@ -371,7 +371,7 @@ def vaps_veps_amb_signe(result,signe=1):
             veps.append(vep)
     return (vaps,veps)
 
-def vaps_veps(result):
+def vaps_veps(result,ortogonals=False):
     &#34;&#34;&#34;
     Retorna la llista valors propis i els seus vectors propis.
     Paràmetres:
@@ -380,12 +380,18 @@ def vaps_veps(result):
     vaps = []
     veps = []
     for l, m, us in result:
-        for k in range(m):
-            vaps.append(l)
-            n1 = Matriu(us[k])
-            vep = n1.vectors_columna()[0]
-            vep.simplificar()
-            veps.append(vep)
+        if ortogonals and m &gt; 1:
+            vs = [Matriu(us[k]).vectors_columna()[0] for k in range(m)]
+            b = SubespaiVectorial(vs).base_ortogonal()
+            veps.extend(b)
+            vaps.extend(m*[l])
+        else:
+            for k in range(m):
+                vaps.append(l)
+                n1 = Matriu(us[k])
+                vep = n1.vectors_columna()[0]
+                vep.simplificar()
+                veps.append(vep)
     return (vaps,veps)
 
 
@@ -469,6 +475,7 @@ class Vector(object):
     Atributs:
         dimensio: el nombre de components o longitud del vector
         components: llista amb les components del vector
+        big: si ha d&#39;escrire \left( ... \right)
     &#34;&#34;&#34;
     #
     #
@@ -503,6 +510,7 @@ class Vector(object):
             c = list(args)
         self.dimensio = len(c)
         self.components = list(c)
+        self.big = False
     #
     #
     #
@@ -539,6 +547,14 @@ class Vector(object):
                 if c[i] == 0:
                     c[i] = values[random.randint(0,m)]
         return cls(c)
+    #
+    #
+    #
+    def set_big(self,big=True):
+        &#34;&#34;&#34;
+           Activa o desactiva l&#39;opció \left( ... \right)
+        &#34;&#34;&#34;
+        self.big = big
     #
     #
     #
@@ -694,7 +710,9 @@ class Vector(object):
         if m != 1:
             s = f&#34;\\deufrac{{1}}{{{latex(m)}}}&#34;
         r = &#34;,&#34;.join([latex(k) for k in l])
-        return f&#34;{s}\\left({r}\\right)&#34;
+        if self.big:
+            return f&#34;{s}\\left({r}\\right)&#34;
+        return f&#34;{s}({r})&#34;
     #
     #
     #
@@ -1470,6 +1488,7 @@ class Matriu:
         columnes: nombre de columnes de la matriu
         matriu: matriu de la classe Matrix del sympy
         format: format LateX per a la matriu
+        diagonalitzable: si és o no diagonalitzable
 
         Només s&#39;utilitzen quan generem una matriu diagonalitzble
           vaps: llista de vectors propis de la matriu
@@ -1492,6 +1511,7 @@ class Matriu:
         self.vaps = None
         self.veps = None
         self.format = None
+        self.diagonalitzable = None
     #
     #
     #
@@ -1824,7 +1844,7 @@ class Matriu:
                             l.append(a2.q)
                             s.append(True)
                 else:
-                    return matriu_latex(self.matriu)
+                    return matriu_latex(self.matriu,format=self.format)
         if square:
             for k in range(len(l)):
                 if not s[k]:
@@ -1991,6 +2011,8 @@ class Matriu:
                 continue
             if not vapsrepetits and len(set(vaps)) != ordre:
                 continue
+            if vapsrepetits and len(set(vaps)) == ordre:
+                continue
             vaps.sort()
             d = diag(*vaps)
             a = c.matriu * d * c.matriu**(-1)
@@ -2002,7 +2024,24 @@ class Matriu:
         m = cls(a)
         m.set_vaps(vaps)
         m.set_veps(c.vectors_columna())
+        m.diagonalitzable = True
         return m
+    #
+    #
+    #
+    def diagonalitza(self,ortogonals=False):
+        &#34;&#34;&#34;
+           Calcula els valors propis i els vectors propis de la matriu i els
+           guarda a les variables self.vaps i self.veps. Actualitza el camp
+           self.diagonalitzable
+        &#34;&#34;&#34;
+        if self.files != self.columnes:
+            return
+        e = self.matriu.eigenvects()
+        self.vaps, self.veps = vaps_veps(e,ortogonals=ortogonals)
+        self.diagonalitzable = False
+        if len(self.vaps) == self.files:
+            self.diagonalitzable = True
     #
     #
     #
@@ -5026,6 +5065,14 @@ class TransformacioLineal(object):
             return None
         v = self.transforma(u)
         return v.es_proporcional(u)
+    #
+    #
+    #
+    def diagonalitza(self,ortogonals=False):
+        &#34;&#34;&#34;
+            Diagonalitza la matriu de la transformació lineal en la base canònica
+        &#34;&#34;&#34;
+        self.canonica.diagonalitza(ortogonals)
 
 
 class TransformacioAfi:
@@ -8487,7 +8534,7 @@ del tipus Matrix del sympy</p></div>
 </details>
 </dd>
 <dt id="Algebra.vaps_veps"><code class="name flex">
-<span>def <span class="ident">vaps_veps</span></span>(<span>result)</span>
+<span>def <span class="ident">vaps_veps</span></span>(<span>result, ortogonals=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Retorna la llista valors propis i els seus vectors propis.</p>
@@ -8497,7 +8544,7 @@ del tipus Matrix del sympy</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def vaps_veps(result):
+<pre><code class="python">def vaps_veps(result,ortogonals=False):
     &#34;&#34;&#34;
     Retorna la llista valors propis i els seus vectors propis.
     Paràmetres:
@@ -8506,12 +8553,18 @@ del tipus Matrix del sympy</p></div>
     vaps = []
     veps = []
     for l, m, us in result:
-        for k in range(m):
-            vaps.append(l)
-            n1 = Matriu(us[k])
-            vep = n1.vectors_columna()[0]
-            vep.simplificar()
-            veps.append(vep)
+        if ortogonals and m &gt; 1:
+            vs = [Matriu(us[k]).vectors_columna()[0] for k in range(m)]
+            b = SubespaiVectorial(vs).base_ortogonal()
+            veps.extend(b)
+            vaps.extend(m*[l])
+        else:
+            for k in range(m):
+                vaps.append(l)
+                n1 = Matriu(us[k])
+                vep = n1.vectors_columna()[0]
+                vep.simplificar()
+                veps.append(vep)
     return (vaps,veps)</code></pre>
 </details>
 </dd>
@@ -14168,7 +14221,8 @@ Ens insteressa poder multiplicar Matrius per Vectors</p>
 <p>dimensio: nombre de files de la matriu
 columnes: nombre de columnes de la matriu
 matriu: matriu de la classe Matrix del sympy
-format: format LateX per a la matriu</p>
+format: format LateX per a la matriu
+diagonalitzable: si és o no diagonalitzable</p>
 <p>Només s'utilitzen quan generem una matriu diagonalitzble
 vaps: llista de vectors propis de la matriu
 veps: llista de vectors propis de la matriu</p>
@@ -14191,6 +14245,7 @@ per defecte és la matriu unitat d'ordre 3</p></div>
         columnes: nombre de columnes de la matriu
         matriu: matriu de la classe Matrix del sympy
         format: format LateX per a la matriu
+        diagonalitzable: si és o no diagonalitzable
 
         Només s&#39;utilitzen quan generem una matriu diagonalitzble
           vaps: llista de vectors propis de la matriu
@@ -14213,6 +14268,7 @@ per defecte és la matriu unitat d'ordre 3</p></div>
         self.vaps = None
         self.veps = None
         self.format = None
+        self.diagonalitzable = None
     #
     #
     #
@@ -14545,7 +14601,7 @@ per defecte és la matriu unitat d'ordre 3</p></div>
                             l.append(a2.q)
                             s.append(True)
                 else:
-                    return matriu_latex(self.matriu)
+                    return matriu_latex(self.matriu,format=self.format)
         if square:
             for k in range(len(l)):
                 if not s[k]:
@@ -14712,6 +14768,8 @@ per defecte és la matriu unitat d'ordre 3</p></div>
                 continue
             if not vapsrepetits and len(set(vaps)) != ordre:
                 continue
+            if vapsrepetits and len(set(vaps)) == ordre:
+                continue
             vaps.sort()
             d = diag(*vaps)
             a = c.matriu * d * c.matriu**(-1)
@@ -14723,7 +14781,24 @@ per defecte és la matriu unitat d'ordre 3</p></div>
         m = cls(a)
         m.set_vaps(vaps)
         m.set_veps(c.vectors_columna())
+        m.diagonalitzable = True
         return m
+    #
+    #
+    #
+    def diagonalitza(self,ortogonals=False):
+        &#34;&#34;&#34;
+           Calcula els valors propis i els vectors propis de la matriu i els
+           guarda a les variables self.vaps i self.veps. Actualitza el camp
+           self.diagonalitzable
+        &#34;&#34;&#34;
+        if self.files != self.columnes:
+            return
+        e = self.matriu.eigenvects()
+        self.vaps, self.veps = vaps_veps(e,ortogonals=ortogonals)
+        self.diagonalitzable = False
+        if len(self.vaps) == self.files:
+            self.diagonalitzable = True
     #
     #
     #
@@ -15245,6 +15320,8 @@ def diagonalitzable(cls,ordre=3,maxim=5,mzeros=-1,mvaps=3,vapsnuls=False,vapsrep
             continue
         if not vapsrepetits and len(set(vaps)) != ordre:
             continue
+        if vapsrepetits and len(set(vaps)) == ordre:
+            continue
         vaps.sort()
         d = diag(*vaps)
         a = c.matriu * d * c.matriu**(-1)
@@ -15256,6 +15333,7 @@ def diagonalitzable(cls,ordre=3,maxim=5,mzeros=-1,mvaps=3,vapsnuls=False,vapsrep
     m = cls(a)
     m.set_vaps(vaps)
     m.set_veps(c.vectors_columna())
+    m.diagonalitzable = True
     return m</code></pre>
 </details>
 </dd>
@@ -15577,6 +15655,32 @@ def transformacio_elemental(cls,ordre,i,j,s,t):
     Retorna el determiant de la matriu
     &#34;&#34;&#34;
     return self.matriu.det()</code></pre>
+</details>
+</dd>
+<dt id="Algebra.Matriu.diagonalitza"><code class="name flex">
+<span>def <span class="ident">diagonalitza</span></span>(<span>self, ortogonals=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calcula els valors propis i els vectors propis de la matriu i els
+guarda a les variables self.vaps i self.veps. Actualitza el camp
+self.diagonalitzable</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def diagonalitza(self,ortogonals=False):
+    &#34;&#34;&#34;
+       Calcula els valors propis i els vectors propis de la matriu i els
+       guarda a les variables self.vaps i self.veps. Actualitza el camp
+       self.diagonalitzable
+    &#34;&#34;&#34;
+    if self.files != self.columnes:
+        return
+    e = self.matriu.eigenvects()
+    self.vaps, self.veps = vaps_veps(e,ortogonals=ortogonals)
+    self.diagonalitzable = False
+    if len(self.vaps) == self.files:
+        self.diagonalitzable = True</code></pre>
 </details>
 </dd>
 <dt id="Algebra.Matriu.es_diagonal"><code class="name flex">
@@ -18332,6 +18436,7 @@ v = Vector(3,1,-2)</p></div>
 <li><code><a title="Algebra.Vector.punt" href="#Algebra.Vector.punt">punt</a></code></li>
 <li><code><a title="Algebra.Vector.radsimplificar" href="#Algebra.Vector.radsimplificar">radsimplificar</a></code></li>
 <li><code><a title="Algebra.Vector.reordena_aleatoriament" href="#Algebra.Vector.reordena_aleatoriament">reordena_aleatoriament</a></code></li>
+<li><code><a title="Algebra.Vector.set_big" href="#Algebra.Vector.set_big">set_big</a></code></li>
 <li><code><a title="Algebra.Vector.simplificar" href="#Algebra.Vector.simplificar">simplificar</a></code></li>
 <li><code><a title="Algebra.Vector.tots_enters" href="#Algebra.Vector.tots_enters">tots_enters</a></code></li>
 </ul>
@@ -23582,7 +23687,15 @@ format: format LaTeX per a la matriu</p></div>
         if self.dimensio != u.dimensio:
             return None
         v = self.transforma(u)
-        return v.es_proporcional(u)</code></pre>
+        return v.es_proporcional(u)
+    #
+    #
+    #
+    def diagonalitza(self,ortogonals=False):
+        &#34;&#34;&#34;
+            Diagonalitza la matriu de la transformació lineal en la base canònica
+        &#34;&#34;&#34;
+        self.canonica.diagonalitza(ortogonals)</code></pre>
 </details>
 <h3>Static methods</h3>
 <dl>
@@ -23917,6 +24030,22 @@ ho fa en graus</p></div>
     Retorna el deterinant de la transformació lineal
     &#34;&#34;&#34;
     return self.canonica.determinant()</code></pre>
+</details>
+</dd>
+<dt id="Algebra.TransformacioLineal.diagonalitza"><code class="name flex">
+<span>def <span class="ident">diagonalitza</span></span>(<span>self, ortogonals=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Diagonalitza la matriu de la transformació lineal en la base canònica</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def diagonalitza(self,ortogonals=False):
+    &#34;&#34;&#34;
+        Diagonalitza la matriu de la transformació lineal en la base canònica
+    &#34;&#34;&#34;
+    self.canonica.diagonalitza(ortogonals)</code></pre>
 </details>
 </dd>
 <dt id="Algebra.TransformacioLineal.eix_angle_rotacio"><code class="name flex">
@@ -24662,7 +24791,9 @@ varietat afi</p>
 <div class="desc"><p>Classe que ens permetrà representar vectors i punts</p>
 <h2 id="atributs">Atributs</h2>
 <p>dimensio: el nombre de components o longitud del vector
-components: llista amb les components del vector</p>
+components: llista amb les components del vector
+big: si ha d'escrire \left( &hellip;
+ight)</p>
 <p>Constructor.</p>
 <h2 id="parametres">Paràmetres</h2>
 <p>c: Una única llista de nombres o una llista de paràmetres
@@ -24680,6 +24811,7 @@ v = Vector(3,1,-2)</p></div>
     Atributs:
         dimensio: el nombre de components o longitud del vector
         components: llista amb les components del vector
+        big: si ha d&#39;escrire \left( ... \right)
     &#34;&#34;&#34;
     #
     #
@@ -24714,6 +24846,7 @@ v = Vector(3,1,-2)</p></div>
             c = list(args)
         self.dimensio = len(c)
         self.components = list(c)
+        self.big = False
     #
     #
     #
@@ -24750,6 +24883,14 @@ v = Vector(3,1,-2)</p></div>
                 if c[i] == 0:
                     c[i] = values[random.randint(0,m)]
         return cls(c)
+    #
+    #
+    #
+    def set_big(self,big=True):
+        &#34;&#34;&#34;
+           Activa o desactiva l&#39;opció \left( ... \right)
+        &#34;&#34;&#34;
+        self.big = big
     #
     #
     #
@@ -24905,7 +25046,9 @@ v = Vector(3,1,-2)</p></div>
         if m != 1:
             s = f&#34;\\deufrac{{1}}{{{latex(m)}}}&#34;
         r = &#34;,&#34;.join([latex(k) for k in l])
-        return f&#34;{s}\\left({r}\\right)&#34;
+        if self.big:
+            return f&#34;{s}\\left({r}\\right)&#34;
+        return f&#34;{s}({r})&#34;
     #
     #
     #
@@ -25851,6 +25994,23 @@ u.radsimplificar()</p></div>
     return Vector(r)</code></pre>
 </details>
 </dd>
+<dt id="Algebra.Vector.set_big"><code class="name flex">
+<span>def <span class="ident">set_big</span></span>(<span>self, big=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Activa o desactiva l'opció \left( &hellip;
+ight)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_big(self,big=True):
+    &#34;&#34;&#34;
+       Activa o desactiva l&#39;opció \left( ... \right)
+    &#34;&#34;&#34;
+    self.big = big</code></pre>
+</details>
+</dd>
 <dt id="Algebra.Vector.simplificar"><code class="name flex">
 <span>def <span class="ident">simplificar</span></span>(<span>self)</span>
 </code></dt>
@@ -26133,6 +26293,7 @@ u.simplificar()</p></div>
 <li><code><a title="Algebra.Matriu.det" href="#Algebra.Matriu.det">det</a></code></li>
 <li><code><a title="Algebra.Matriu.determinant" href="#Algebra.Matriu.determinant">determinant</a></code></li>
 <li><code><a title="Algebra.Matriu.diagonal" href="#Algebra.Matriu.diagonal">diagonal</a></code></li>
+<li><code><a title="Algebra.Matriu.diagonalitza" href="#Algebra.Matriu.diagonalitza">diagonalitza</a></code></li>
 <li><code><a title="Algebra.Matriu.diagonalitzable" href="#Algebra.Matriu.diagonalitzable">diagonalitzable</a></code></li>
 <li><code><a title="Algebra.Matriu.es_diagonal" href="#Algebra.Matriu.es_diagonal">es_diagonal</a></code></li>
 <li><code><a title="Algebra.Matriu.es_simetrica" href="#Algebra.Matriu.es_simetrica">es_simetrica</a></code></li>
@@ -26368,6 +26529,7 @@ u.simplificar()</p></div>
 <li><code><a title="Algebra.TransformacioLineal.angles_euler" href="#Algebra.TransformacioLineal.angles_euler">angles_euler</a></code></li>
 <li><code><a title="Algebra.TransformacioLineal.antiimatges" href="#Algebra.TransformacioLineal.antiimatges">antiimatges</a></code></li>
 <li><code><a title="Algebra.TransformacioLineal.determinant" href="#Algebra.TransformacioLineal.determinant">determinant</a></code></li>
+<li><code><a title="Algebra.TransformacioLineal.diagonalitza" href="#Algebra.TransformacioLineal.diagonalitza">diagonalitza</a></code></li>
 <li><code><a title="Algebra.TransformacioLineal.eix_angle_rotacio" href="#Algebra.TransformacioLineal.eix_angle_rotacio">eix_angle_rotacio</a></code></li>
 <li><code><a title="Algebra.TransformacioLineal.es_rotacio" href="#Algebra.TransformacioLineal.es_rotacio">es_rotacio</a></code></li>
 <li><code><a title="Algebra.TransformacioLineal.es_simetrica" href="#Algebra.TransformacioLineal.es_simetrica">es_simetrica</a></code></li>
@@ -26425,6 +26587,7 @@ u.simplificar()</p></div>
 <li><code><a title="Algebra.Vector.punt" href="#Algebra.Vector.punt">punt</a></code></li>
 <li><code><a title="Algebra.Vector.radsimplificar" href="#Algebra.Vector.radsimplificar">radsimplificar</a></code></li>
 <li><code><a title="Algebra.Vector.reordena_aleatoriament" href="#Algebra.Vector.reordena_aleatoriament">reordena_aleatoriament</a></code></li>
+<li><code><a title="Algebra.Vector.set_big" href="#Algebra.Vector.set_big">set_big</a></code></li>
 <li><code><a title="Algebra.Vector.simplificar" href="#Algebra.Vector.simplificar">simplificar</a></code></li>
 <li><code><a title="Algebra.Vector.tots_enters" href="#Algebra.Vector.tots_enters">tots_enters</a></code></li>
 </ul>

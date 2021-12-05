@@ -422,6 +422,7 @@ class Vector(object):
     Atributs:
         dimensio: el nombre de components o longitud del vector
         components: llista amb les components del vector
+        big: si ha d'escrire \left( ... \right)
     """
     #
     #
@@ -456,6 +457,7 @@ class Vector(object):
             c = list(args)
         self.dimensio = len(c)
         self.components = list(c)
+        self.big = False
     #
     #
     #
@@ -492,6 +494,14 @@ class Vector(object):
                 if c[i] == 0:
                     c[i] = values[random.randint(0,m)]
         return cls(c)
+    #
+    #
+    #
+    def set_big(self,big=True):
+        """
+           Activa o desactiva l'opció \left( ... \right)
+        """
+        self.big = big
     #
     #
     #
@@ -647,7 +657,9 @@ class Vector(object):
         if m != 1:
             s = f"\\deufrac{{1}}{{{latex(m)}}}"
         r = ",".join([latex(k) for k in l])
-        return f"{s}\\left({r}\\right)"
+        if self.big:
+            return f"{s}\\left({r}\\right)"
+        return f"{s}({r})"
     #
     #
     #
@@ -1779,7 +1791,7 @@ class Matriu:
                             l.append(a2.q)
                             s.append(True)
                 else:
-                    return matriu_latex(self.matriu)
+                    return matriu_latex(self.matriu,format=self.format)
         if square:
             for k in range(len(l)):
                 if not s[k]:
