@@ -5663,7 +5663,7 @@ class Conica(object):
     #
     #
     @classmethod
-    def hiperbola(cls,maxim=30,canonica=False):
+    def hiperbola(cls,maxim=30,canonica=False,focus=False):
         """
         Retorna una hipèrbola aleatòria
         Paràmetres:
@@ -5671,7 +5671,7 @@ class Conica(object):
         """
         trobat = False
         while not trobat:
-            h = Hiperbola.aleatoria(canonica=canonica)
+            h = Hiperbola.aleatoria(canonica=canonica,focus=focus)
             trobat = canonica or h.canonica.norma_maxim() <= maxim
         return h
     #
@@ -5805,7 +5805,7 @@ class Ellipse(Conica):
     #
     #
     @classmethod
-    def aleatoria(cls,canonica=False):
+    def aleatoria(cls,canonica=False,):
         """
         Retorna una el·lipse aleatòria
         """
@@ -5814,9 +5814,9 @@ class Ellipse(Conica):
             random.shuffle(base)
             eix = base[0]
         else:
-            eix = Vector.aleatori(l=2,maxim=3,nuls=False)
+            eix = Vector.aleatori(l=2,maxim=5,nuls=False)
         centre = Punt.aleatori(l=2,maxim=3,nuls=False)
-        c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
+        c = [1,2,3,4,5,6,7,8,9,10]
         trobat = False
         while not trobat:
             a = random.randint(0,len(c) - 1)
@@ -5826,6 +5826,9 @@ class Ellipse(Conica):
             trobat = a2 != b2
         if b2 > a2:
             a2, b2 = b2, a2
+        l = eix.length()
+        a2 = (a2*l)**2
+        b2 = (b2*l)**2
         return cls(a2,b2,centre,eix)
     #
     #
@@ -5981,9 +5984,13 @@ class Hiperbola(Conica):
     #
     #
     @classmethod
-    def aleatoria(cls,canonica=False):
+    def aleatoria(cls,canonica=False,focus=False):
         """
         Retorna una hipèrbola aleatòria
+        Paràmetres:
+          canonica: si els eixos principals són paral·lels als de la
+             referència canònica
+          focus: si els focus han de tenir coordenades enteres
         """
         if canonica:
             base = [Vector(1,0),Vector(0,1)]
@@ -5992,14 +5999,25 @@ class Hiperbola(Conica):
         else:
             eix = Vector.aleatori(l=2,maxim=3,nuls=False)
         centre = Punt.aleatori(l=2,maxim=3,nuls=False)
-        c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
+        values = [1,2,3,4,5,5,7,8,9,10]
         trobat = False
         while not trobat:
-            a = random.randint(0,len(c) - 1)
-            a2 = c[a]
-            a = random.randint(0,len(c) - 1)
-            b2 = c[a]
+            a = random.randint(0,len(values) - 1)
+            a2 = values[a]
+            if focus:
+                c2 = a2 + random.randint(1,3)
+                b2 = sqrt(c2 - a2)
+            else:
+                a = random.randint(0,len(values) - 1)
+                b2 = values[a]
             trobat = a2 != b2
+        l = eix.length()
+        a2 = (a2*l)**2
+        if focus:
+            c2 = (c2*l)**2
+            b2 = c2 - a2
+        else:
+            b2 = (b2*l)**2
         return cls(a2,b2,centre,eix)
     #
     #
@@ -6248,6 +6266,16 @@ class Parabola(Conica):
         """
         p2 = self.parametre() / 2
         return self.ref.punt_de_coordenades(Punt([0,p2]))
+    #
+    #
+    #
+    def recta_directriu(self):
+        """
+        Retorna la recta directriu com a recta afí
+        """
+        p2 = self.parametre() / 2
+        p = self.ref.punt_de_coordenades(Punt([0,-p2]))
+        return RectaAfi(p,self.ref.base.vecs[0])
     #
     #
     #

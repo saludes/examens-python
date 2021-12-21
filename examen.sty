@@ -25,6 +25,8 @@
 %
 %
 %
+\newboolean{use@minion}
+\setboolean{use@minion}{false}
 \newboolean{use@stix}
 \setboolean{use@stix}{false}
 \newboolean{use@times}
@@ -33,6 +35,10 @@
 \setboolean{use@mtpro}{false}
 \newboolean{use@apretat}
 \setboolean{use@apretat}{false}
+\DeclareOption{minion}{
+ \setboolean{use@minion}{true}
+ \catcode`\·=\active
+}
 \DeclareOption{stix}{
  \setboolean{use@stix}{true}
  \catcode`\·=\active
@@ -131,6 +137,18 @@
 %
 % Font
 %
+\ifthenelse{\boolean{use@minion}}{
+ \usepackage{fontspec}
+ \usepackage{unicode-math}
+ \setmathfont{STIXTwoMath}
+ \setmainfont{MinionPro}[
+  UprightFont={*-Regular},
+  BoldFont={*-Bold},
+  ItalicFont={*-It},
+  BoldItalicFont={*-BoldIt}]
+ \setmathfont[range={\mathbb}]{TeX Gyre Pagella Math}
+}{}
+
 \ifthenelse{\boolean{use@stix}}{
  \usepackage{fontspec}
  \usepackage{unicode-math}
