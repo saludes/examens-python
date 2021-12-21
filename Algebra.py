@@ -5737,7 +5737,22 @@ class Conica(object):
             unitaris: si és True, els retorna unitaris
         """
         return self.ref.vectors(unitaris)
-
+    #
+    #
+    #
+    def eix_principal(self):
+        """
+        Retorna l'eix principal com a recta afí
+        """
+        return RectaAfi(self.ref.origen,self.ref.base.vecs[0])
+    #
+    #
+    #
+    def eix_secundari(self):
+        """
+        Retorna l'eix secundari com a recta afí
+        """
+        return RectaAfi(self.ref.origen,self.ref.base.vecs[1])
 
 class Ellipse(Conica):
     """
