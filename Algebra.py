@@ -510,7 +510,7 @@ class Vector(object):
         Retorna True si totes les components del vector són nombres enters
         """
         for k in self.components:
-            if not isinstance(k,Integer):
+            if not (isinstance(k,Integer) or isinstance(k,int)):
                 return False
         return True
     #
