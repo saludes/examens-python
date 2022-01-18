@@ -111,12 +111,14 @@ if sender is None or subject is None:
     print("S'ha d'especificar l'assumpte i l'emisor dels correus")
     sys.exit(0)
 
+regex = re.compile('^\s*#.*$',re.IGNORECASE)
 try:
     with open(est) as f:
         for line in f:
-            line = line.rstrip()
+            line = line.strip()
             if regex.match(line):
                 continue
+            print(line)
             try:
                 data = line.split(':')
                 estudiants.append({'nom' : data[0],'cognoms' : data[1],'email' : data[2]})
