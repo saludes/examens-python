@@ -563,7 +563,7 @@ class Vector(object):
         Retorna True si totes les components del vector són nombres enters
         &#34;&#34;&#34;
         for k in self.components:
-            if not isinstance(k,Integer):
+            if not (isinstance(k,Integer) or isinstance(k,int)):
                 return False
         return True
     #
@@ -2623,6 +2623,14 @@ class EquacioLineal:
             if m &gt; n:
                 n = m
         return SistemaEquacions.from_equacions([self.equacio],n+1,self.prime)
+    #
+    #
+    #
+    def resol(self,unknown):
+        &#34;&#34;&#34;
+        Resol l&#39;equació aïllant la incògnita &#39;unknown&#39;
+        &#34;&#34;&#34;
+        return solve(self.equacio,unknown)[0]
 
 
 class SistemaEquacions:
@@ -5716,7 +5724,7 @@ class Conica(object):
     #
     #
     @classmethod
-    def hiperbola(cls,maxim=30,canonica=False):
+    def hiperbola(cls,maxim=30,canonica=False,focus=False):
         &#34;&#34;&#34;
         Retorna una hipèrbola aleatòria
         Paràmetres:
@@ -5724,7 +5732,7 @@ class Conica(object):
         &#34;&#34;&#34;
         trobat = False
         while not trobat:
-            h = Hiperbola.aleatoria(canonica=canonica)
+            h = Hiperbola.aleatoria(canonica=canonica,focus=focus)
             trobat = canonica or h.canonica.norma_maxim() &lt;= maxim
         return h
     #
@@ -5858,7 +5866,7 @@ class Ellipse(Conica):
     #
     #
     @classmethod
-    def aleatoria(cls,canonica=False):
+    def aleatoria(cls,canonica=False,):
         &#34;&#34;&#34;
         Retorna una el·lipse aleatòria
         &#34;&#34;&#34;
@@ -5867,9 +5875,9 @@ class Ellipse(Conica):
             random.shuffle(base)
             eix = base[0]
         else:
-            eix = Vector.aleatori(l=2,maxim=3,nuls=False)
+            eix = Vector.aleatori(l=2,maxim=5,nuls=False)
         centre = Punt.aleatori(l=2,maxim=3,nuls=False)
-        c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
+        c = [1,2,3,4,5,6,7,8,9,10]
         trobat = False
         while not trobat:
             a = random.randint(0,len(c) - 1)
@@ -5879,6 +5887,9 @@ class Ellipse(Conica):
             trobat = a2 != b2
         if b2 &gt; a2:
             a2, b2 = b2, a2
+        l = eix.length()
+        a2 = (a2*l)**2
+        b2 = (b2*l)**2
         return cls(a2,b2,centre,eix)
     #
     #
@@ -6034,9 +6045,13 @@ class Hiperbola(Conica):
     #
     #
     @classmethod
-    def aleatoria(cls,canonica=False):
+    def aleatoria(cls,canonica=False,focus=False):
         &#34;&#34;&#34;
         Retorna una hipèrbola aleatòria
+        Paràmetres:
+          canonica: si els eixos principals són paral·lels als de la
+             referència canònica
+          focus: si els focus han de tenir coordenades enteres
         &#34;&#34;&#34;
         if canonica:
             base = [Vector(1,0),Vector(0,1)]
@@ -6045,14 +6060,25 @@ class Hiperbola(Conica):
         else:
             eix = Vector.aleatori(l=2,maxim=3,nuls=False)
         centre = Punt.aleatori(l=2,maxim=3,nuls=False)
-        c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
+        values = [1,2,3,4,5,5,7,8,9,10]
         trobat = False
         while not trobat:
-            a = random.randint(0,len(c) - 1)
-            a2 = c[a]
-            a = random.randint(0,len(c) - 1)
-            b2 = c[a]
+            a = random.randint(0,len(values) - 1)
+            a2 = values[a]
+            if focus:
+                c2 = a2 + random.randint(1,3)
+                b2 = sqrt(c2 - a2)
+            else:
+                a = random.randint(0,len(values) - 1)
+                b2 = values[a]
             trobat = a2 != b2
+        l = eix.length()
+        a2 = (a2*l)**2
+        if focus:
+            c2 = (c2*l)**2
+            b2 = c2 - a2
+        else:
+            b2 = (b2*l)**2
         return cls(a2,b2,centre,eix)
     #
     #
@@ -6301,6 +6327,16 @@ class Parabola(Conica):
         &#34;&#34;&#34;
         p2 = self.parametre() / 2
         return self.ref.punt_de_coordenades(Punt([0,p2]))
+    #
+    #
+    #
+    def recta_directriu(self):
+        &#34;&#34;&#34;
+        Retorna la recta directriu com a recta afí
+        &#34;&#34;&#34;
+        p2 = self.parametre() / 2
+        p = self.ref.punt_de_coordenades(Punt([0,-p2]))
+        return RectaAfi(p,self.ref.base.vecs[0])
     #
     #
     #
@@ -10777,7 +10813,7 @@ canonica: matriu projectiva de la cònica en la referència canònica</p></div>
     #
     #
     @classmethod
-    def hiperbola(cls,maxim=30,canonica=False):
+    def hiperbola(cls,maxim=30,canonica=False,focus=False):
         &#34;&#34;&#34;
         Retorna una hipèrbola aleatòria
         Paràmetres:
@@ -10785,7 +10821,7 @@ canonica: matriu projectiva de la cònica en la referència canònica</p></div>
         &#34;&#34;&#34;
         trobat = False
         while not trobat:
-            h = Hiperbola.aleatoria(canonica=canonica)
+            h = Hiperbola.aleatoria(canonica=canonica,focus=focus)
             trobat = canonica or h.canonica.norma_maxim() &lt;= maxim
         return h
     #
@@ -11013,7 +11049,7 @@ def from_equacio(cls,eq):
 </details>
 </dd>
 <dt id="Algebra.Conica.hiperbola"><code class="name flex">
-<span>def <span class="ident">hiperbola</span></span>(<span>maxim=30, canonica=False)</span>
+<span>def <span class="ident">hiperbola</span></span>(<span>maxim=30, canonica=False, focus=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Retorna una hipèrbola aleatòria</p>
@@ -11024,7 +11060,7 @@ def from_equacio(cls,eq):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def hiperbola(cls,maxim=30,canonica=False):
+def hiperbola(cls,maxim=30,canonica=False,focus=False):
     &#34;&#34;&#34;
     Retorna una hipèrbola aleatòria
     Paràmetres:
@@ -11032,7 +11068,7 @@ def hiperbola(cls,maxim=30,canonica=False):
     &#34;&#34;&#34;
     trobat = False
     while not trobat:
-        h = Hiperbola.aleatoria(canonica=canonica)
+        h = Hiperbola.aleatoria(canonica=canonica,focus=focus)
         trobat = canonica or h.canonica.norma_maxim() &lt;= maxim
     return h</code></pre>
 </details>
@@ -11237,7 +11273,7 @@ def parabola(cls,maxim=30,canonica=False):
     #
     #
     @classmethod
-    def aleatoria(cls,canonica=False):
+    def aleatoria(cls,canonica=False,):
         &#34;&#34;&#34;
         Retorna una el·lipse aleatòria
         &#34;&#34;&#34;
@@ -11246,9 +11282,9 @@ def parabola(cls,maxim=30,canonica=False):
             random.shuffle(base)
             eix = base[0]
         else:
-            eix = Vector.aleatori(l=2,maxim=3,nuls=False)
+            eix = Vector.aleatori(l=2,maxim=5,nuls=False)
         centre = Punt.aleatori(l=2,maxim=3,nuls=False)
-        c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
+        c = [1,2,3,4,5,6,7,8,9,10]
         trobat = False
         while not trobat:
             a = random.randint(0,len(c) - 1)
@@ -11258,6 +11294,9 @@ def parabola(cls,maxim=30,canonica=False):
             trobat = a2 != b2
         if b2 &gt; a2:
             a2, b2 = b2, a2
+        l = eix.length()
+        a2 = (a2*l)**2
+        b2 = (b2*l)**2
         return cls(a2,b2,centre,eix)
     #
     #
@@ -11379,7 +11418,7 @@ def parabola(cls,maxim=30,canonica=False):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def aleatoria(cls,canonica=False):
+def aleatoria(cls,canonica=False,):
     &#34;&#34;&#34;
     Retorna una el·lipse aleatòria
     &#34;&#34;&#34;
@@ -11388,9 +11427,9 @@ def aleatoria(cls,canonica=False):
         random.shuffle(base)
         eix = base[0]
     else:
-        eix = Vector.aleatori(l=2,maxim=3,nuls=False)
+        eix = Vector.aleatori(l=2,maxim=5,nuls=False)
     centre = Punt.aleatori(l=2,maxim=3,nuls=False)
-    c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
+    c = [1,2,3,4,5,6,7,8,9,10]
     trobat = False
     while not trobat:
         a = random.randint(0,len(c) - 1)
@@ -11400,6 +11439,9 @@ def aleatoria(cls,canonica=False):
         trobat = a2 != b2
     if b2 &gt; a2:
         a2, b2 = b2, a2
+    l = eix.length()
+    a2 = (a2*l)**2
+    b2 = (b2*l)**2
     return cls(a2,b2,centre,eix)</code></pre>
 </details>
 </dd>
@@ -12157,7 +12199,15 @@ e = EquacioLineal(eq)</p></div>
             m = unknowns.index(u)
             if m &gt; n:
                 n = m
-        return SistemaEquacions.from_equacions([self.equacio],n+1,self.prime)</code></pre>
+        return SistemaEquacions.from_equacions([self.equacio],n+1,self.prime)
+    #
+    #
+    #
+    def resol(self,unknown):
+        &#34;&#34;&#34;
+        Resol l&#39;equació aïllant la incògnita &#39;unknown&#39;
+        &#34;&#34;&#34;
+        return solve(self.equacio,unknown)[0]</code></pre>
 </details>
 <h3>Static methods</h3>
 <dl>
@@ -12205,6 +12255,22 @@ def coeficients(cls,a,b,amp=False,prime=0):
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="Algebra.EquacioLineal.resol"><code class="name flex">
+<span>def <span class="ident">resol</span></span>(<span>self, unknown)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Resol l'equació aïllant la incògnita 'unknown'</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def resol(self,unknown):
+    &#34;&#34;&#34;
+    Resol l&#39;equació aïllant la incògnita &#39;unknown&#39;
+    &#34;&#34;&#34;
+    return solve(self.equacio,unknown)[0]</code></pre>
+</details>
+</dd>
 <dt id="Algebra.EquacioLineal.set_coeficient_positiu"><code class="name flex">
 <span>def <span class="ident">set_coeficient_positiu</span></span>(<span>self, incogs)</span>
 </code></dt>
@@ -13061,9 +13127,13 @@ segon grau</p></div>
     #
     #
     @classmethod
-    def aleatoria(cls,canonica=False):
+    def aleatoria(cls,canonica=False,focus=False):
         &#34;&#34;&#34;
         Retorna una hipèrbola aleatòria
+        Paràmetres:
+          canonica: si els eixos principals són paral·lels als de la
+             referència canònica
+          focus: si els focus han de tenir coordenades enteres
         &#34;&#34;&#34;
         if canonica:
             base = [Vector(1,0),Vector(0,1)]
@@ -13072,14 +13142,25 @@ segon grau</p></div>
         else:
             eix = Vector.aleatori(l=2,maxim=3,nuls=False)
         centre = Punt.aleatori(l=2,maxim=3,nuls=False)
-        c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
+        values = [1,2,3,4,5,5,7,8,9,10]
         trobat = False
         while not trobat:
-            a = random.randint(0,len(c) - 1)
-            a2 = c[a]
-            a = random.randint(0,len(c) - 1)
-            b2 = c[a]
+            a = random.randint(0,len(values) - 1)
+            a2 = values[a]
+            if focus:
+                c2 = a2 + random.randint(1,3)
+                b2 = sqrt(c2 - a2)
+            else:
+                a = random.randint(0,len(values) - 1)
+                b2 = values[a]
             trobat = a2 != b2
+        l = eix.length()
+        a2 = (a2*l)**2
+        if focus:
+            c2 = (c2*l)**2
+            b2 = c2 - a2
+        else:
+            b2 = (b2*l)**2
         return cls(a2,b2,centre,eix)
     #
     #
@@ -13228,18 +13309,26 @@ segon grau</p></div>
 <h3>Static methods</h3>
 <dl>
 <dt id="Algebra.Hiperbola.aleatoria"><code class="name flex">
-<span>def <span class="ident">aleatoria</span></span>(<span>canonica=False)</span>
+<span>def <span class="ident">aleatoria</span></span>(<span>canonica=False, focus=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Retorna una hipèrbola aleatòria</p></div>
+<div class="desc"><p>Retorna una hipèrbola aleatòria</p>
+<h2 id="parametres">Paràmetres</h2>
+<p>canonica: si els eixos principals són paral·lels als de la
+referència canònica
+focus: si els focus han de tenir coordenades enteres</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def aleatoria(cls,canonica=False):
+def aleatoria(cls,canonica=False,focus=False):
     &#34;&#34;&#34;
     Retorna una hipèrbola aleatòria
+    Paràmetres:
+      canonica: si els eixos principals són paral·lels als de la
+         referència canònica
+      focus: si els focus han de tenir coordenades enteres
     &#34;&#34;&#34;
     if canonica:
         base = [Vector(1,0),Vector(0,1)]
@@ -13248,14 +13337,25 @@ def aleatoria(cls,canonica=False):
     else:
         eix = Vector.aleatori(l=2,maxim=3,nuls=False)
     centre = Punt.aleatori(l=2,maxim=3,nuls=False)
-    c = [1,2,3,4,5,8,10,12,16,18,20,25,36,40,45,48,50,60,80,100]
+    values = [1,2,3,4,5,5,7,8,9,10]
     trobat = False
     while not trobat:
-        a = random.randint(0,len(c) - 1)
-        a2 = c[a]
-        a = random.randint(0,len(c) - 1)
-        b2 = c[a]
+        a = random.randint(0,len(values) - 1)
+        a2 = values[a]
+        if focus:
+            c2 = a2 + random.randint(1,3)
+            b2 = sqrt(c2 - a2)
+        else:
+            a = random.randint(0,len(values) - 1)
+            b2 = values[a]
         trobat = a2 != b2
+    l = eix.length()
+    a2 = (a2*l)**2
+    if focus:
+        c2 = (c2*l)**2
+        b2 = c2 - a2
+    else:
+        b2 = (b2*l)**2
     return cls(a2,b2,centre,eix)</code></pre>
 </details>
 </dd>
@@ -16482,6 +16582,16 @@ columnes: llista de columnes</p></div>
     #
     #
     #
+    def recta_directriu(self):
+        &#34;&#34;&#34;
+        Retorna la recta directriu com a recta afí
+        &#34;&#34;&#34;
+        p2 = self.parametre() / 2
+        p = self.ref.punt_de_coordenades(Punt([0,-p2]))
+        return RectaAfi(p,self.ref.base.vecs[0])
+    #
+    #
+    #
     def to_asy(self,scaled=1.0,canonica=10,x=8,y=8):
         &#34;&#34;&#34;
         Retorna una expressió per fer servir amb el programa Asymtote
@@ -16606,6 +16716,24 @@ def aleatoria(cls,canonica=False):
     Retorna el paràmetre de la paràbola
     &#34;&#34;&#34;
     return - self.matriu[2,1]</code></pre>
+</details>
+</dd>
+<dt id="Algebra.Parabola.recta_directriu"><code class="name flex">
+<span>def <span class="ident">recta_directriu</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retorna la recta directriu com a recta afí</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def recta_directriu(self):
+    &#34;&#34;&#34;
+    Retorna la recta directriu com a recta afí
+    &#34;&#34;&#34;
+    p2 = self.parametre() / 2
+    p = self.ref.punt_de_coordenades(Punt([0,-p2]))
+    return RectaAfi(p,self.ref.base.vecs[0])</code></pre>
 </details>
 </dd>
 <dt id="Algebra.Parabola.to_asy"><code class="name flex">
@@ -24968,7 +25096,7 @@ v = Vector(3,1,-2)</p></div>
         Retorna True si totes les components del vector són nombres enters
         &#34;&#34;&#34;
         for k in self.components:
-            if not isinstance(k,Integer):
+            if not (isinstance(k,Integer) or isinstance(k,int)):
                 return False
         return True
     #
@@ -26141,7 +26269,7 @@ u.simplificar()</p></div>
     Retorna True si totes les components del vector són nombres enters
     &#34;&#34;&#34;
     for k in self.components:
-        if not isinstance(k,Integer):
+        if not (isinstance(k,Integer) or isinstance(k,int)):
             return False
     return True</code></pre>
 </details>
@@ -26283,6 +26411,7 @@ u.simplificar()</p></div>
 <h4><code><a title="Algebra.EquacioLineal" href="#Algebra.EquacioLineal">EquacioLineal</a></code></h4>
 <ul class="">
 <li><code><a title="Algebra.EquacioLineal.coeficients" href="#Algebra.EquacioLineal.coeficients">coeficients</a></code></li>
+<li><code><a title="Algebra.EquacioLineal.resol" href="#Algebra.EquacioLineal.resol">resol</a></code></li>
 <li><code><a title="Algebra.EquacioLineal.set_coeficient_positiu" href="#Algebra.EquacioLineal.set_coeficient_positiu">set_coeficient_positiu</a></code></li>
 <li><code><a title="Algebra.EquacioLineal.to_sistema_equacions" href="#Algebra.EquacioLineal.to_sistema_equacions">to_sistema_equacions</a></code></li>
 </ul>
@@ -26411,6 +26540,7 @@ u.simplificar()</p></div>
 <li><code><a title="Algebra.Parabola.focus" href="#Algebra.Parabola.focus">focus</a></code></li>
 <li><code><a title="Algebra.Parabola.maxim_origen" href="#Algebra.Parabola.maxim_origen">maxim_origen</a></code></li>
 <li><code><a title="Algebra.Parabola.parametre" href="#Algebra.Parabola.parametre">parametre</a></code></li>
+<li><code><a title="Algebra.Parabola.recta_directriu" href="#Algebra.Parabola.recta_directriu">recta_directriu</a></code></li>
 <li><code><a title="Algebra.Parabola.to_asy" href="#Algebra.Parabola.to_asy">to_asy</a></code></li>
 <li><code><a title="Algebra.Parabola.vertex" href="#Algebra.Parabola.vertex">vertex</a></code></li>
 </ul>

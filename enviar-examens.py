@@ -118,10 +118,9 @@ try:
             line = line.strip()
             if regex.match(line):
                 continue
-            print(line)
             try:
                 data = line.split(':')
-                estudiants.append({'nom' : data[0],'cognoms' : data[1],'email' : data[2]})
+                estudiants.append({'nom' : data[0],'cognoms' : data[1],'email' : data[3]})
             except:
                 continue
     f.close()

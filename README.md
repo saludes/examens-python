@@ -29,8 +29,10 @@ Un cop tenim en una carpeta els fitxers _examen.tex_, _Problemes.py_, _estudiant
 ```
 Cada línia del fitxer _estudiants.csv_ ha de ser de la forma
 ```
-NOM:COGNOMS:CORREU ELECTRÒNIC
+NOM:COGNOMS:DNI:CORREU ELECTRÒNIC:GRUP
 ```
+on els camps obligatoris són NOM, COGNOMS i CORREU ELECTRÒNIC. DNI i GRUP poden estar en blanc.
+
 Les opcions que tenim són
 ```
 Utilització: examen.py --examen=<fitxer> --estudiants=<fitxer> --problemes=<enter> [--no-solucions] [--tex-engine=pdflatex]

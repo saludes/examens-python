@@ -183,7 +183,7 @@ class Examen:
                             data = line.split(':')
                             self.estudiants.append({'nom' : data[0].strip(),
                                                     'cognoms' : data[1].strip(),
-                                                    'email' : data[2].strip()})
+                                                    'email' : data[3].strip()})
                         except:
                             continue
                 f.close()

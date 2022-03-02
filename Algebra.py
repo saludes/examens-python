@@ -2570,6 +2570,14 @@ class EquacioLineal:
             if m > n:
                 n = m
         return SistemaEquacions.from_equacions([self.equacio],n+1,self.prime)
+    #
+    #
+    #
+    def resol(self,unknown):
+        """
+        Resol l'equació aïllant la incògnita 'unknown'
+        """
+        return solve(self.equacio,unknown)[0]
 
 
 class SistemaEquacions:
