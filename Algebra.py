@@ -1072,6 +1072,26 @@ class Vector(object):
         if v[0] != 0:
             return f"{s}\\left({latex(v[0])} + {r}\\right)"
         return f"{s}\\left({r}\\right)"
+    #
+    #
+    #
+    def diff(self,t,n=1):
+        """
+        Retorna l'enèssima derivada del vector
+        """
+        d = [c.diff(t,n) for c in self.components]
+        return Vector(d)
+    #
+    #
+    #
+    def subs(self,x,y):
+        """
+        Retorna el vector que s'obté substiuint el símbol x per y
+        """
+        d = [c.subs(x,y) for c in self.components]
+        return Vector(d)
+
+
 
 class Punt(Vector):
     """
