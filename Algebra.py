@@ -415,7 +415,6 @@ class Radicals(object):
             return 1
         return mcm_llista(self.fraccions)
 
-
 class Vector(object):
     """
     Classe que ens permetrà representar vectors i punts
@@ -889,7 +888,7 @@ class Vector(object):
     #
     #
     #
-    def simplificar(self):
+    def simplificar(self,positiu=False):
         """
         Simplifica el vector, és a dir, converteix les seves components en una
         llista d'enters amb mcd igual a 1.
@@ -913,10 +912,12 @@ class Vector(object):
             else:
                 return
         mcm = mcm_llista(d)
+        if mcm < 0:
+            mcm *= -1
         v = [mcm * x for x in self.components]
         mcd = mcd_llista(v)
         v = [simplify(k // mcd) for k in v]
-        if v[0] < 0:
+        if positiu and v[0] < 0:
             v = [-k for k in v]
         self.components = list(v)
     #

@@ -286,7 +286,7 @@ class Examen:
     #
     #
     def borra_fitxers(self):
-        names = ['*.log','*.aux','*.asy','*-1.pdf','*.pre','*.fls','*.fdb_*']
+        names = ['*.log','*.aux','*.asy','*.pre','*.fls','*.fdb_*','*-[0-9].pdf']
         files = []
         for n in names:
             files += glob.glob(n)

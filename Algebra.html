@@ -468,7 +468,6 @@ class Radicals(object):
             return 1
         return mcm_llista(self.fraccions)
 
-
 class Vector(object):
     &#34;&#34;&#34;
     Classe que ens permetrà representar vectors i punts
@@ -942,7 +941,7 @@ class Vector(object):
     #
     #
     #
-    def simplificar(self):
+    def simplificar(self,positiu=False):
         &#34;&#34;&#34;
         Simplifica el vector, és a dir, converteix les seves components en una
         llista d&#39;enters amb mcd igual a 1.
@@ -966,10 +965,12 @@ class Vector(object):
             else:
                 return
         mcm = mcm_llista(d)
+        if mcm &lt; 0:
+            mcm *= -1
         v = [mcm * x for x in self.components]
         mcd = mcd_llista(v)
         v = [simplify(k // mcd) for k in v]
-        if v[0] &lt; 0:
+        if positiu and v[0] &lt; 0:
             v = [-k for k in v]
         self.components = list(v)
     #
@@ -25497,7 +25498,7 @@ v = Vector(3,1,-2)</p></div>
     #
     #
     #
-    def simplificar(self):
+    def simplificar(self,positiu=False):
         &#34;&#34;&#34;
         Simplifica el vector, és a dir, converteix les seves components en una
         llista d&#39;enters amb mcd igual a 1.
@@ -25521,10 +25522,12 @@ v = Vector(3,1,-2)</p></div>
             else:
                 return
         mcm = mcm_llista(d)
+        if mcm &lt; 0:
+            mcm *= -1
         v = [mcm * x for x in self.components]
         mcd = mcd_llista(v)
         v = [simplify(k // mcd) for k in v]
-        if v[0] &lt; 0:
+        if positiu and v[0] &lt; 0:
             v = [-k for k in v]
         self.components = list(v)
     #
@@ -26266,7 +26269,7 @@ ight)</p></div>
 </details>
 </dd>
 <dt id="Algebra.Vector.simplificar"><code class="name flex">
-<span>def <span class="ident">simplificar</span></span>(<span>self)</span>
+<span>def <span class="ident">simplificar</span></span>(<span>self, positiu=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Simplifica el vector, és a dir, converteix les seves components en una
@@ -26280,7 +26283,7 @@ u.simplificar()</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def simplificar(self):
+<pre><code class="python">def simplificar(self,positiu=False):
     &#34;&#34;&#34;
     Simplifica el vector, és a dir, converteix les seves components en una
     llista d&#39;enters amb mcd igual a 1.
@@ -26304,10 +26307,12 @@ u.simplificar()</p></div>
         else:
             return
     mcm = mcm_llista(d)
+    if mcm &lt; 0:
+        mcm *= -1
     v = [mcm * x for x in self.components]
     mcd = mcd_llista(v)
     v = [simplify(k // mcd) for k in v]
-    if v[0] &lt; 0:
+    if positiu and v[0] &lt; 0:
         v = [-k for k in v]
     self.components = list(v)</code></pre>
 </details>
