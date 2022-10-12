@@ -28,6 +28,7 @@ import mimetypes
 import sys
 import re
 import unidecode
+import time
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -168,3 +169,4 @@ for e in estudiants:
         filename += ".pdf"
     correu = create_message(sender,e['email'],subject,m,[filename])
     send_message(service,'me', correu)
+    time.sleep(0.25)
