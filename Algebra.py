@@ -8313,3 +8313,9 @@ class RectaRegressio(object):
         xs = " & ".join([f"${p[0]}$" for p in self.punts])
         ys = " & ".join([f"${p[1]}$" for p in self.punts])
         return f"\\begin{{tabular}}{{{format}}} {xs} \\\\ \\hline {ys} \\end{{tabular}}"
+
+__all__ = [Vector,Punt,Matriu,EquacioLineal,SistemaEquacions,EquacioParametrica,EquacionsParametriques,
+           PlaVectorial,RectaVectorial,ReferenciaAfi,PlaAfi,RectaAfi,SubespaiVectorial,VarietatAfi,
+           TransformacioLineal,TransformacioAfi,FormaQuadratica,Conica,Ellipse,Hiperbola,Parabola,Quadrica,
+           Ellipsoide,HiperboloideUnaFulla,HiperboloideDuesFulles,Con,CilindreElliptic,CilindreHiperbolic,
+           ParaboloideElliptic,ParaboloideHiperbolic,CilindreParabolic,RectaRegressio]
