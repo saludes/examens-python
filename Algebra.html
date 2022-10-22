@@ -1144,8 +1144,14 @@ class Vector(object):
         &#34;&#34;&#34;
         d = [c.subs(x,y) for c in self.components]
         return Vector(d)
-
-
+    #
+    #
+    #
+    def clona(self):
+        &#34;&#34;&#34;
+        Retorma una còpia del vector
+        &#34;&#34;&#34;
+        return Vector(self.components)
 
 class Punt(Vector):
     &#34;&#34;&#34;
@@ -2521,6 +2527,16 @@ class EquacioLineal:
     #
     #
     #
+    def terme_independent(self):
+        &#34;&#34;&#34;
+        Retorna el terme independent de l&#39;equació
+        &#34;&#34;&#34;
+        d = self.equacio.as_coefficients_dict()
+        return -d[1]
+
+    #
+    #
+    #
     def __repr__(self):
         &#34;&#34;&#34;
         Retorna l&#39;expressió en latex de l&#39;equació.
@@ -3769,6 +3785,7 @@ class PlaAfi(object):
         v1 = self.u1.components_en_base(ref.base)
         v2 = self.u2.components_en_base(ref.base)
         w = v1.cross(v2)
+        w.simplificar()
         return EquacioLineal.coeficients(w,w.dot(c),False,prime)
     #
     #
@@ -3942,14 +3959,21 @@ class RectaAfi(object):
     #
     #
     @classmethod
-    def aleatoria(cls,dim=3):
+    def aleatoria(cls,dim=3,maxim=None):
         &#34;&#34;&#34;
         Retorna una recta afí aleatòria
         Paràmetres:
              dim: dimensió
+             maxim: màxim de les coordenades del punt i les components dels
+                    vector director
+
         &#34;&#34;&#34;
-        v = Vector.aleatori(l=dim,maxim=3,nuls=False)
-        p = Punt.aleatori(l=dim,maxim=4,nuls=False)
+        if maxim is None:
+            v = Vector.aleatori(l=dim,maxim=3,nuls=False)
+            p = Punt.aleatori(l=dim,maxim=4,nuls=False)
+        else:
+            v = Vector.aleatori(l=dim,maxim=maxim,nuls=False)
+            p = Punt.aleatori(l=dim,maxim=maxim,nuls=False)
         return cls(p,v)
     #
     #
@@ -12098,6 +12122,16 @@ e = EquacioLineal(eq)</p></div>
     #
     #
     #
+    def terme_independent(self):
+        &#34;&#34;&#34;
+        Retorna el terme independent de l&#39;equació
+        &#34;&#34;&#34;
+        d = self.equacio.as_coefficients_dict()
+        return -d[1]
+
+    #
+    #
+    #
     def __repr__(self):
         &#34;&#34;&#34;
         Retorna l&#39;expressió en latex de l&#39;equació.
@@ -12320,6 +12354,23 @@ manera que el coeficients de "k" passa a ser positiu</p></div>
             self.equacio *= -1
             return
         return</code></pre>
+</details>
+</dd>
+<dt id="Algebra.EquacioLineal.terme_independent"><code class="name flex">
+<span>def <span class="ident">terme_independent</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retorna el terme independent de l'equació</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def terme_independent(self):
+    &#34;&#34;&#34;
+    Retorna el terme independent de l&#39;equació
+    &#34;&#34;&#34;
+    d = self.equacio.as_coefficients_dict()
+    return -d[1]</code></pre>
 </details>
 </dd>
 <dt id="Algebra.EquacioLineal.to_sistema_equacions"><code class="name flex">
@@ -17611,6 +17662,7 @@ p: punt de pas</p></div>
         v1 = self.u1.components_en_base(ref.base)
         v2 = self.u2.components_en_base(ref.base)
         w = v1.cross(v2)
+        w.simplificar()
         return EquacioLineal.coeficients(w,w.dot(c),False,prime)
     #
     #
@@ -17940,6 +17992,7 @@ prime: nombre de primes que s'escriuran a les incògnites</p></div>
     v1 = self.u1.components_en_base(ref.base)
     v2 = self.u2.components_en_base(ref.base)
     w = v1.cross(v2)
+    w.simplificar()
     return EquacioLineal.coeficients(w,w.dot(c),False,prime)</code></pre>
 </details>
 </dd>
@@ -18638,6 +18691,7 @@ v = Vector(3,1,-2)</p></div>
 <ul class="hlist">
 <li><code><a title="Algebra.Vector.aleatori" href="#Algebra.Vector.aleatori">aleatori</a></code></li>
 <li><code><a title="Algebra.Vector.as_quaternio" href="#Algebra.Vector.as_quaternio">as_quaternio</a></code></li>
+<li><code><a title="Algebra.Vector.clona" href="#Algebra.Vector.clona">clona</a></code></li>
 <li><code><a title="Algebra.Vector.components_en_base" href="#Algebra.Vector.components_en_base">components_en_base</a></code></li>
 <li><code><a title="Algebra.Vector.cross" href="#Algebra.Vector.cross">cross</a></code></li>
 <li><code><a title="Algebra.Vector.diff" href="#Algebra.Vector.diff">diff</a></code></li>
@@ -20193,14 +20247,21 @@ p: punt de pas</p></div>
     #
     #
     @classmethod
-    def aleatoria(cls,dim=3):
+    def aleatoria(cls,dim=3,maxim=None):
         &#34;&#34;&#34;
         Retorna una recta afí aleatòria
         Paràmetres:
              dim: dimensió
+             maxim: màxim de les coordenades del punt i les components dels
+                    vector director
+
         &#34;&#34;&#34;
-        v = Vector.aleatori(l=dim,maxim=3,nuls=False)
-        p = Punt.aleatori(l=dim,maxim=4,nuls=False)
+        if maxim is None:
+            v = Vector.aleatori(l=dim,maxim=3,nuls=False)
+            p = Punt.aleatori(l=dim,maxim=4,nuls=False)
+        else:
+            v = Vector.aleatori(l=dim,maxim=maxim,nuls=False)
+            p = Punt.aleatori(l=dim,maxim=maxim,nuls=False)
         return cls(p,v)
     #
     #
@@ -20434,25 +20495,34 @@ p: punt de pas</p></div>
 <h3>Static methods</h3>
 <dl>
 <dt id="Algebra.RectaAfi.aleatoria"><code class="name flex">
-<span>def <span class="ident">aleatoria</span></span>(<span>dim=3)</span>
+<span>def <span class="ident">aleatoria</span></span>(<span>dim=3, maxim=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Retorna una recta afí aleatòria</p>
 <h2 id="parametres">Paràmetres</h2>
-<p>dim: dimensió</p></div>
+<p>dim: dimensió
+maxim: màxim de les coordenades del punt i les components dels
+vector director</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def aleatoria(cls,dim=3):
+def aleatoria(cls,dim=3,maxim=None):
     &#34;&#34;&#34;
     Retorna una recta afí aleatòria
     Paràmetres:
          dim: dimensió
+         maxim: màxim de les coordenades del punt i les components dels
+                vector director
+
     &#34;&#34;&#34;
-    v = Vector.aleatori(l=dim,maxim=3,nuls=False)
-    p = Punt.aleatori(l=dim,maxim=4,nuls=False)
+    if maxim is None:
+        v = Vector.aleatori(l=dim,maxim=3,nuls=False)
+        p = Punt.aleatori(l=dim,maxim=4,nuls=False)
+    else:
+        v = Vector.aleatori(l=dim,maxim=maxim,nuls=False)
+        p = Punt.aleatori(l=dim,maxim=maxim,nuls=False)
     return cls(p,v)</code></pre>
 </details>
 </dd>
@@ -25700,7 +25770,15 @@ v = Vector(3,1,-2)</p></div>
         Retorna el vector que s&#39;obté substiuint el símbol x per y
         &#34;&#34;&#34;
         d = [c.subs(x,y) for c in self.components]
-        return Vector(d)</code></pre>
+        return Vector(d)
+    #
+    #
+    #
+    def clona(self):
+        &#34;&#34;&#34;
+        Retorma una còpia del vector
+        &#34;&#34;&#34;
+        return Vector(self.components)</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -25794,6 +25872,22 @@ quaternió</p></div>
     if v[0] != 0:
         return f&#34;{s}\\left({latex(v[0])} + {r}\\right)&#34;
     return f&#34;{s}\\left({r}\\right)&#34;</code></pre>
+</details>
+</dd>
+<dt id="Algebra.Vector.clona"><code class="name flex">
+<span>def <span class="ident">clona</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retorma una còpia del vector</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clona(self):
+    &#34;&#34;&#34;
+    Retorma una còpia del vector
+    &#34;&#34;&#34;
+    return Vector(self.components)</code></pre>
 </details>
 </dd>
 <dt id="Algebra.Vector.components_en_base"><code class="name flex">
@@ -26492,6 +26586,7 @@ u.simplificar()</p></div>
 <li><code><a title="Algebra.EquacioLineal.coeficients" href="#Algebra.EquacioLineal.coeficients">coeficients</a></code></li>
 <li><code><a title="Algebra.EquacioLineal.resol" href="#Algebra.EquacioLineal.resol">resol</a></code></li>
 <li><code><a title="Algebra.EquacioLineal.set_coeficient_positiu" href="#Algebra.EquacioLineal.set_coeficient_positiu">set_coeficient_positiu</a></code></li>
+<li><code><a title="Algebra.EquacioLineal.terme_independent" href="#Algebra.EquacioLineal.terme_independent">terme_independent</a></code></li>
 <li><code><a title="Algebra.EquacioLineal.to_sistema_equacions" href="#Algebra.EquacioLineal.to_sistema_equacions">to_sistema_equacions</a></code></li>
 </ul>
 </li>
@@ -26851,6 +26946,7 @@ u.simplificar()</p></div>
 <ul class="">
 <li><code><a title="Algebra.Vector.aleatori" href="#Algebra.Vector.aleatori">aleatori</a></code></li>
 <li><code><a title="Algebra.Vector.as_quaternio" href="#Algebra.Vector.as_quaternio">as_quaternio</a></code></li>
+<li><code><a title="Algebra.Vector.clona" href="#Algebra.Vector.clona">clona</a></code></li>
 <li><code><a title="Algebra.Vector.components_en_base" href="#Algebra.Vector.components_en_base">components_en_base</a></code></li>
 <li><code><a title="Algebra.Vector.cross" href="#Algebra.Vector.cross">cross</a></code></li>
 <li><code><a title="Algebra.Vector.diff" href="#Algebra.Vector.diff">diff</a></code></li>
