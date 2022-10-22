@@ -1091,8 +1091,14 @@ class Vector(object):
         """
         d = [c.subs(x,y) for c in self.components]
         return Vector(d)
-
-
+    #
+    #
+    #
+    def clona(self):
+        """
+        Retorma una còpia del vector
+        """
+        return Vector(self.components)
 
 class Punt(Vector):
     """
@@ -2468,6 +2474,16 @@ class EquacioLineal:
     #
     #
     #
+    def terme_independent(self):
+        """
+        Retorna el terme independent de l'equació
+        """
+        d = self.equacio.as_coefficients_dict()
+        return -d[1]
+
+    #
+    #
+    #
     def __repr__(self):
         """
         Retorna l'expressió en latex de l'equació.
@@ -3716,6 +3732,7 @@ class PlaAfi(object):
         v1 = self.u1.components_en_base(ref.base)
         v2 = self.u2.components_en_base(ref.base)
         w = v1.cross(v2)
+        w.simplificar()
         return EquacioLineal.coeficients(w,w.dot(c),False,prime)
     #
     #
@@ -3889,14 +3906,21 @@ class RectaAfi(object):
     #
     #
     @classmethod
-    def aleatoria(cls,dim=3):
+    def aleatoria(cls,dim=3,maxim=None):
         """
         Retorna una recta afí aleatòria
         Paràmetres:
              dim: dimensió
+             maxim: màxim de les coordenades del punt i les components dels
+                    vector director
+
         """
-        v = Vector.aleatori(l=dim,maxim=3,nuls=False)
-        p = Punt.aleatori(l=dim,maxim=4,nuls=False)
+        if maxim is None:
+            v = Vector.aleatori(l=dim,maxim=3,nuls=False)
+            p = Punt.aleatori(l=dim,maxim=4,nuls=False)
+        else:
+            v = Vector.aleatori(l=dim,maxim=maxim,nuls=False)
+            p = Punt.aleatori(l=dim,maxim=maxim,nuls=False)
         return cls(p,v)
     #
     #
