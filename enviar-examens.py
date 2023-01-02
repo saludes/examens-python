@@ -169,4 +169,4 @@ for e in estudiants:
         filename += ".pdf"
     correu = create_message(sender,e['email'],subject,m,[filename])
     send_message(service,'me', correu)
-    time.sleep(0.25)
+    time.sleep(0.5)

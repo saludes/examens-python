@@ -19,7 +19,7 @@
 \RequirePackage{fancyhdr}
 \RequirePackage{verbatim}
 \RequirePackage{array}
-\RequirePackage[T1]{fontenc}
+\RequirePackage{fontenc}
 \RequirePackage{asymptote}
 \RequirePackage{makecell}
 %
@@ -35,6 +35,9 @@
 \setboolean{use@mtpro}{false}
 \newboolean{use@apretat}
 \setboolean{use@apretat}{false}
+\newboolean{use@test}
+\setboolean{use@test}{false}
+
 \DeclareOption{minion}{
  \setboolean{use@minion}{true}
  \catcode`\·=\active
@@ -51,6 +54,9 @@
 }
 \DeclareOption{apretat}{
  \setboolean{use@apretat}{true}
+}
+\DeclareOption{test}{
+ \setboolean{use@test}{true}
 }
 %
 % Dades de l'alumne
@@ -115,6 +121,18 @@
 %\voffset=-0.4in
 %\headheight=0.9in
 \ProcessOptions\relax
+%
+% Test
+%
+\ifthenelse{\boolean{use@test}}{
+ \RequirePackage{draftwatermark}
+ \SetWatermarkText{Test}
+ \SetWatermarkScale{2.5}
+ \SetWatermarkAngle{65}
+ \SetWatermarkVerCenter{19cm}
+ \SetWatermarkLightness{0.9}
+}{}
+
 %
 % Apretat
 %

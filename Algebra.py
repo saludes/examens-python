@@ -5685,6 +5685,7 @@ class Conica(object):
         x, y = symbols('x y')
         m = Matriu.matriu_columna(Vector([x,y,1]))
         r = m.transposada() * self.canonica * m
+        r.simplificar()
         return mylatex(r[0,0].expand()) + " = 0"
         #
         #
@@ -5696,6 +5697,7 @@ class Conica(object):
         x, y = symbols('x y')
         m = Matriu.matriu_columna(Vector([x,y,1]))
         r = m.transposada() * self.canonica * m
+        r.simplificar()
         return r[0,0].expand()
     #
     #
@@ -6412,6 +6414,7 @@ class Quadrica(object):
         x, y, z = symbols('x y z')
         m = Matriu.matriu_columna(Vector([x,y,z,1]))
         r = m.transposada() * self.canonica * m
+        r.simplificar()
         return mylatex(r[0,0].expand()) + " = 0"
     #
     #
@@ -6423,6 +6426,7 @@ class Quadrica(object):
         x, y, z = symbols('x y z')
         m = Matriu.matriu_columna(Vector([x,y,z,1]))
         r = m.transposada() * self.canonica * m
+        r.simplificar()
         return r[0,0].expand()
     #
     #
@@ -6656,7 +6660,7 @@ class Quadrica(object):
         if isinstance(self,HiperboloideDuesFulles):
             return "Hiperboloide de dues fulles"
         if isinstance(self,Con):
-            return "Con"
+            return "Con real"
         if isinstance(self,CilindreElliptic):
             return "Cilindre el·líptic"
         if isinstance(self,CilindreHiperbolic):
@@ -8313,9 +8317,3 @@ class RectaRegressio(object):
         xs = " & ".join([f"${p[0]}$" for p in self.punts])
         ys = " & ".join([f"${p[1]}$" for p in self.punts])
         return f"\\begin{{tabular}}{{{format}}} {xs} \\\\ \\hline {ys} \\end{{tabular}}"
-
-__all__ = [Vector,Punt,Matriu,EquacioLineal,SistemaEquacions,EquacioParametrica,EquacionsParametriques,
-           PlaVectorial,RectaVectorial,ReferenciaAfi,PlaAfi,RectaAfi,SubespaiVectorial,VarietatAfi,
-           TransformacioLineal,TransformacioAfi,FormaQuadratica,Conica,Ellipse,Hiperbola,Parabola,Quadrica,
-           Ellipsoide,HiperboloideUnaFulla,HiperboloideDuesFulles,Con,CilindreElliptic,CilindreHiperbolic,
-           ParaboloideElliptic,ParaboloideHiperbolic,CilindreParabolic,RectaRegressio]
