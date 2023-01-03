@@ -27,6 +27,8 @@
 %
 \newboolean{use@minion}
 \setboolean{use@minion}{false}
+\newboolean{use@century}
+\setboolean{use@century}{false}
 \newboolean{use@stix}
 \setboolean{use@stix}{false}
 \newboolean{use@times}
@@ -40,6 +42,10 @@
 
 \DeclareOption{minion}{
  \setboolean{use@minion}{true}
+ \catcode`\·=\active
+}
+\DeclareOption{century}{
+ \setboolean{use@century}{true}
  \catcode`\·=\active
 }
 \DeclareOption{stix}{
@@ -132,7 +138,6 @@
  \SetWatermarkVerCenter{19cm}
  \SetWatermarkLightness{0.9}
 }{}
-
 %
 % Apretat
 %
@@ -180,6 +185,21 @@
  \setmathfont[range={\mathbb}]{TeX Gyre Pagella Math}
 }{}
 
+\ifthenelse{\boolean{use@century}}{
+ \usepackage{fontspec}
+ \usepackage{unicode-math}
+ \setmathfont{STIXTwoMath}
+ \setmainfont{NewCenturySchlbkLTStd}[
+  Scale=1,
+  UprightFont={*-Roman},
+  BoldFont={*-Bd},
+  ItalicFont={*-It},
+  BoldItalicFont={*-BdIt},
+  SmallCapsFont={*-Roman},
+  SmallCapsFeatures={Letters=SmallCaps}]
+ \setmathfont[range={\mathbb}]{TeX Gyre Pagella Math}
+}{}
+
 \ifthenelse{\boolean{use@times}}{
  \usepackage{amsfonts}
  \usepackage{amssymb}
@@ -190,7 +210,8 @@
  \usepackage{times}
  \usepackage[mtphrd]{mtpro2}
 }{}
-\ifthenelse{\boolean{use@times}\or\boolean{use@stix}\or\boolean{use@mtpro}\or\boolean{use@minion}}{}
+\ifthenelse{\boolean{use@times}\or\boolean{use@stix}\or\boolean{use@mtpro}%
+\or\boolean{use@minion}\or\boolean{use@century}}{}
 {
  \usepackage{amsfonts}
  \usepackage{amssymb}
@@ -278,8 +299,8 @@
 \baselineskip=8pt
 \vspace*{3.5cm}
 \begin{center}
-\textbf{Cognoms}: \framebox[9.5cm][l]{\rule[-4pt]{0pt}{18pt}\textsf{\@@cognoms}}
-\hfill\textbf{Nom}: \framebox[4.9cm][l]{\rule[-4pt]{0pt}{18pt}\textsf{\@@nom}}
+\textbf{Cognoms}: \framebox[9cm][l]{\rule[-4pt]{0pt}{18pt}\textsf{\@@cognoms}}
+\hfill\textbf{Nom}: \framebox[5cm][l]{\rule[-4pt]{0pt}{18pt}\textsf{\@@nom}}
 \end{center}
 \end{minipage}}
 %

@@ -917,8 +917,11 @@ class Vector(object):
         v = [mcm * x for x in self.components]
         mcd = mcd_llista(v)
         v = [simplify(k // mcd) for k in v]
-        if positiu and v[0] < 0:
-            v = [-k for k in v]
+        k = 0
+        while v[k] == 0 and k < len(v) - 1:
+            k += 1
+        if positiu and v[k] < 0:
+            v = [-x for x in v]
         self.components = list(v)
     #
     #
@@ -4652,6 +4655,8 @@ class TransformacioLineal(object):
         m = self.canonica - Matriu()
         e = m.nucli()[0]
         e = Vector([radsimp(k.expand()) for k in e.components])
+        e.simplificar(positiu=True)
+        print(e)
         t = radsimp(self.canonica.matriu.trace().expand())
         t = (t - 1)/2
         alpha = acos(t)
@@ -4674,6 +4679,7 @@ class TransformacioLineal(object):
         if not self.es_rotacio():
             return None
         w, angle = self.eix_angle_rotacio(radiants=True)
+        w.simplificar(positiu=True)
         w.normalitzar()
         w *= sin(angle/2)
         w = Vector([radsimp(x.expand()) for x in w.components])
