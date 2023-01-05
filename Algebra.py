@@ -4656,7 +4656,6 @@ class TransformacioLineal(object):
         e = m.nucli()[0]
         e = Vector([radsimp(k.expand()) for k in e.components])
         e.simplificar(positiu=True)
-        print(e)
         t = radsimp(self.canonica.matriu.trace().expand())
         t = (t - 1)/2
         alpha = acos(t)

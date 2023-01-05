@@ -31,10 +31,12 @@
 \setboolean{use@century}{false}
 \newboolean{use@stix}
 \setboolean{use@stix}{false}
-\newboolean{use@times}
-\setboolean{use@times}{false}
+\newboolean{use@newcm}
+\setboolean{use@newcm}{false}
 \newboolean{use@mtpro}
 \setboolean{use@mtpro}{false}
+\newboolean{use@times}
+\setboolean{use@times}{false}
 \newboolean{use@apretat}
 \setboolean{use@apretat}{false}
 \newboolean{use@test}
@@ -52,6 +54,11 @@
  \setboolean{use@stix}{true}
  \catcode`\·=\active
 }
+\DeclareOption{newcm}{
+ \setboolean{use@newcm}{true}
+ \catcode`\·=\active
+}
+
 \DeclareOption{times}{
  \setboolean{use@times}{true}
 }
@@ -190,7 +197,7 @@
  \usepackage{unicode-math}
  \setmathfont{STIXTwoMath}
  \setmainfont{NewCenturySchlbkLTStd}[
-  Scale=1,
+  Scale=0.95,
   UprightFont={*-Roman},
   BoldFont={*-Bd},
   ItalicFont={*-It},
@@ -198,6 +205,27 @@
   SmallCapsFont={*-Roman},
   SmallCapsFeatures={Letters=SmallCaps}]
  \setmathfont[range={\mathbb}]{TeX Gyre Pagella Math}
+}{}
+
+\ifthenelse{\boolean{use@newcm}}{
+ \usepackage{fontspec}
+ \usepackage{unicode-math}
+ \setmainfont{NewCM10-Regular.otf}[
+  ItalicFont=NewCM10-Italic.otf,
+  BoldFont=NewCM10-Bold.otf,
+  BoldItalicFont=NewCM10-BoldItalic.otf,
+  SmallCapsFeatures={Numbers=OldStyle}]
+ \setsansfont{NewCMSans10-Regular.otf}[
+  ItalicFont=NewCMSans10-Oblique.otf,
+  BoldFont=NewCMSans10-Bold.otf,
+  BoldItalicFont=NewCMSans10-BoldOblique.otf,
+  SmallCapsFeatures={Numbers=OldStyle}]
+ \setmonofont{NewCMMono10-Regular.otf}[
+  ItalicFont=NewCMMono10-Italic.otf,%
+  BoldFont=NewCMMono10-Bold.otf,%
+  BoldItalicFont=NewCMMono10-BoldOblique.otf,%
+  SmallCapsFeatures={Numbers=OldStyle}]
+ \setmathfont{NewCMMath-Regular.otf}
 }{}
 
 \ifthenelse{\boolean{use@times}}{
@@ -211,7 +239,7 @@
  \usepackage[mtphrd]{mtpro2}
 }{}
 \ifthenelse{\boolean{use@times}\or\boolean{use@stix}\or\boolean{use@mtpro}%
-\or\boolean{use@minion}\or\boolean{use@century}}{}
+\or\boolean{use@minion}\or\boolean{use@century}\or\boolean{use@newcm}}{}
 {
  \usepackage{amsfonts}
  \usepackage{amssymb}
