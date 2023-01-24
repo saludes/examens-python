@@ -222,7 +222,7 @@ def nzeros(m):
                 z += 1
     return z
 
-def nzeros(m):
+def nnegatius(m):
     """
     Retorna el nombre d'elements negatius d'una matriu del tipus Matrix del sympy
     """
@@ -1981,6 +1981,8 @@ class Matriu:
             if mzeros >= 0 and nzeros(m) > mzeros:
                 continue
             trobat = True
+        if nnegatius(m) > ordre**2/2:
+            m *= -1
         return cls(m)
     #
     #
