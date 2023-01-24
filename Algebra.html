@@ -275,6 +275,18 @@ def nzeros(m):
                 z += 1
     return z
 
+def nzeros(m):
+    &#34;&#34;&#34;
+    Retorna el nombre d&#39;elements negatius d&#39;una matriu del tipus Matrix del sympy
+    &#34;&#34;&#34;
+    f, c = m.shape
+    z = 0
+    for i in range(f):
+        for j in range(c):
+            if m[i,j] &lt; 0:
+                z += 1
+    return z
+
 def matriu_latex(m,format=None,ampliada=False,tipus=&#34;p&#34;):
     &#34;&#34;&#34;
     Retorna l&#39;expressió en latex d&#39;una matriu del tipus Matrix del sympy
@@ -970,8 +982,11 @@ class Vector(object):
         v = [mcm * x for x in self.components]
         mcd = mcd_llista(v)
         v = [simplify(k // mcd) for k in v]
-        if positiu and v[0] &lt; 0:
-            v = [-k for k in v]
+        k = 0
+        while v[k] == 0 and k &lt; len(v) - 1:
+            k += 1
+        if positiu and v[k] &lt; 0:
+            v = [-x for x in v]
         self.components = list(v)
     #
     #
@@ -1581,6 +1596,8 @@ class Matriu:
                 for j in range(c):
                     if m[i,j] == 0:
                         m[i,j] = values[random.randint(0,2 * maxim - 1)]
+        if nnegatius(m) &gt; (f*c)/2:
+            m *= -1
         return cls(m)
     #
     #
@@ -1610,6 +1627,14 @@ class Matriu:
         Retorna el nombre de zeros de la matriu
         &#34;&#34;&#34;
         return nzeros(self.matriu)
+    #
+    #
+    #
+    def nnegatius(self):
+        &#34;&#34;&#34;
+        Retorna el nombre de coeficients negatius de la matriu
+        &#34;&#34;&#34;
+        return nnegatius(self.matriu)
     #
     #
     #
@@ -1942,7 +1967,7 @@ class Matriu:
           c: nombre de columnes de la matriu
           r: rang de la matriu
           maxim: tots els elements tindran valor absolut menor que &#34;maxim&#34;
-          nuls: la matriu pot contenir coeficients nuls o no
+          mzeros: nombre màxim de zeros. Si és -1, no hi ha màxim
         &#34;&#34;&#34;
         values = [-1,1,2]
         trobat = False
@@ -1956,6 +1981,8 @@ class Matriu:
             if mzeros &gt;= 0 and nzeros(n) &gt; mzeros:
                 continue
             trobat = norma_maxim(n) &lt;= maxim
+        if nnegatius(n) &gt; f*c/2:
+            n *= -1
         return cls(n)
     #
     #
@@ -4705,6 +4732,7 @@ class TransformacioLineal(object):
         m = self.canonica - Matriu()
         e = m.nucli()[0]
         e = Vector([radsimp(k.expand()) for k in e.components])
+        e.simplificar(positiu=True)
         t = radsimp(self.canonica.matriu.trace().expand())
         t = (t - 1)/2
         alpha = acos(t)
@@ -4727,6 +4755,7 @@ class TransformacioLineal(object):
         if not self.es_rotacio():
             return None
         w, angle = self.eix_angle_rotacio(radiants=True)
+        w.simplificar(positiu=True)
         w.normalitzar()
         w *= sin(angle/2)
         w = Vector([radsimp(x.expand()) for x in w.components])
@@ -5738,6 +5767,7 @@ class Conica(object):
         x, y = symbols(&#39;x y&#39;)
         m = Matriu.matriu_columna(Vector([x,y,1]))
         r = m.transposada() * self.canonica * m
+        r.simplificar()
         return mylatex(r[0,0].expand()) + &#34; = 0&#34;
         #
         #
@@ -5749,6 +5779,7 @@ class Conica(object):
         x, y = symbols(&#39;x y&#39;)
         m = Matriu.matriu_columna(Vector([x,y,1]))
         r = m.transposada() * self.canonica * m
+        r.simplificar()
         return r[0,0].expand()
     #
     #
@@ -6465,6 +6496,7 @@ class Quadrica(object):
         x, y, z = symbols(&#39;x y z&#39;)
         m = Matriu.matriu_columna(Vector([x,y,z,1]))
         r = m.transposada() * self.canonica * m
+        r.simplificar()
         return mylatex(r[0,0].expand()) + &#34; = 0&#34;
     #
     #
@@ -6476,6 +6508,7 @@ class Quadrica(object):
         x, y, z = symbols(&#39;x y z&#39;)
         m = Matriu.matriu_columna(Vector([x,y,z,1]))
         r = m.transposada() * self.canonica * m
+        r.simplificar()
         return r[0,0].expand()
     #
     #
@@ -6709,7 +6742,7 @@ class Quadrica(object):
         if isinstance(self,HiperboloideDuesFulles):
             return &#34;Hiperboloide de dues fulles&#34;
         if isinstance(self,Con):
-            return &#34;Con&#34;
+            return &#34;Con real&#34;
         if isinstance(self,CilindreElliptic):
             return &#34;Cilindre el·líptic&#34;
         if isinstance(self,CilindreHiperbolic):
@@ -8590,20 +8623,20 @@ del tipus Matrix del sympy</p></div>
 <span>def <span class="ident">nzeros</span></span>(<span>m)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Retorna el nombre de zeros d'una matriu del tipus Matrix del sympy</p></div>
+<div class="desc"><p>Retorna el nombre d'elements negatius d'una matriu del tipus Matrix del sympy</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def nzeros(m):
     &#34;&#34;&#34;
-    Retorna el nombre de zeros d&#39;una matriu del tipus Matrix del sympy
+    Retorna el nombre d&#39;elements negatius d&#39;una matriu del tipus Matrix del sympy
     &#34;&#34;&#34;
     f, c = m.shape
     z = 0
     for i in range(f):
         for j in range(c):
-            if m[i,j] == 0:
+            if m[i,j] &lt; 0:
                 z += 1
     return z</code></pre>
 </details>
@@ -10827,6 +10860,7 @@ canonica: matriu projectiva de la cònica en la referència canònica</p></div>
         x, y = symbols(&#39;x y&#39;)
         m = Matriu.matriu_columna(Vector([x,y,1]))
         r = m.transposada() * self.canonica * m
+        r.simplificar()
         return mylatex(r[0,0].expand()) + &#34; = 0&#34;
         #
         #
@@ -10838,6 +10872,7 @@ canonica: matriu projectiva de la cònica en la referència canònica</p></div>
         x, y = symbols(&#39;x y&#39;)
         m = Matriu.matriu_columna(Vector([x,y,1]))
         r = m.transposada() * self.canonica * m
+        r.simplificar()
         return r[0,0].expand()
     #
     #
@@ -11194,6 +11229,7 @@ def parabola(cls,maxim=30,canonica=False):
     x, y = symbols(&#39;x y&#39;)
     m = Matriu.matriu_columna(Vector([x,y,1]))
     r = m.transposada() * self.canonica * m
+    r.simplificar()
     return r[0,0].expand()</code></pre>
 </details>
 </dd>
@@ -14550,6 +14586,8 @@ per defecte és la matriu unitat d'ordre 3</p></div>
                 for j in range(c):
                     if m[i,j] == 0:
                         m[i,j] = values[random.randint(0,2 * maxim - 1)]
+        if nnegatius(m) &gt; (f*c)/2:
+            m *= -1
         return cls(m)
     #
     #
@@ -14579,6 +14617,14 @@ per defecte és la matriu unitat d'ordre 3</p></div>
         Retorna el nombre de zeros de la matriu
         &#34;&#34;&#34;
         return nzeros(self.matriu)
+    #
+    #
+    #
+    def nnegatius(self):
+        &#34;&#34;&#34;
+        Retorna el nombre de coeficients negatius de la matriu
+        &#34;&#34;&#34;
+        return nnegatius(self.matriu)
     #
     #
     #
@@ -14911,7 +14957,7 @@ per defecte és la matriu unitat d'ordre 3</p></div>
           c: nombre de columnes de la matriu
           r: rang de la matriu
           maxim: tots els elements tindran valor absolut menor que &#34;maxim&#34;
-          nuls: la matriu pot contenir coeficients nuls o no
+          mzeros: nombre màxim de zeros. Si és -1, no hi ha màxim
         &#34;&#34;&#34;
         values = [-1,1,2]
         trobat = False
@@ -14925,6 +14971,8 @@ per defecte és la matriu unitat d'ordre 3</p></div>
             if mzeros &gt;= 0 and nzeros(n) &gt; mzeros:
                 continue
             trobat = norma_maxim(n) &lt;= maxim
+        if nnegatius(n) &gt; f*c/2:
+            n *= -1
         return cls(n)
     #
     #
@@ -15442,6 +15490,8 @@ def aleatoria(cls,f=3,c=3,maxim=5,nuls=True):
             for j in range(c):
                 if m[i,j] == 0:
                     m[i,j] = values[random.randint(0,2 * maxim - 1)]
+    if nnegatius(m) &gt; (f*c)/2:
+        m *= -1
     return cls(m)</code></pre>
 </details>
 </dd>
@@ -15455,7 +15505,7 @@ def aleatoria(cls,f=3,c=3,maxim=5,nuls=True):
 c: nombre de columnes de la matriu
 r: rang de la matriu
 maxim: tots els elements tindran valor absolut menor que "maxim"
-nuls: la matriu pot contenir coeficients nuls o no</p></div>
+mzeros: nombre màxim de zeros. Si és -1, no hi ha màxim</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -15469,7 +15519,7 @@ def amb_rang(cls,f=3,c=3,r=3,maxim=5,mzeros=-1):
       c: nombre de columnes de la matriu
       r: rang de la matriu
       maxim: tots els elements tindran valor absolut menor que &#34;maxim&#34;
-      nuls: la matriu pot contenir coeficients nuls o no
+      mzeros: nombre màxim de zeros. Si és -1, no hi ha màxim
     &#34;&#34;&#34;
     values = [-1,1,2]
     trobat = False
@@ -15483,6 +15533,8 @@ def amb_rang(cls,f=3,c=3,r=3,maxim=5,mzeros=-1):
         if mzeros &gt;= 0 and nzeros(n) &gt; mzeros:
             continue
         trobat = norma_maxim(n) &lt;= maxim
+    if nnegatius(n) &gt; f*c/2:
+        n *= -1
     return cls(n)</code></pre>
 </details>
 </dd>
@@ -16128,6 +16180,22 @@ Si la matriu no és quadrada retorna None</p></div>
         if k &gt; max:
             max = k
     return max</code></pre>
+</details>
+</dd>
+<dt id="Algebra.Matriu.nnegatius"><code class="name flex">
+<span>def <span class="ident">nnegatius</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retorna el nombre de coeficients negatius de la matriu</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def nnegatius(self):
+    &#34;&#34;&#34;
+    Retorna el nombre de coeficients negatius de la matriu
+    &#34;&#34;&#34;
+    return nnegatius(self.matriu)</code></pre>
 </details>
 </dd>
 <dt id="Algebra.Matriu.norma_maxim"><code class="name flex">
@@ -18796,6 +18864,7 @@ canonica: matriu projectiva de la quàdrica en la referència canònica</p></div
         x, y, z = symbols(&#39;x y z&#39;)
         m = Matriu.matriu_columna(Vector([x,y,z,1]))
         r = m.transposada() * self.canonica * m
+        r.simplificar()
         return mylatex(r[0,0].expand()) + &#34; = 0&#34;
     #
     #
@@ -18807,6 +18876,7 @@ canonica: matriu projectiva de la quàdrica en la referència canònica</p></div
         x, y, z = symbols(&#39;x y z&#39;)
         m = Matriu.matriu_columna(Vector([x,y,z,1]))
         r = m.transposada() * self.canonica * m
+        r.simplificar()
         return r[0,0].expand()
     #
     #
@@ -19040,7 +19110,7 @@ canonica: matriu projectiva de la quàdrica en la referència canònica</p></div
         if isinstance(self,HiperboloideDuesFulles):
             return &#34;Hiperboloide de dues fulles&#34;
         if isinstance(self,Con):
-            return &#34;Con&#34;
+            return &#34;Con real&#34;
         if isinstance(self,CilindreElliptic):
             return &#34;Cilindre el·líptic&#34;
         if isinstance(self,CilindreHiperbolic):
@@ -19913,6 +19983,7 @@ def paraboloidehiperbolic(cls,maxim=30,diagonal=15,canonica=False):
     x, y, z = symbols(&#39;x y z&#39;)
     m = Matriu.matriu_columna(Vector([x,y,z,1]))
     r = m.transposada() * self.canonica * m
+    r.simplificar()
     return r[0,0].expand()</code></pre>
 </details>
 </dd>
@@ -19952,7 +20023,7 @@ def paraboloidehiperbolic(cls,maxim=30,diagonal=15,canonica=False):
     if isinstance(self,HiperboloideDuesFulles):
         return &#34;Hiperboloide de dues fulles&#34;
     if isinstance(self,Con):
-        return &#34;Con&#34;
+        return &#34;Con real&#34;
     if isinstance(self,CilindreElliptic):
         return &#34;Cilindre el·líptic&#34;
     if isinstance(self,CilindreHiperbolic):
@@ -23565,6 +23636,7 @@ format: format LaTeX per a la matriu</p></div>
         m = self.canonica - Matriu()
         e = m.nucli()[0]
         e = Vector([radsimp(k.expand()) for k in e.components])
+        e.simplificar(positiu=True)
         t = radsimp(self.canonica.matriu.trace().expand())
         t = (t - 1)/2
         alpha = acos(t)
@@ -23587,6 +23659,7 @@ format: format LaTeX per a la matriu</p></div>
         if not self.es_rotacio():
             return None
         w, angle = self.eix_angle_rotacio(radiants=True)
+        w.simplificar(positiu=True)
         w.normalitzar()
         w *= sin(angle/2)
         w = Vector([radsimp(x.expand()) for x in w.components])
@@ -24362,6 +24435,7 @@ ho fa en graus</p></div>
     m = self.canonica - Matriu()
     e = m.nucli()[0]
     e = Vector([radsimp(k.expand()) for k in e.components])
+    e.simplificar(positiu=True)
     t = radsimp(self.canonica.matriu.trace().expand())
     t = (t - 1)/2
     alpha = acos(t)
@@ -24585,6 +24659,7 @@ que l'altre és l'oposat</p></div>
     if not self.es_rotacio():
         return None
     w, angle = self.eix_angle_rotacio(radiants=True)
+    w.simplificar(positiu=True)
     w.normalitzar()
     w *= sin(angle/2)
     w = Vector([radsimp(x.expand()) for x in w.components])
@@ -25597,8 +25672,11 @@ v = Vector(3,1,-2)</p></div>
         v = [mcm * x for x in self.components]
         mcd = mcd_llista(v)
         v = [simplify(k // mcd) for k in v]
-        if positiu and v[0] &lt; 0:
-            v = [-k for k in v]
+        k = 0
+        while v[k] == 0 and k &lt; len(v) - 1:
+            k += 1
+        if positiu and v[k] &lt; 0:
+            v = [-x for x in v]
         self.components = list(v)
     #
     #
@@ -26406,8 +26484,11 @@ u.simplificar()</p></div>
     v = [mcm * x for x in self.components]
     mcd = mcd_llista(v)
     v = [simplify(k // mcd) for k in v]
-    if positiu and v[0] &lt; 0:
-        v = [-k for k in v]
+    k = 0
+    while v[k] == 0 and k &lt; len(v) - 1:
+        k += 1
+    if positiu and v[k] &lt; 0:
+        v = [-x for x in v]
     self.components = list(v)</code></pre>
 </details>
 </dd>
@@ -26685,6 +26766,7 @@ u.simplificar()</p></div>
 <li><code><a title="Algebra.Matriu.matriu_columna" href="#Algebra.Matriu.matriu_columna">matriu_columna</a></code></li>
 <li><code><a title="Algebra.Matriu.matriu_fila" href="#Algebra.Matriu.matriu_fila">matriu_fila</a></code></li>
 <li><code><a title="Algebra.Matriu.max_diagonal" href="#Algebra.Matriu.max_diagonal">max_diagonal</a></code></li>
+<li><code><a title="Algebra.Matriu.nnegatius" href="#Algebra.Matriu.nnegatius">nnegatius</a></code></li>
 <li><code><a title="Algebra.Matriu.norma_maxim" href="#Algebra.Matriu.norma_maxim">norma_maxim</a></code></li>
 <li><code><a title="Algebra.Matriu.nucli" href="#Algebra.Matriu.nucli">nucli</a></code></li>
 <li><code><a title="Algebra.Matriu.nzeros" href="#Algebra.Matriu.nzeros">nzeros</a></code></li>

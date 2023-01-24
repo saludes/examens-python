@@ -222,6 +222,18 @@ def nzeros(m):
                 z += 1
     return z
 
+def nzeros(m):
+    """
+    Retorna el nombre d'elements negatius d'una matriu del tipus Matrix del sympy
+    """
+    f, c = m.shape
+    z = 0
+    for i in range(f):
+        for j in range(c):
+            if m[i,j] < 0:
+                z += 1
+    return z
+
 def matriu_latex(m,format=None,ampliada=False,tipus="p"):
     """
     Retorna l'expressió en latex d'una matriu del tipus Matrix del sympy
@@ -1531,6 +1543,8 @@ class Matriu:
                 for j in range(c):
                     if m[i,j] == 0:
                         m[i,j] = values[random.randint(0,2 * maxim - 1)]
+        if nnegatius(m) > (f*c)/2:
+            m *= -1
         return cls(m)
     #
     #
@@ -1560,6 +1574,14 @@ class Matriu:
         Retorna el nombre de zeros de la matriu
         """
         return nzeros(self.matriu)
+    #
+    #
+    #
+    def nnegatius(self):
+        """
+        Retorna el nombre de coeficients negatius de la matriu
+        """
+        return nnegatius(self.matriu)
     #
     #
     #
@@ -1892,7 +1914,7 @@ class Matriu:
           c: nombre de columnes de la matriu
           r: rang de la matriu
           maxim: tots els elements tindran valor absolut menor que "maxim"
-          nuls: la matriu pot contenir coeficients nuls o no
+          mzeros: nombre màxim de zeros. Si és -1, no hi ha màxim
         """
         values = [-1,1,2]
         trobat = False
@@ -1906,6 +1928,8 @@ class Matriu:
             if mzeros >= 0 and nzeros(n) > mzeros:
                 continue
             trobat = norma_maxim(n) <= maxim
+        if nnegatius(n) > f*c/2:
+            n *= -1
         return cls(n)
     #
     #
