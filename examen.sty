@@ -33,6 +33,8 @@
 \setboolean{use@stix}{false}
 \newboolean{use@newcm}
 \setboolean{use@newcm}{false}
+\newboolean{use@erewhon}
+\setboolean{use@erewhon}{false}
 \newboolean{use@mtpro}
 \setboolean{use@mtpro}{false}
 \newboolean{use@times}
@@ -58,7 +60,10 @@
  \setboolean{use@newcm}{true}
  \catcode`\·=\active
 }
-
+\DeclareOption{erewhon}{
+ \setboolean{use@erewhon}{true}
+ \catcode`\·=\active
+}
 \DeclareOption{times}{
  \setboolean{use@times}{true}
 }
@@ -228,6 +233,21 @@
  \setmathfont{NewCMMath-Book.otf}
 }{}
 
+\ifthenelse{\boolean{use@erewhon}}{
+ \usepackage{fontspec}
+ \usepackage{unicode-math}
+ \setmathfont{STIXTwoMath}
+ \setmainfont{Erewhon}[
+  Scale=1.0,
+  UprightFont={*-Regular},
+  BoldFont={*-Bold},
+  ItalicFont={*-Italic},
+  BoldItalicFont={*-BoldItalic},
+  SmallCapsFont={*-Regular},
+  SmallCapsFeatures={Letters=SmallCaps}]
+ \setmathfont[range={\mathbb}]{TeX Gyre Pagella Math}
+}{}
+
 \ifthenelse{\boolean{use@times}}{
  \usepackage{amsfonts}
  \usepackage{amssymb}
@@ -239,7 +259,7 @@
  \usepackage[mtphrd]{mtpro2}
 }{}
 \ifthenelse{\boolean{use@times}\or\boolean{use@stix}\or\boolean{use@mtpro}%
-\or\boolean{use@minion}\or\boolean{use@century}\or\boolean{use@newcm}}{}
+\or\boolean{use@minion}\or\boolean{use@century}\or\boolean{use@newcm}\or\boolean{use@erewhon}}{}
 {
  \usepackage{amsfonts}
  \usepackage{amssymb}
