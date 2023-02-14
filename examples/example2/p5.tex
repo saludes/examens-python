@@ -18,9 +18,9 @@ Donada la cònica d'equació
 \begin{figure}[!t]
 \begin{center}
 \begin{asy}
-unitsize(0.45cm);
+unitsize(1cm);
 
-Canonica(-13,13,-10,10);
+Canonica(-13,13,-10,10,scaled=0.45);
 
 \end{asy}
 \end{center}
@@ -32,9 +32,8 @@ Canonica(-13,13,-10,10);
 \begin{figure}[!t]
 \begin{center}
 \begin{asy}
-unitsize(0.45cm);
+unitsize(1cm);
 
-Canonica(MINIMX,MAXIMX,MINIMY,MAXIMY);
 CONICA;
 clip((MINIMX,MINIMY)--(MAXIMX,MINIMY)--(MAXIMX,MAXIMY)--(MINIMX,MAXIMY)--cycle);
 \end{asy}

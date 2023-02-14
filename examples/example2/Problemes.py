@@ -88,11 +88,11 @@ class Problemes:
     #
     #
     def problema5(self):
-        q = Conica.aleatoria(maxim=20)
+        q = Conica.aleatoria(maxim=50)
         o = q.ref.origen
         return {'EQUACIO' : f"{q}", 'PRINCIPAL' : f"{q.ref}",
                 'REDUIDA' : q.equacio_reduida(), 'TIPUS' : q.tipus(),
-                'CONICA' : q.to_asy(), 'MINIMY' : f"{o[1]-10}",
+                'CONICA' : q.to_asy(scaled=0.45), 'MINIMY' : f"{o[1]-10}",
                 'MAXIMY' : f"{o[1]+10}", 'MINIMX' : f"{o[0]-13}", 'MAXIMX' : f"{o[0]+13}"}
     #
     #

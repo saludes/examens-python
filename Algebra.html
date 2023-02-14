@@ -275,7 +275,7 @@ def nzeros(m):
                 z += 1
     return z
 
-def nzeros(m):
+def nnegatius(m):
     &#34;&#34;&#34;
     Retorna el nombre d&#39;elements negatius d&#39;una matriu del tipus Matrix del sympy
     &#34;&#34;&#34;
@@ -2034,6 +2034,8 @@ class Matriu:
             if mzeros &gt;= 0 and nzeros(m) &gt; mzeros:
                 continue
             trobat = True
+        if nnegatius(m) &gt; ordre**2/2:
+            m *= -1
         return cls(m)
     #
     #
@@ -5830,7 +5832,7 @@ class Conica(object):
     #
     #
     @classmethod
-    def aleatoria(cls,maxim=30,canonica=False):
+    def aleatoria(cls,maxim=40,canonica=False):
         &#34;&#34;&#34;
         Retorna una el·lipse, hipèrbola o paràbola aleatòries
         Paràmetres:
@@ -6051,21 +6053,27 @@ class Ellipse(Conica):
     #
     #
     #
-    def to_asy(self,scaled=1.0,canonica=10,x=8,y=8):
+    def to_asy(self,scaled=1.0,canonica=10):
         &#34;&#34;&#34;
         Retorna una expressió per fer servir amb el programa Asymtote
         Paràmetres:
             scaled: factor d&#39;escalat
             canonica = valors de partida dels eixos de la referència canònica
-            x, y: nombres enters. El gràfic es representarà en una quadricula
-            de límits (-x,x) i (-y,y)
         &#34;&#34;&#34;
         a2 = self.semieix_major()**2
         b2 = self.semieix_menor()**2
         centre = self.centre()
         vector = self.vectors()[0]
+        if vector[0] &lt; 0:
+            vector = -vector
         mx, Mx  = -canonica + centre[0],canonica + centre[0]
         my, My  = -canonica + centre[1],canonica + centre[1]
+        x = int(self.semieix_major()+3)
+        if x &lt; 8:
+            x = 8
+        y = int(self.semieix_menor()+3)
+        if y &lt; 8:
+            y = 8
         str = f&#34;Canonica({mx},{Mx},{my},{My},scaled={scaled});&#34;
         clip = f&#34;path cl = ({mx},{my})--({Mx},{my})--({Mx},{My})--({mx},{My})--cycle;\n&#34;
         clip += f&#34;cl = scale({scaled}) * cl;\nclip(cl);&#34;
@@ -8595,6 +8603,28 @@ Retorna zero si el coeficients està per sobre de la diagonal principal</p></div
     return e</code></pre>
 </details>
 </dd>
+<dt id="Algebra.nnegatius"><code class="name flex">
+<span>def <span class="ident">nnegatius</span></span>(<span>m)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Retorna el nombre d'elements negatius d'una matriu del tipus Matrix del sympy</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def nnegatius(m):
+    &#34;&#34;&#34;
+    Retorna el nombre d&#39;elements negatius d&#39;una matriu del tipus Matrix del sympy
+    &#34;&#34;&#34;
+    f, c = m.shape
+    z = 0
+    for i in range(f):
+        for j in range(c):
+            if m[i,j] &lt; 0:
+                z += 1
+    return z</code></pre>
+</details>
+</dd>
 <dt id="Algebra.norma_maxim"><code class="name flex">
 <span>def <span class="ident">norma_maxim</span></span>(<span>m)</span>
 </code></dt>
@@ -8623,20 +8653,20 @@ del tipus Matrix del sympy</p></div>
 <span>def <span class="ident">nzeros</span></span>(<span>m)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Retorna el nombre d'elements negatius d'una matriu del tipus Matrix del sympy</p></div>
+<div class="desc"><p>Retorna el nombre de zeros d'una matriu del tipus Matrix del sympy</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def nzeros(m):
     &#34;&#34;&#34;
-    Retorna el nombre d&#39;elements negatius d&#39;una matriu del tipus Matrix del sympy
+    Retorna el nombre de zeros d&#39;una matriu del tipus Matrix del sympy
     &#34;&#34;&#34;
     f, c = m.shape
     z = 0
     for i in range(f):
         for j in range(c):
-            if m[i,j] &lt; 0:
+            if m[i,j] == 0:
                 z += 1
     return z</code></pre>
 </details>
@@ -10923,7 +10953,7 @@ canonica: matriu projectiva de la cònica en la referència canònica</p></div>
     #
     #
     @classmethod
-    def aleatoria(cls,maxim=30,canonica=False):
+    def aleatoria(cls,maxim=40,canonica=False):
         &#34;&#34;&#34;
         Retorna una el·lipse, hipèrbola o paràbola aleatòries
         Paràmetres:
@@ -10993,7 +11023,7 @@ canonica: matriu projectiva de la cònica en la referència canònica</p></div>
 <h3>Static methods</h3>
 <dl>
 <dt id="Algebra.Conica.aleatoria"><code class="name flex">
-<span>def <span class="ident">aleatoria</span></span>(<span>maxim=30, canonica=False)</span>
+<span>def <span class="ident">aleatoria</span></span>(<span>maxim=40, canonica=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Retorna una el·lipse, hipèrbola o paràbola aleatòries</p>
@@ -11004,7 +11034,7 @@ canonica: matriu projectiva de la cònica en la referència canònica</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def aleatoria(cls,maxim=30,canonica=False):
+def aleatoria(cls,maxim=40,canonica=False):
     &#34;&#34;&#34;
     Retorna una el·lipse, hipèrbola o paràbola aleatòries
     Paràmetres:
@@ -11463,21 +11493,27 @@ def parabola(cls,maxim=30,canonica=False):
     #
     #
     #
-    def to_asy(self,scaled=1.0,canonica=10,x=8,y=8):
+    def to_asy(self,scaled=1.0,canonica=10):
         &#34;&#34;&#34;
         Retorna una expressió per fer servir amb el programa Asymtote
         Paràmetres:
             scaled: factor d&#39;escalat
             canonica = valors de partida dels eixos de la referència canònica
-            x, y: nombres enters. El gràfic es representarà en una quadricula
-            de límits (-x,x) i (-y,y)
         &#34;&#34;&#34;
         a2 = self.semieix_major()**2
         b2 = self.semieix_menor()**2
         centre = self.centre()
         vector = self.vectors()[0]
+        if vector[0] &lt; 0:
+            vector = -vector
         mx, Mx  = -canonica + centre[0],canonica + centre[0]
         my, My  = -canonica + centre[1],canonica + centre[1]
+        x = int(self.semieix_major()+3)
+        if x &lt; 8:
+            x = 8
+        y = int(self.semieix_menor()+3)
+        if y &lt; 8:
+            y = 8
         str = f&#34;Canonica({mx},{Mx},{my},{My},scaled={scaled});&#34;
         clip = f&#34;path cl = ({mx},{my})--({Mx},{my})--({Mx},{My})--({mx},{My})--cycle;\n&#34;
         clip += f&#34;cl = scale({scaled}) * cl;\nclip(cl);&#34;
@@ -11656,34 +11692,38 @@ def aleatoria(cls,canonica=False,):
 </details>
 </dd>
 <dt id="Algebra.Ellipse.to_asy"><code class="name flex">
-<span>def <span class="ident">to_asy</span></span>(<span>self, scaled=1.0, canonica=10, x=8, y=8)</span>
+<span>def <span class="ident">to_asy</span></span>(<span>self, scaled=1.0, canonica=10)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Retorna una expressió per fer servir amb el programa Asymtote</p>
 <h2 id="parametres">Paràmetres</h2>
 <p>scaled: factor d'escalat
-canonica = valors de partida dels eixos de la referència canònica
-x, y: nombres enters. El gràfic es representarà en una quadricula
-de límits (-x,x) i (-y,y)</p></div>
+canonica = valors de partida dels eixos de la referència canònica</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def to_asy(self,scaled=1.0,canonica=10,x=8,y=8):
+<pre><code class="python">def to_asy(self,scaled=1.0,canonica=10):
     &#34;&#34;&#34;
     Retorna una expressió per fer servir amb el programa Asymtote
     Paràmetres:
         scaled: factor d&#39;escalat
         canonica = valors de partida dels eixos de la referència canònica
-        x, y: nombres enters. El gràfic es representarà en una quadricula
-        de límits (-x,x) i (-y,y)
     &#34;&#34;&#34;
     a2 = self.semieix_major()**2
     b2 = self.semieix_menor()**2
     centre = self.centre()
     vector = self.vectors()[0]
+    if vector[0] &lt; 0:
+        vector = -vector
     mx, Mx  = -canonica + centre[0],canonica + centre[0]
     my, My  = -canonica + centre[1],canonica + centre[1]
+    x = int(self.semieix_major()+3)
+    if x &lt; 8:
+        x = 8
+    y = int(self.semieix_menor()+3)
+    if y &lt; 8:
+        y = 8
     str = f&#34;Canonica({mx},{Mx},{my},{My},scaled={scaled});&#34;
     clip = f&#34;path cl = ({mx},{my})--({Mx},{my})--({Mx},{My})--({mx},{My})--cycle;\n&#34;
     clip += f&#34;cl = scale({scaled}) * cl;\nclip(cl);&#34;
@@ -15024,6 +15064,8 @@ per defecte és la matriu unitat d'ordre 3</p></div>
             if mzeros &gt;= 0 and nzeros(m) &gt; mzeros:
                 continue
             trobat = True
+        if nnegatius(m) &gt; ordre**2/2:
+            m *= -1
         return cls(m)
     #
     #
@@ -15809,6 +15851,8 @@ def invertible(cls,ordre=3,maxim=5,mzeros=-1,unitaria=False):
         if mzeros &gt;= 0 and nzeros(m) &gt; mzeros:
             continue
         trobat = True
+    if nnegatius(m) &gt; ordre**2/2:
+        m *= -1
     return cls(m)</code></pre>
 </details>
 </dd>
@@ -26548,6 +26592,7 @@ u.simplificar()</p></div>
 <li><code><a title="Algebra.mti" href="#Algebra.mti">mti</a></code></li>
 <li><code><a title="Algebra.mts" href="#Algebra.mts">mts</a></code></li>
 <li><code><a title="Algebra.mylatex" href="#Algebra.mylatex">mylatex</a></code></li>
+<li><code><a title="Algebra.nnegatius" href="#Algebra.nnegatius">nnegatius</a></code></li>
 <li><code><a title="Algebra.norma_maxim" href="#Algebra.norma_maxim">norma_maxim</a></code></li>
 <li><code><a title="Algebra.nzeros" href="#Algebra.nzeros">nzeros</a></code></li>
 <li><code><a title="Algebra.primer_no_nul" href="#Algebra.primer_no_nul">primer_no_nul</a></code></li>

@@ -5779,7 +5779,7 @@ class Conica(object):
     #
     #
     @classmethod
-    def aleatoria(cls,maxim=30,canonica=False):
+    def aleatoria(cls,maxim=40,canonica=False):
         """
         Retorna una el·lipse, hipèrbola o paràbola aleatòries
         Paràmetres:
@@ -6000,21 +6000,27 @@ class Ellipse(Conica):
     #
     #
     #
-    def to_asy(self,scaled=1.0,canonica=10,x=8,y=8):
+    def to_asy(self,scaled=1.0,canonica=10):
         """
         Retorna una expressió per fer servir amb el programa Asymtote
         Paràmetres:
             scaled: factor d'escalat
             canonica = valors de partida dels eixos de la referència canònica
-            x, y: nombres enters. El gràfic es representarà en una quadricula
-            de límits (-x,x) i (-y,y)
         """
         a2 = self.semieix_major()**2
         b2 = self.semieix_menor()**2
         centre = self.centre()
         vector = self.vectors()[0]
+        if vector[0] < 0:
+            vector = -vector
         mx, Mx  = -canonica + centre[0],canonica + centre[0]
         my, My  = -canonica + centre[1],canonica + centre[1]
+        x = int(self.semieix_major()+3)
+        if x < 8:
+            x = 8
+        y = int(self.semieix_menor()+3)
+        if y < 8:
+            y = 8
         str = f"Canonica({mx},{Mx},{my},{My},scaled={scaled});"
         clip = f"path cl = ({mx},{my})--({Mx},{my})--({Mx},{My})--({mx},{My})--cycle;\n"
         clip += f"cl = scale({scaled}) * cl;\nclip(cl);"

@@ -3,7 +3,7 @@
 La principal diferència entre aquest exemple i l'anterior és que ara, en cada examen s'inclou una figura diferent generada amb el programa _Asymptote_. Per això, en el fitxer _examen.tex_ hem d'incloure unes línies amb comandes del paquet _asymptote_:
 ```
 \begin{asydef}
-import eixos;
+import coordenades;
 import graph;
 usepackage("amsfonts");
 usepackage("amssymb");
