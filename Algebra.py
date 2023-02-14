@@ -6244,6 +6244,8 @@ class Hiperbola(Conica):
         b2 = self.semieix_imaginari()**2
         centre = self.centre()
         vector = self.vectors()[0]
+        if vector[0] < 0:
+            vector = -vector
         mx, Mx  = -canonica + centre[0],canonica + centre[0]
         my, My  = -canonica + centre[1],canonica + centre[1]
         str = f"Canonica({mx},{Mx},{my},{My},scaled={scaled});"

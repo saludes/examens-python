@@ -11,7 +11,7 @@ usepackage("times");
 usepackage("txfonts");
 \end{asydef}
 ```
-_eixos.asy_ és un fitxer amb funcions predefinides per generar quadrícules i gràfics de còniques. S'ha de copiar a una carpeta on el programa _asy_ el pugui trobar, per exemple, _$HOME/.asy_ o _/usr/share/asymptote_.
+_coordenades.asy_ és un fitxer amb funcions predefinides per generar quadrícules i gràfics de còniques. S'ha de copiar a una carpeta on el programa _asy_ el pugui trobar, per exemple, _$HOME/.asy_ o _/usr/share/asymptote_.
 
 Per generar els fitxers TeX i els PDF amb els exàmens, hem d'executar la comanda
 ```
