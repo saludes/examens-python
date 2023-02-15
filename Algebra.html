@@ -5636,7 +5636,7 @@ class Conica(object):
     sinó generar coniques a partir dels elements característics o de manera
     aleatòria.
     Atributs:
-        ref: referència afí
+        ref: referència euclidiana
         matriu: matriu projectiva de la cònica en la referència &#34;ref&#34;
         canonica: matriu projectiva de la cònica en la referència canònica
     &#34;&#34;&#34;
@@ -5931,6 +5931,8 @@ class Ellipse(Conica):
     #
     #
     def __init__(self,a2,b2,centre,eix):
+        if eix[0] &lt; 0:
+            eix = -eix
         s = SubespaiVectorial([eix])
         base = s.amplia_base(unitaria=True)
         r = ReferenciaAfi(centre,base)
@@ -6116,6 +6118,8 @@ class Hiperbola(Conica):
     #
     #
     def __init__(self,a2,b2,centre,eix):
+        if eix[0] &lt; 0:
+            eix = -eix
         s = SubespaiVectorial([eix])
         base = s.amplia_base(unitaria=True)
         r = ReferenciaAfi(centre,base)
@@ -6297,6 +6301,8 @@ class Hiperbola(Conica):
         b2 = self.semieix_imaginari()**2
         centre = self.centre()
         vector = self.vectors()[0]
+        if vector[0] &lt; 0:
+            vector = -vector
         mx, Mx  = -canonica + centre[0],canonica + centre[0]
         my, My  = -canonica + centre[1],canonica + centre[1]
         str = f&#34;Canonica({mx},{Mx},{my},{My},scaled={scaled});&#34;
@@ -6337,9 +6343,17 @@ class Parabola(Conica):
     def __init__(self,vertex,focus):
         eix = focus - vertex
         p = 2 * eix.length()
-        m = Matriu(Matrix(3,3,[1,0,0,0,0,-p,0,-p,0]))
         s = SubespaiVectorial([eix])
         base = s.amplia_base_suplementari(unitaria=True)
+        v1, v2 = base.vecs
+        if v1[0] &lt; 0:
+            v1 = -v1
+        if v2[1] &lt; 0:
+            v2 = -v2
+        if eix * v2 &lt; 0:
+            p = -p
+        base.vecs = [v1,v2]
+        m = Matriu(Matrix(3,3,[1,0,0,0,0,-p,0,-p,0]))
         r = ReferenciaAfi(vertex,base)
         Conica.__init__(self,m,r)
     #
@@ -6374,7 +6388,7 @@ class Parabola(Conica):
         &#34;&#34;&#34;
         Retorna el paràmetre de la paràbola
         &#34;&#34;&#34;
-        return - self.matriu[2,1]
+        return abs(self.matriu[2,1])
     #
     #
     #
@@ -6398,10 +6412,15 @@ class Parabola(Conica):
         &#34;&#34;&#34;
         Retorna l&#39;equacio reduïda de la paràbola en format LaTeX
         &#34;&#34;&#34;
+        minus = &#34;&#34;
         p = self.parametre()
+        eix = self.focus() - self.vertex()
+        v2 = self.ref.base.vecs[1]
+        if eix * v2 &lt; 0:
+            minus = &#34;-&#34;
         if 2 * p == 1:
-            return f&#34;y&#39; = x&#39;^2&#34;
-        return f&#34;y&#39; = \\frac{{x&#39;^2}}{{{ latex(2 * p) }}}&#34;
+            return f&#34;y&#39; = {minus}x&#39;^2&#34;
+        return f&#34;y&#39; = {minus}\\frac{{x&#39;^2}}{{{ latex(2 * p) }}}&#34;
     #
     #
     #
@@ -6410,6 +6429,8 @@ class Parabola(Conica):
         Retorna el focus de la paràbola
         &#34;&#34;&#34;
         p2 = self.parametre() / 2
+        if self.matriu[2,1] &gt; 0:
+            p2 *= -1
         return self.ref.punt_de_coordenades(Punt([0,p2]))
     #
     #
@@ -6419,6 +6440,8 @@ class Parabola(Conica):
         Retorna la recta directriu com a recta afí
         &#34;&#34;&#34;
         p2 = self.parametre() / 2
+        if self.matriu[2,1] &gt; 0:
+            p2 *= -1
         p = self.ref.punt_de_coordenades(Punt([0,-p2]))
         return RectaAfi(p,self.ref.base.vecs[0])
     #
@@ -6435,10 +6458,13 @@ class Parabola(Conica):
         &#34;&#34;&#34;
         mx, Mx  = -canonica + self.vertex()[0],canonica + self.vertex()[0]
         my, My  = -canonica + self.vertex()[1],canonica + self.vertex()[1]
+        d = 1
+        if self.matriu[2,1] &gt; 0:
+            d = -1
         str = f&#34;Canonica({mx},{Mx},{my},{My},scaled={scaled});&#34;
         clip = f&#34;path cl = ({mx},{my})--({Mx},{my})--({Mx},{My})--({mx},{My})--cycle;\n&#34;
         clip += f&#34;cl = scale({scaled}) * cl;\nclip(cl);&#34;
-        return f&#34;{str}\nParabola({self.vertex()},{self.focus()},x={x},y={y},scaled={scaled});\n{clip}&#34;
+        return f&#34;{str}\nParabola({self.vertex()},{self.focus()},d={d},x={x},y={y},scaled={scaled});\n{clip}&#34;
 
 
 class Quadrica(object):
@@ -10744,7 +10770,7 @@ def aleatoria(cls,canonica=False):
 sinó generar coniques a partir dels elements característics o de manera
 aleatòria.</p>
 <h2 id="atributs">Atributs</h2>
-<p>ref: referència afí
+<p>ref: referència euclidiana
 matriu: matriu projectiva de la cònica en la referència "ref"
 canonica: matriu projectiva de la cònica en la referència canònica</p></div>
 <details class="source">
@@ -10757,7 +10783,7 @@ canonica: matriu projectiva de la cònica en la referència canònica</p></div>
     sinó generar coniques a partir dels elements característics o de manera
     aleatòria.
     Atributs:
-        ref: referència afí
+        ref: referència euclidiana
         matriu: matriu projectiva de la cònica en la referència &#34;ref&#34;
         canonica: matriu projectiva de la cònica en la referència canònica
     &#34;&#34;&#34;
@@ -11371,6 +11397,8 @@ def parabola(cls,maxim=30,canonica=False):
     #
     #
     def __init__(self,a2,b2,centre,eix):
+        if eix[0] &lt; 0:
+            eix = -eix
         s = SubespaiVectorial([eix])
         base = s.amplia_base(unitaria=True)
         r = ReferenciaAfi(centre,base)
@@ -13262,6 +13290,8 @@ segon grau</p></div>
     #
     #
     def __init__(self,a2,b2,centre,eix):
+        if eix[0] &lt; 0:
+            eix = -eix
         s = SubespaiVectorial([eix])
         base = s.amplia_base(unitaria=True)
         r = ReferenciaAfi(centre,base)
@@ -13443,6 +13473,8 @@ segon grau</p></div>
         b2 = self.semieix_imaginari()**2
         centre = self.centre()
         vector = self.vectors()[0]
+        if vector[0] &lt; 0:
+            vector = -vector
         mx, Mx  = -canonica + centre[0],canonica + centre[0]
         my, My  = -canonica + centre[1],canonica + centre[1]
         str = f&#34;Canonica({mx},{Mx},{my},{My},scaled={scaled});&#34;
@@ -13694,6 +13726,8 @@ de límits (-x,x) i (-y,y)</p></div>
     b2 = self.semieix_imaginari()**2
     centre = self.centre()
     vector = self.vectors()[0]
+    if vector[0] &lt; 0:
+        vector = -vector
     mx, Mx  = -canonica + centre[0],canonica + centre[0]
     my, My  = -canonica + centre[1],canonica + centre[1]
     str = f&#34;Canonica({mx},{Mx},{my},{My},scaled={scaled});&#34;
@@ -16689,9 +16723,17 @@ columnes: llista de columnes</p></div>
     def __init__(self,vertex,focus):
         eix = focus - vertex
         p = 2 * eix.length()
-        m = Matriu(Matrix(3,3,[1,0,0,0,0,-p,0,-p,0]))
         s = SubespaiVectorial([eix])
         base = s.amplia_base_suplementari(unitaria=True)
+        v1, v2 = base.vecs
+        if v1[0] &lt; 0:
+            v1 = -v1
+        if v2[1] &lt; 0:
+            v2 = -v2
+        if eix * v2 &lt; 0:
+            p = -p
+        base.vecs = [v1,v2]
+        m = Matriu(Matrix(3,3,[1,0,0,0,0,-p,0,-p,0]))
         r = ReferenciaAfi(vertex,base)
         Conica.__init__(self,m,r)
     #
@@ -16726,7 +16768,7 @@ columnes: llista de columnes</p></div>
         &#34;&#34;&#34;
         Retorna el paràmetre de la paràbola
         &#34;&#34;&#34;
-        return - self.matriu[2,1]
+        return abs(self.matriu[2,1])
     #
     #
     #
@@ -16750,10 +16792,15 @@ columnes: llista de columnes</p></div>
         &#34;&#34;&#34;
         Retorna l&#39;equacio reduïda de la paràbola en format LaTeX
         &#34;&#34;&#34;
+        minus = &#34;&#34;
         p = self.parametre()
+        eix = self.focus() - self.vertex()
+        v2 = self.ref.base.vecs[1]
+        if eix * v2 &lt; 0:
+            minus = &#34;-&#34;
         if 2 * p == 1:
-            return f&#34;y&#39; = x&#39;^2&#34;
-        return f&#34;y&#39; = \\frac{{x&#39;^2}}{{{ latex(2 * p) }}}&#34;
+            return f&#34;y&#39; = {minus}x&#39;^2&#34;
+        return f&#34;y&#39; = {minus}\\frac{{x&#39;^2}}{{{ latex(2 * p) }}}&#34;
     #
     #
     #
@@ -16762,6 +16809,8 @@ columnes: llista de columnes</p></div>
         Retorna el focus de la paràbola
         &#34;&#34;&#34;
         p2 = self.parametre() / 2
+        if self.matriu[2,1] &gt; 0:
+            p2 *= -1
         return self.ref.punt_de_coordenades(Punt([0,p2]))
     #
     #
@@ -16771,6 +16820,8 @@ columnes: llista de columnes</p></div>
         Retorna la recta directriu com a recta afí
         &#34;&#34;&#34;
         p2 = self.parametre() / 2
+        if self.matriu[2,1] &gt; 0:
+            p2 *= -1
         p = self.ref.punt_de_coordenades(Punt([0,-p2]))
         return RectaAfi(p,self.ref.base.vecs[0])
     #
@@ -16787,10 +16838,13 @@ columnes: llista de columnes</p></div>
         &#34;&#34;&#34;
         mx, Mx  = -canonica + self.vertex()[0],canonica + self.vertex()[0]
         my, My  = -canonica + self.vertex()[1],canonica + self.vertex()[1]
+        d = 1
+        if self.matriu[2,1] &gt; 0:
+            d = -1
         str = f&#34;Canonica({mx},{Mx},{my},{My},scaled={scaled});&#34;
         clip = f&#34;path cl = ({mx},{my})--({Mx},{my})--({Mx},{My})--({mx},{My})--cycle;\n&#34;
         clip += f&#34;cl = scale({scaled}) * cl;\nclip(cl);&#34;
-        return f&#34;{str}\nParabola({self.vertex()},{self.focus()},x={x},y={y},scaled={scaled});\n{clip}&#34;</code></pre>
+        return f&#34;{str}\nParabola({self.vertex()},{self.focus()},d={d},x={x},y={y},scaled={scaled});\n{clip}&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -16847,10 +16901,15 @@ def aleatoria(cls,canonica=False):
     &#34;&#34;&#34;
     Retorna l&#39;equacio reduïda de la paràbola en format LaTeX
     &#34;&#34;&#34;
+    minus = &#34;&#34;
     p = self.parametre()
+    eix = self.focus() - self.vertex()
+    v2 = self.ref.base.vecs[1]
+    if eix * v2 &lt; 0:
+        minus = &#34;-&#34;
     if 2 * p == 1:
-        return f&#34;y&#39; = x&#39;^2&#34;
-    return f&#34;y&#39; = \\frac{{x&#39;^2}}{{{ latex(2 * p) }}}&#34;</code></pre>
+        return f&#34;y&#39; = {minus}x&#39;^2&#34;
+    return f&#34;y&#39; = {minus}\\frac{{x&#39;^2}}{{{ latex(2 * p) }}}&#34;</code></pre>
 </details>
 </dd>
 <dt id="Algebra.Parabola.focus"><code class="name flex">
@@ -16867,6 +16926,8 @@ def aleatoria(cls,canonica=False):
     Retorna el focus de la paràbola
     &#34;&#34;&#34;
     p2 = self.parametre() / 2
+    if self.matriu[2,1] &gt; 0:
+        p2 *= -1
     return self.ref.punt_de_coordenades(Punt([0,p2]))</code></pre>
 </details>
 </dd>
@@ -16899,7 +16960,7 @@ def aleatoria(cls,canonica=False):
     &#34;&#34;&#34;
     Retorna el paràmetre de la paràbola
     &#34;&#34;&#34;
-    return - self.matriu[2,1]</code></pre>
+    return abs(self.matriu[2,1])</code></pre>
 </details>
 </dd>
 <dt id="Algebra.Parabola.recta_directriu"><code class="name flex">
@@ -16916,6 +16977,8 @@ def aleatoria(cls,canonica=False):
     Retorna la recta directriu com a recta afí
     &#34;&#34;&#34;
     p2 = self.parametre() / 2
+    if self.matriu[2,1] &gt; 0:
+        p2 *= -1
     p = self.ref.punt_de_coordenades(Punt([0,-p2]))
     return RectaAfi(p,self.ref.base.vecs[0])</code></pre>
 </details>
@@ -16945,10 +17008,13 @@ de límits (-x,x) i (-y,y)</p></div>
     &#34;&#34;&#34;
     mx, Mx  = -canonica + self.vertex()[0],canonica + self.vertex()[0]
     my, My  = -canonica + self.vertex()[1],canonica + self.vertex()[1]
+    d = 1
+    if self.matriu[2,1] &gt; 0:
+        d = -1
     str = f&#34;Canonica({mx},{Mx},{my},{My},scaled={scaled});&#34;
     clip = f&#34;path cl = ({mx},{my})--({Mx},{my})--({Mx},{My})--({mx},{My})--cycle;\n&#34;
     clip += f&#34;cl = scale({scaled}) * cl;\nclip(cl);&#34;
-    return f&#34;{str}\nParabola({self.vertex()},{self.focus()},x={x},y={y},scaled={scaled});\n{clip}&#34;</code></pre>
+    return f&#34;{str}\nParabola({self.vertex()},{self.focus()},d={d},x={x},y={y},scaled={scaled});\n{clip}&#34;</code></pre>
 </details>
 </dd>
 <dt id="Algebra.Parabola.vertex"><code class="name flex">
