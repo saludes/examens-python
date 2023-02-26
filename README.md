@@ -17,9 +17,11 @@ Per a descarregar aquesta utilitat heu d'executar la comanda
 ```
 i per fer-la servir des de qualsevol carpeta on tinguem els models d'examen, les diferents preguntes i el fitxer amb les dades dels estudiants, hem de procedir a
 
-* Copiar els fitxers examen.sty i eseiaat-ma.pdf a una carpeta on els TeX pugui trobar-los. Amb Linux poden ser _$HOME/texmf/tex/latex/_ o _/usr/local/share/texmf/tex/latex/_ i en Windows 10 depèn si teniu instal·lat el TexLive o el MikTeX, però en general ha de ser a la carpeta _localtexmf\\tex\\latex_
-* Copiar el fitxer Algebra.py a una carpeta on el Python pugui trobar-lo. Amb Linux pot ser _/usr/local/lib/python3.8/dist-packages/_ i en Windows 10 _C:\\Archivos de programa\\Python39\\Lib\\site-packages\\_
-* Copiar els fitxers _examen.py_ i _credentials.py_  a una carpeta des d'on es pugui executar des de la línia de comandes. Amb Linux pot ser _/usr/local/bin/_ i en Windpws 10 a una carpeta que estigui en el _%Path%_ o bé podem afegir la carpeta _examens-python_ que s'ha creat en executar la comanda _git clone_ al _%Path%_
+* Copiar els fitxers examen.sty i eseiaat-ma.pdf a una carpeta on els TeX pugui trobar-los. Amb Linux poden ser _$HOME/texmf/tex/latex/_ o _/usr/local/share/texmf/tex/latex/_ i en Windows 10/11 depèn si teniu instal·lat el TexLive o el MikTeX, però en general ha de ser a la carpeta _localtexmf\\tex\\latex_
+* Copiar el fitxer Algebra.py a una carpeta on el Python pugui trobar-lo. Amb Linux pot ser _/usr/local/lib/python3.8/dist-packages/_ i en Windows 10/11 _C:\\Archivos de programa\\Python311\\Lib\\site-packages\\_
+* Copiar els fitxers _examen.py_ i _credentials.py_  a una carpeta des d'on es pugui executar des de la línia de comandes. Amb Linux pot ser _/usr/local/bin/_ i en Windpws 10/11 a una carpeta que estigui en el _%Path%_ o bé podem afegir la carpeta _examens-python_ que s'ha creat en executar la comanda _git clone_ al _%Path%_.
+
+* En lloc de copiar també es poden crear enllaços simbòlics mab la comanda _ln_ del Linux o _mklink_ del Windows 10/11
 
 ## Utilització
 
