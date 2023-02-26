@@ -5801,9 +5801,9 @@ class Conica(object):
         if isinstance(self,Ellipse):
             return "El·lipse"
         if isinstance(self,Hiperbola):
-            return "Hipèrbola"
+            return "Hip\\`erbola"
         if isinstance(self,Parabola):
-            return "Paràbola"
+            return "Par\\`abola"
         return ""
     #
     #
@@ -6725,15 +6725,15 @@ class Quadrica(object):
         if isinstance(self,Con):
             return "Con real"
         if isinstance(self,CilindreElliptic):
-            return "Cilindre el·líptic"
+            return "Cilindre el·l\\'{\i}ptic"
         if isinstance(self,CilindreHiperbolic):
-            return "Cilindre hiperbòlic"
+            return "Cilindre hiperb\\`olic"
         if isinstance(self,ParaboloideElliptic):
-            return "Paraboloide el·líptic"
+            return "Paraboloide el·l\\'{\i}ptic"
         if isinstance(self,ParaboloideHiperbolic):
-            return "Paraboloide hiperbòlic"
+            return "Paraboloide hiperb\\`olic"
         if isinstance(self,CilindreParabolic):
-            return "Cilindre parabòlic"
+            return "Cilindre parab\\`olic"
         return ""
     #
     #
