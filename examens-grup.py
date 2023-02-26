@@ -32,15 +32,16 @@ if nomfitxer is None:
     sys.exit(0)
 
 try:
-        for line in f:
-            line = line.rstrip()
-            if regex.match(line):
-                continue
-            try:
-                data = line.split(':')
-                estudiants.append({'nom' : data[0],'cognoms' : data[1],'grup' : data[4]})
-            except:
-                continue
+    f = open(est,encoding='utf8')
+    for line in f:
+        line = line.rstrip()
+        if regex.match(line):
+            continue
+        try:
+            data = line.split(':')
+            estudiants.append({'nom' : data[0],'cognoms' : data[1],'grup' : data[4]})
+        except:
+            continue
     f.close()
 except:
     print("Error de lectura del fitxer d'estudiants")
