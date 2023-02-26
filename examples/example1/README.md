@@ -4,7 +4,11 @@ En aquesta carpeta podem veure l'estructura típica per a elaborar un examen amb
 
 1. *estudiants.csv*: fitxer de text amb un estudiant a cada línia amb les dades següents separades per dos punts:
 ```
-NOM:GOGNOMS:CORREU ELECTRÒNIC
+NOM:GOGNOMS:DNI:CORREU ELECTRÒNIC:GRUP
+```  
+Si no es posen el DNI i el grup, sha de deixar el camp en blanc
+```
+NOM:GOGNOMS::CORREU ELECTRÒNIC:
 ```  
 2. *examen.tex*: conté les dades bàsiques per a generar un examen (fitxer TeX) per a cada estudiant.
 3. *p<nombre>.tex*: un fitxer TeX per a cada problema. Ha de contenir l'enunciat del problema i com s'han d'incloure les dades i solucions per a cada estudiant.
@@ -14,4 +18,4 @@ Per generar els fitxers TeX i els PDF amb els exàmens, hem d'executar la comand
 ```
 ~$ examen.py --examen=examen.tex --estudiants=estudiants.csv --problemes=4 --tex-engine=pdflatex
 ```
-Aleshores, es crea la carpeta *tex* os s'hi guarden tots els fitxers. 
+Aleshores, es crea la carpeta *tex* os s'hi guarden tots els fitxers.
