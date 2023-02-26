@@ -32,7 +32,7 @@ try:
     from Problemes import Problemes
 except:
     pass
-
+from pylatexenc.latexencode import unicode_to_latex
 class Examen:
     def __init__(self):
         self.parser = OptionParser()
@@ -174,7 +174,7 @@ class Examen:
         #
         if est is not None:
             try:
-                with open(est) as f:
+                with open(est,encoding='utf8') as f:
                     for line in f:
                         line = line.rstrip()
                         if regex.match(line):
@@ -239,7 +239,7 @@ class Examen:
             filename = "examen%04d" % nombre
             filename = filename.replace(" ","0")
         else:
-            relacio = {'COGNOMS' : estudiant['cognoms'], 'NOM' : estudiant['nom'], 'ENUNCIATS' : enunciats,'MODEL' : f"{nombre}"}
+            relacio = {'COGNOMS' : unicode_to_latex(estudiant['cognoms']), 'NOM' : unicode_to_latex(estudiant['nom']), 'ENUNCIATS' : enunciats,'MODEL' : f"{nombre}"}
             filename = f"{estudiant['cognoms']}-{estudiant['nom']}".lower().replace(' ','-')
             filename = unidecode.unidecode(filename)
         examen = self.examen

@@ -114,7 +114,7 @@ if sender is None or subject is None:
 
 regex = re.compile('^\s*#.*$',re.IGNORECASE)
 try:
-    with open(est) as f:
+    with open(est,encoding='utf8') as f:
         for line in f:
             line = line.strip()
             if regex.match(line):

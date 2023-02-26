@@ -32,7 +32,6 @@ if nomfitxer is None:
     sys.exit(0)
 
 try:
-    with open(est) as f:
         for line in f:
             line = line.rstrip()
             if regex.match(line):

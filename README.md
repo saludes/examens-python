@@ -8,6 +8,14 @@ Es fa servir el _LaTeX_ per a generar els diferents models d'examen. Per tant, p
 2. **Python**, la versió 3.7 o posterior (https://www.python.org/).
 3. **SymPy**, que és una llibreria de _Python_ per a càlcul simbòlic (https://www.sympy.org).
 4. **Python unidecode**, que serveix, entre altres coses, per treure els accents de qualsevol text. Es fa servir per treure els accents del nom i cognoms dels estudiants ja que poden donar problemes a l'hora d'ajuntar fitxers amb nom que conté aquests nom i cognoms.
+5. **Python pylatexenc**, per codificar els cognoms i noms en TeX. És l'única manera que he trobat que en Windows no hi hagi problemes amb la codificació UTF-8.
+
+Amb Windows 10/11 i amb Linux si la nostra distribució no incorpora aquests paqquets, podem executar des de la línia de comandes i com a administrador
+```
+pip3 install sympy
+pip3 install unidecode
+pip3 install pylatexenc
+```
 
 ## Descàrrega
 
