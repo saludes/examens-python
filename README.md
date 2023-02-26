@@ -4,7 +4,7 @@
 
 Es fa servir el _LaTeX_ per a generar els diferents models d'examen. Per tant, per fer servir aquesta utilitat necessitem tenir intal·lats els programes següents:
 
-1. **LaTeX**, preferiblement el TeXLive, que està disponible per a Linux, Windows 10 i MacOS (https://www.tug.org/texlive/).
+1. **LaTeX**, preferiblement el TeXLive, que està disponible per a Linux, Windows 10/11  i MacOS (https://www.tug.org/texlive/).
 2. **Python**, la versió 3.7 o posterior (https://www.python.org/).
 3. **SymPy**, que és una llibreria de _Python_ per a càlcul simbòlic (https://www.sympy.org).
 4. **Python unidecode**, que serveix, entre altres coses, per treure els accents de qualsevol text. Es fa servir per treure els accents del nom i cognoms dels estudiants ja que poden donar problemes a l'hora d'ajuntar fitxers amb nom que conté aquests nom i cognoms.
@@ -26,10 +26,58 @@ Per a descarregar aquesta utilitat heu d'executar la comanda
 i per fer-la servir des de qualsevol carpeta on tinguem els models d'examen, les diferents preguntes i el fitxer amb les dades dels estudiants, hem de procedir a
 
 * Copiar els fitxers examen.sty i eseiaat-ma.pdf a una carpeta on els TeX pugui trobar-los. Amb Linux poden ser _$HOME/texmf/tex/latex/_ o _/usr/local/share/texmf/tex/latex/_ i en Windows 10/11 depèn si teniu instal·lat el TexLive o el MikTeX, però en general ha de ser a la carpeta _localtexmf\\tex\\latex_
-* Copiar el fitxer Algebra.py a una carpeta on el Python pugui trobar-lo. Amb Linux pot ser _/usr/local/lib/python3.8/dist-packages/_ i en Windows 10/11 _C:\\Archivos de programa\\Python311\\Lib\\site-packages\\_
+* Copiar el fitxer Algebra.py a una carpeta on el Python pugui trobar-lo. Amb Linux pot ser _/usr/local/lib/python3.11/dist-packages/_ i en Windows 10/11 _C:\\Archivos de programa\\Python311\\Lib\\site-packages\\_
 * Copiar els fitxers _examen.py_ i _credentials.py_  a una carpeta des d'on es pugui executar des de la línia de comandes. Amb Linux pot ser _/usr/local/bin/_ i en Windpws 10/11 a una carpeta que estigui en el _%Path%_ o bé podem afegir la carpeta _examens-python_ que s'ha creat en executar la comanda _git clone_ al _%Path%_.
-
 * En lloc de copiar també es poden crear enllaços simbòlics mab la comanda _ln_ del Linux o _mklink_ del Windows 10/11
+
+
+En Linux, he executat les comandes següents:
+```
+~$ whoami
+amer
+~$ su -
+Password:
+~# whoami
+root
+~# cd /usr/local/bin
+~/usr/local/bin# ln -sf /home/amer/Git/examens-python/examen.py .
+~/usr/local/bin# ln -sf /home/amer/Git/examens-python/enviar-examens.py .
+~/usr/local/bin# ln -sf /home/amer/Git/examens-python/examens-grup.py .
+~/usr/local/bin# cd ../lib/python3.11/dist-packages/
+~/usr/local/bin/lib/python3.11/dist-packages# ln -sf /home/amer/Git/examens-python/Algebra.py .
+~/usr/local/bin/lib/python3.11/dist-packages# ^D
+~$ mkdir -P .asy ; cd .asy
+~/.asy$ ln -sf /home/amer/Git/examens-python/coordenades.asy .
+~/.asy$ cd ..
+~$ mkdir -p texmf/tex/latex ; cd texmf/tex/latex
+~texmf/tex/latex$ ln -sf /home/amer/Git/examens-python/examen.sty .
+~texmf/tex/latex$ ln -sf /home/amer/Git/examens-python/eseiaat-ma.pdf .
+~texmf/tex/latex$ cd
+~$ ln -sf /home/amer/Git/examens-python/LaTeXMk .latexmkrc
+```
+
+En Windows 10/11, obrim el teminal (cmd) com a administrador i executarem
+```
+C:\Windows\system32> cd "C:\Program Files\Python311
+C:\Program Files\Python311> mklink examen.py "C:\Users\Rafel Amer\examens-python\examen.py"
+C:\Program Files\Python311> mklink enviar-examens.py "C:\Users\Rafel Amer\examens-python\enviar-examens.py"
+C:\Program Files\Python311> mklink examens-grup.py "C:\Users\Rafel Amer\examens-python\examens-grup.py"
+C:\Program Files\Python311> cd Lib\site-packages
+C:\Program Files\Python311\Lib\site-packages> mklink Algebra.py "C:\Users\Rafel Amer\examens-python\Algebra.py
+C:\Program Files\Python311\Lib\site-packages> cd C:\Users\Rafel Amer>
+C:\Users\Rafel Amer> mkdir .asy
+C:\Users\Rafel Amer> cd .asy
+C:\Users\Rafel Amer\.asy> mklink coordenades.asy "C:\Users\Rafel Amer\examens-python\coordenades.asy"
+C:\Users\Rafel Amer\.asy> cd ..
+C:\Users\Rafel Amer> mkdir -p texmf\tex\latex
+C:\Users\Rafel Amer> cd texmf\tex\latex
+C:\Users\Rafel Amer\texmf\tex\latex> mklink examen.asy "C:\Users\Rafel Amer\examens-python\examen.asy"
+C:\Users\Rafel Amer\texmf\tex\latex> mklink eseiaat-ma.pdf "C:\Users\Rafel Amer\examens-python\eseiaat-ma.pdf"
+C:\Users\Rafel Amer\texmf\tex\latex> cd C:\
+C:\> mkdir LatexMk
+C:\> cd LaTeXMk
+C:\LaTeXMk> mklink LaTeXMk "C:\Users\Rafel Amer\examens-python\LaTeXMk"
+```
 
 ## Utilització
 
