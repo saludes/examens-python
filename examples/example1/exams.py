@@ -100,6 +100,8 @@ class LaTeXExamExam(Exam):
       for r in csv.reader(ests, delimiter=':'):
         nom = r[0] + ' ' + r[1]
         email = r[3]
-        with open(f"tex/{nom}.tex", 'w') as tex:
+        fname = f"tex/{nom}.tex"
+        with open(fname, 'w') as tex:
           tex.write(ex.render(estudiant=nom, seed=email))
+          print("Writing file", fname)
     

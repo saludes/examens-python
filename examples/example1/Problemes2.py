@@ -23,9 +23,9 @@ def problema1():
 @ex.problem
 def problema2():
   r"""
-  Es considera el pla vectorial $P$ de $\rn 3$
+  Es considera el pla vectorial $P$ de $\mathbb{R}^3$
   $P = \langle{{VECTORS}}\rangle$
-  i la base $\cal B'={{BASE}}$. Determineu l'equació implícita del pla $P$ respecte de la base $\cal B'$.
+  i la base $\mathcal B'={{BASE}}$. Determineu l'equació implícita del pla $P$ respecte de la base $\cal B'$.
   """
   m = Matriu.invertible(maxim=2, mzeros=1, unitaria=True)
   trobat = False
