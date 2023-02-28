@@ -21,10 +21,10 @@ class Exam:
     self.problems = []
 
   def shuffle(self, seed=None):
-    from random import shuffle
+    import random
     if seed:
       random.seed(seed)
-    shuffle(self.problems)
+    random.shuffle(self.problems)
 
   def __len__(self):
     return len(self.problems)
@@ -61,6 +61,7 @@ class LaTeXExamExam(Exam):
 \firstpagefooter{ {{estudiant}} }{}{}
 
 \begin{document}
+%% seed: {{seed}}
 \begin{questions}
 {% for pr in exam %}
   \question ({{pr.id}}) {{pr.r}}
@@ -91,3 +92,14 @@ class LaTeXExamExam(Exam):
     kw['doc_options'] =self.configure_docclass()
     return super().render(**kw)
   
+
+  if __name__ == '__main__':
+    import csv
+    from Problemes2 import ex
+    with open("estudiants.csv") as ests:
+      for r in csv.reader(ests, delimiter=':'):
+        nom = r[0] + ' ' + r[1]
+        email = r[3]
+        with open(f"tex/{nom}.tex", 'w') as tex:
+          tex.write(ex.render(estudiant=nom, seed=email))
+    
