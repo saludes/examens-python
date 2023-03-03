@@ -93,6 +93,61 @@ class LaTeXExamExam(Exam):
     return super().render(**kw)
   
 
+class ClozeExam(Exam):
+  template = """
+    {% for pr in exam %}
+      {{pr.id}}: {{pr.r}}
+    {% endfor %}
+    """
+
+  def multichoice(self, *answers):
+      d = {}
+      for a in answers:
+          if isinstance(a, tuple):
+              ans,va = a
+              assert ans not in d
+              d[ans] = va
+          elif isinstance(a, str):
+              d[a] = False
+          else:
+              raise NotImplementedError(a)
+      if sum(int(v) for v in d.values()) != 1:
+          raise ValueError("Falta resposta correcta o més d'una")
+      items = '~'.join([('=' if v else '') + ans for (ans,v) in d.items()])
+      #items = items.replace('~=', '=')
+      return "{1:MULTICHOICE:" + items + "}"
+
+  def short_answer(self, *answers):
+      ans = []
+      for a in answers:
+          if isinstance(a, tuple):
+              fb = '' if len(a) == 2 else a[2]
+              v = a[1]
+              answer = a[0]
+          elif isinstance(a, str):
+              fb = ''
+              v = 0
+              answer = a
+          else:
+              raise NotImplementedError()
+          ans.append((answer, v, fb))
+          total = sum(v for (_,v,_) in ans)
+      
+      def fmt_sa(el):
+          ans,v,fb = el
+          if v == 0:
+              item = ans
+          else:
+              item =f'%{v}%' + ans
+          if fb:
+              item += "#" + fb
+          return item
+      
+      ans = "~".join(map(fmt_sa, ans))
+      return "{1:SHORTANSWER:" + ans + "}"
+  
+
+
   if __name__ == '__main__':
     import csv
     from Problemes2 import ex
