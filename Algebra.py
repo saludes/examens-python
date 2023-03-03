@@ -666,7 +666,7 @@ class Vector(object):
         l = [m*k for k in self.components]
         s = ""
         if m != 1:
-            s = f"\\deufrac{{1}}{{{latex(m)}}}"
+            s = f"\\frac{{1}}{{{latex(m)}}}"
         r = ",".join([latex(k) for k in l])
         if self.big:
             return f"{s}\\left({r}\\right)"
@@ -1083,7 +1083,7 @@ class Vector(object):
         f, v = self.factor_comu()
         s = ""
         if f != 1:
-            s = f"\\deufrac{{1}}{{{latex(f)}}}"
+            s = f"\\frac{{1}}{{{latex(f)}}}"
         r = latex(v[1]*i + v[2]*j + v[3]*k)
         if v[0] != 0:
             return f"{s}\\left({latex(v[0])} + {r}\\right)"
@@ -1857,7 +1857,7 @@ class Matriu:
                 l.append(m * self.matriu[i,j])
         s = ""
         if m != 1:
-            s = f"\\deufrac{{1}}{{{latex(m)}}}"
+            s = f"\\frac{{1}}{{{latex(m)}}}"
         m = Matrix(self.files,self.columnes,l)
         return s + matriu_latex(m,format=self.format)
     #
