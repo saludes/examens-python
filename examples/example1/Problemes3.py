@@ -31,3 +31,22 @@ The capital of France is {{FRANCE}}"""
             ('*', 0, "Wrong answer. The capital of France is Paris, of course.")))
 
 
+@ex.problem
+def aritmetic():
+    """
+Digues quan és el mínim comú múltiple de {{N1}} i {{N2}}: {{LCM}}"""
+    from random import randint
+    from math import lcm
+    s1 = randint(10,100)
+    s2 = randint(10,100)
+    m = lcm(s1, s2)
+    return dict(
+        N1=s1,
+        N2=s2,
+        LCM=ex.short_answer(
+            (str(m), 100),
+            ('*',0, "està malament")))
+
+
+
+
