@@ -1,16 +1,22 @@
 class Problem:
   def __init__(self, name, func, **kw):
+    from hypothesis.strategies import composite
     self.name = name
-    self.f = func
+    self.content = func.__doc__
+    self.f = composite(func)()
     self.args = kw
 
   def __repr__(self):
     return f"<Problem {self.name}>"
+  
+  def __call__(self):
+     return self.f.example()
+      
 
   def render(self):
     from jinja2 import Template
-    kw = {k: str(v) for k, v in self.f().items()}
-    return Template(self.f.__doc__).render(**kw)
+    kw = {k: str(v) for k, v in self().items()}
+    return Template(self.content).render(**kw)
 
 
 
