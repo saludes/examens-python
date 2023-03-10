@@ -11,17 +11,39 @@ class Problem:
   
   def __call__(self):
      return self.f.example()
+  
+  def _split(self, text):
+    import re
+    parts = re.split(r'\n\s*=+\n', text)
+    if len(parts) == 2:
+       return dict(CONTENT=parts[0], SOLUTION=parts[1])
+    elif len(parts)==1:
+       return dict(CONTENT=parts[0])
+    else:
+       raise ValueError("Invalid number of parts.")
+     
+     
       
 
-  def render(self):
+  def render(self, template=None):
     from jinja2 import Template
-    kw = {k: str(v) for k, v in self().items()}
-    return Template(self.content).render(**kw)
+    #kw = {k: str(v) for k, v in self().items()}
+    kw = self()
+    if template:
+       return self.with_parts(template, kw)
+    else:
+      return Template(self.content).render(**kw)
 
+    
+  def with_parts(self, template, params):
+    from jinja2 import Template
+    d = self._split(self.content)
+    tmp = template.render(d)
+    return Template(tmp).render(**params)
 
 
 class Exam: 
-  slots = ['template']
+  slots = ['template', 'problem_template']
 
   def __init__(self):
     self.problems = []
@@ -51,7 +73,9 @@ class Exam:
 
   def render(self, **kw):
     from jinja2 import Template
-    kw['exam'] = [dict(id=pr.name, r=pr.render()) for pr in self]
+    temp = Template(self.problem_template)
+    render = lambda pr: pr.render(temp)
+    kw['exam'] = [dict(id=pr.name, r=render(pr)) for pr in self]
     return Template(self.template).render(**kw)
 
 
@@ -70,11 +94,18 @@ class LaTeXExamExam(Exam):
 %% seed: {{seed}}
 \begin{questions}
 {% for pr in exam %}
-  \question ({{pr.id}}) {{pr.r}}
+  % {{pr.id}}
+  {{pr.r}}
 {% endfor %}
 \end{questions}
 \end{document}
 """
+
+  problem_template=r'''
+  \question {{CONTENT}}
+
+  \begin{solution}{{SOLUTION}}\end{solution}
+  '''
 
   def __init__(self):
     super().__init__()
