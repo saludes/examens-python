@@ -22,19 +22,14 @@ class Problem:
     else:
        raise ValueError("Invalid number of parts.")
      
-     
-      
-
   def render(self, template=None):
     from jinja2 import Template
-    #kw = {k: str(v) for k, v in self().items()}
     kw = self()
     if template:
        return self.with_parts(template, kw)
     else:
       return Template(self.content).render(**kw)
 
-    
   def with_parts(self, template, params):
     from jinja2 import Template
     d = self._split(self.content)
