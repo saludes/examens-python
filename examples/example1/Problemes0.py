@@ -29,15 +29,15 @@ def sympy_complex(draw,min_magnitude=1, max_magnitude=2, tolerance=0.01):
 
 @ex.problem
 def potencia(draw):
-    """Calculeu la potència {{EXPONENT}} de {{COMPLEX}}
+    """Calculeu la potència `EXPONENT` de `COMPLEX`
     =====
     {% if EXPONENT <= 3 %}
-    Podem aplicar la propietat distributiva a {{EXPAND}}, que dóna {{SOLUCIO}},
+    Podem aplicar la propietat distributiva a `EXPAND`, que dóna `SOLUCIO`,
 
     O altrament:
     {% endif %}
-    Passem a la forma polar, obtenim $|z|={{ZABS}}$ amb argument {{ZARG}}.
-    Per tant la potència tindrà $|z^{{EXPONENT}}| = {{WABS}}$ i argument {{WARG}}, que passat a forma binomial és {{SOLUCIO}}.
+    Passem a la forma polar, obtenim $|z|=`ZABS`$ amb argument `ZARG`.
+    Per tant la potència tindrà $|z^{`EXPONENT`}| = `WABS`$ i argument `WARG`, que passat a forma binomial és `SOLUCIO`.
     """
     from sympy import expand, arg
     scx = sympy_complex(min_magnitude=1, max_magnitude=2, tolerance=0.1)
@@ -53,11 +53,11 @@ def potencia(draw):
     
 @ex.problem
 def arrel(draw):
-    """Calculeu $\sqrt[{{EXPONENT}}]{ {{COMPLEX}} }$
+    """Calculeu $\sqrt[`EXPONENT`]{`COMPLEX`}$
     =====
-    Passem a la forma polar, amb valor absolut {{ZABS}} i argument {{ZARG}}.
-    Fem l'arrel {{EXPONENT}} del valor absolut que dóna {{WABS}}, i dividim l'argument
-    per {{EXPONENT}} tenint en compte $2\pi$, que és {{WARG}}, que tornant a la forma binomial dóna {{SOLUCIO}}
+    Passem a la forma polar, amb valor absolut `ZABS` i argument `ZARG`.
+    Fem l'arrel `EXPONENT` del valor absolut que dóna `WABS`, i dividim l'argument
+    per `EXPONENT` tenint en compte $2\pi$, que és `WARG`, que tornant a la forma binomial dóna `SOLUCIO`
     """
     from sympy import Integer, arg
     z = draw(complex())

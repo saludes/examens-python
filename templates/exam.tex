@@ -1,0 +1,17 @@
+\documentclass[`doc_options`]{exam}
+\usepackage[catalan]{babel}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\renewcommand{\solutiontitle}{\noindent\textbf{Resolució:}\enspace}
+\firstpagefooter{`estudiant`}{}{}
+
+\begin{document}
+%% seed: `seed`
+\begin{questions}
+{% for problem in exam %}
+  % `problem.id`'
+  `problem.r`
+{% endfor %}
+\end{questions}
+\end{document}

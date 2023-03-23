@@ -8,6 +8,10 @@
 *.pdf
 *.log
 examples/**/*.tex
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+
 
 # C extensions
 *.so
@@ -134,3 +138,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .DS_Store
+

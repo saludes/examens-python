@@ -22,19 +22,14 @@ class Problem:
     else:
        raise ValueError("Invalid number of parts.")
      
-  def render(self, template=None):
-    from jinja2 import Template
+  def render(self, environ, template):
     kw = self()
-    if template:
-       return self.with_parts(template, kw)
-    else:
-      return Template(self.content).render(**kw)
-
-  def with_parts(self, template, params):
-    from jinja2 import Template
+    return self.with_parts(template, environ, kw)
+    
+  def with_parts(self, environ, template, params):
     d = self._split(self.content)
     tmp = template.render(d)
-    return Template(tmp).render(**params)
+    return environ.from_string(tmp).render(**params)
 
 
 class Exam: 
@@ -42,6 +37,12 @@ class Exam:
 
   def __init__(self):
     self.problems = []
+    from jinja2 import Environment, FileSystemLoader
+    self.env = Environment(
+       loader=FileSystemLoader('templates'),
+       variable_start_string='`' ,
+       variable_end_string='`')
+
 
   def shuffle(self, seed=None):
     import random
@@ -67,40 +68,18 @@ class Exam:
     return prob
 
   def render(self, **kw):
-    from jinja2 import Template
-    temp = Template(self.problem_template)
-    render = lambda pr: pr.render(temp)
+    problem_tp = self.env.get_template(self.problem_template)
+    exam_tp = self.env.get_template(self.template)
+    render = lambda pr: pr.render(problem_tp, self.env)
     kw['exam'] = [dict(id=pr.name, r=render(pr)) for pr in self]
-    return Template(self.template).render(**kw)
+    #breakpoint()
+    return exam_tp.render(**kw)
 
 
   
 class LaTeXExamExam(Exam):
-  template = r"""
-\documentclass{{doc_options}}{exam}
-\usepackage[catalan]{babel} 
-\usepackage{amssymb}
-\usepackage{graphicx}
-\usepackage{amsmath}
-\renewcommand{\solutiontitle}{\noindent\textbf{Resolució:}\enspace}
-\firstpagefooter{ {{estudiant}} }{}{}
-
-\begin{document}
-%% seed: {{seed}}
-\begin{questions}
-{% for pr in exam %}
-  % {{pr.id}}
-  {{pr.r}}
-{% endfor %}
-\end{questions}
-\end{document}
-"""
-
-  problem_template=r'''
-  \question {{CONTENT}}
-
-  \begin{solution}{{SOLUTION}}\end{solution}
-  '''
+  template = 'exam.tex'
+  problem_template='problem.tex'
 
   def __init__(self):
     super().__init__()
